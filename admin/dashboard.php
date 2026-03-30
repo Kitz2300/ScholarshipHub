@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Admin Dashboard</title>
+    </head>
+    <body>
+        <h2>Admin Dashboard</h2>
+        <p>Welcome, Admin!</p>
+    </body>
+</html>
