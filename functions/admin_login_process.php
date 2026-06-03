@@ -13,11 +13,13 @@ if(isset($_POST['username']) && isset($_POST['password'])) {
 
     if($result->num_rows > 0) {
         // Login successful
-        header("Location: /../admin/dashboard.php");
+        header("Location: ../admin/dashboard.php");
         exit();
     } else {
-        // Login failed
+        // Login faileds
         echo "Invalid username or password.";
+        header("Location: ../admin/login.php");
+        exit();
     }
 }
 ?>

@@ -5,7 +5,7 @@
     </head>
     <body>
         <h2>Admin Login</h2>
-        <form method="post" action="/../functions/admin_login_process.php">
+        <form method="post" action="../functions/admin_login_process.php">
             <label for="username">Username:</label><br>
             <input type="text" id="username" name="username" required><br><br>
             <label for="password">Password:</label><br>
