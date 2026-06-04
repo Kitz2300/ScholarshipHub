@@ -1,5 +1,6 @@
 <?php 
 require_once __DIR__ . '/../includes/conn.php';
+session_start();
 
 if(isset($_POST['username']) && isset($_POST['password'])) {
     $username = $_POST['username'];
@@ -13,6 +14,7 @@ if(isset($_POST['username']) && isset($_POST['password'])) {
 
     if($result->num_rows > 0) {
         // Login successful
+        $_SESSION['username'] = $username;
         header("Location: ../student/dashboard.php");
         exit();
     } else {

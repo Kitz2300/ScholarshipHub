@@ -1,10 +1,16 @@
+<?php session_start(); ?>
+
 <!DOCTYPE html>
 <html>
     <head>
         <title>Staff Dashboard</title>
     </head>
     <body>
+        <?php if(!isset($_SESSION['username']) || $_SESSION['role'] !== 'staff') {?>
+            <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>
+        <?php } else { ?>
         <h2>Staff Dashboard</h2>
         <p>Welcome, Staff!</p>
+        <?php } ?>
     </body>
 </html>
