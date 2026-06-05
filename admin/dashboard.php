@@ -14,6 +14,7 @@ session_start();
         <?php } else { ?>
         <h2>Admin Dashboard</h2>
         <p>Welcome, Admin!</p>
-        <?php } ?>
+        <a href="scholar_list.php">Scholar List</a>
+        <?php } ?>  
     </body>
 </html>
