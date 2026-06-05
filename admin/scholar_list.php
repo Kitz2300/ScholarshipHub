@@ -1,4 +1,6 @@
-<?php session_start(); ?>
+<?php 
+include '../includes/conn.php';
+session_start(); ?>
 
 <!DOCTYPE html>
 <html>
@@ -44,7 +46,27 @@
                 <label for="birth_date">Birth Date:</label><br>
                 <input type="date" name="birth_date" id="birth_date" required><br>
 
-                <!-- add the rest of the fields here later -->
+                <label for="scholarship_program">Scholarship Program</label><br>
+                <select name="scholarship_program" id="scholarship_program" required>
+                    <option value="">Select Scholarship Program</option>
+                <?php 
+                $scholarship_program_sql = "SELECT id, name, code FROM scholarship_program";
+                $stmt = $conn->prepare($scholarship_program_sql);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                while($row = $result->fetch_assoc()) {
+                    echo "<option value='" . $row['id'] . "'>" . $row['name'] . " (" . $row['code'] . ")</option>";
+                }
+                
+                ?>
+                </select><br>
+
+                <label for="program">Program</label><br>
+                <select name="program" id="program" required>
+                    <option value="">Select Program</option>
+                <?php 
+                $program_sql = "SELECT id, name FROM program";
+                ?>
 
                 <button type="submit">Add Scholar</button>
             </form>
