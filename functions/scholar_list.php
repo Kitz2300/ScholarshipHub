@@ -17,4 +17,8 @@ while($row = $result->fetch_assoc()) {
     echo "<td><button>Edit</button> <button>Delete</button></td>";
     echo "</tr>";
 }
+
+if($result->num_rows == 0) {
+    echo "<tr><td colspan='6'>No scholars found.</td></tr>";
+}
 ?>

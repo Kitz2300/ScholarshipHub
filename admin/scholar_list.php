@@ -1,6 +1,7 @@
 <?php 
 include '../includes/conn.php';
-session_start(); ?>
+session_start(); 
+?>
 
 <!DOCTYPE html>
 <html>
@@ -9,14 +10,13 @@ session_start(); ?>
     </head>
     <body>
         <?php 
-        if(!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {?>
+        if(!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') { ?>
             <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>
         <?php } else { ?>
-        <h2>Scholar List</h2>
-        <div class="scholar_list">
-
-        </div>
+        <h1>Scholar List</h1>
         <div class="add_scholar">
+            <h2>Add New Scholar</h2>
+            <h3>Student Information</h3>
             <form action="../functions/add_scholar.php" method="post">
                 <label for="last_name">Name:</label><br>
                 <input type="text" name="last_name" placeholder="Last Name" id="last_name" required>
@@ -36,6 +36,9 @@ session_start(); ?>
                 <label for="student_id">Student ID:</label><br>
                 <input type="text" name="student_id" placeholder="23-0223-403" required><br>
 
+                <label for="student_contact">Contact Number:</label><br>
+                <input type="text" name="student_contact" placeholder="09123456789" required><br>
+
                 <label for="sex">Sex:</label><br>
                 <select name="sex" id="sex" required>
                     <option value="">Select Sex</option>
@@ -45,6 +48,29 @@ session_start(); ?>
 
                 <label for="birth_date">Birth Date:</label><br>
                 <input type="date" name="birth_date" id="birth_date" required><br>
+
+                <label for="disability">Disability:</label><br>
+                <select name="disability" id="disability" required>
+                    <option value="">Select Disability</option>
+                    <option value="None">None</option>
+                    <option value="Visual Impairment">Visual Impairment</option>
+                    <option value="Hearing Impairment">Hearing Impairment</option>
+                    <option value="Mobility Impairment">Mobility Impairment</option>
+                    <option value="Cognitive Impairment">Cognitive Impairment</option>
+                    <!-- Add more disability options as needed -->
+                </select><br>
+
+                <label for="ip_goup">IP Group:</label><br>
+                <select name="ip_group" id="ip_group" required>
+                    <option value="">Select IP Group</option>
+                    <!-- Add IP group options here -->
+                </select><br>
+
+                <label for="addresss">Address:</label><br>
+                <select name="address" id="address" required>
+                    <option value="">Select Address</option>
+                    <!-- add address options here -->
+                </select><br>
 
                 <label for="scholarship_program">Scholarship Program</label><br>
                 <select name="scholarship_program" id="scholarship_program" required>
@@ -63,10 +89,28 @@ session_start(); ?>
 
                 <label for="program">Program</label><br>
                 <select name="program" id="program" required>
-                    <option value="">Select Program</option>
+                    <option value="" disabled selected>Select Program</option>
                 <?php 
                 $program_sql = "SELECT id, name FROM program";
+                $stmt = $conn->prepare($program_sql);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                while($row = $result->fetch_assoc()) {
+                    echo "<option value='" . $row['id'] . "'>" . $row['name'] . "</option>";
+                }
                 ?>
+                <select><br>
+
+                <h3>Parent Information</h3>
+                <label for="father_name">Father's Name:</label><br>
+                <input type="text" name="father_name" placeholder="last_name" id="father_name" required>
+                <input type="text" name="father_name" placeholder="given_name" id="father_name" required>
+                <input type="text" name="father_name" placeholder="middle_name" id="father_name" required><br>
+
+                <label for="mother_name">Mother's Name:</label><br>
+                <input type="text" name="mother_name" placeholder="last_name" id="mother_name" required>
+                <input type="text" name="mother_name" placeholder="given_name" id="mother_name" required>
+                <input type="text" name="mother_name" placeholder="middle_name" id="mother_name" required><br>
 
                 <button type="submit">Add Scholar</button>
             </form>
@@ -83,7 +127,7 @@ session_start(); ?>
                     <th>Academic Status</th>
                     <th>Actions</th>
                 </tr>
-                <?php include_once __DIR__ . '/../functions/scholar_list.php'; ?>
+                <?php include __DIR__ . '/../functions/scholar_list.php'; ?>
             </table>
         </div>
         <?php } ?>  
