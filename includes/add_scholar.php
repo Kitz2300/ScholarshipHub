@@ -8,6 +8,7 @@
                 <input type="text" name="middle_name" placeholder="Middle Name" id="middle_name" required>
                 <select name="ext_name" id="ext_name" required>
                     <option value="">Extension Name</option>
+                    <option value="N/A">Not Applicable</option>
                     <option value="Jr.">Jr.</option>
                     <option value="Sr.">Sr.</option>
                     <option value="II">II</option>
@@ -33,7 +34,7 @@
                 <label for="birth_date">Birth Date:</label><br>
                 <input type="date" name="birth_date" id="birth_date" required><br>
 
-                <label for="disability">Disability:</label><br>
+                <label for="disability">Disability (if applicable):</label><br>
                 <select name="disability" id="disability" required>
                     <option value="">Select Disability</option>
                     <option value="None">None</option>
@@ -47,12 +48,14 @@
                 <label for="ip_goup">IP Group:</label><br>
                 <select name="ip_group" id="ip_group" required>
                     <option value="">Select IP Group</option>
+                    <option value="Not applicable">Not applicable</option>
                     <!-- Add IP group options here -->
                 </select><br>
 
-                <label for="addresss">Address:</label><br>
+                <label for="addresss">Permanent Address:</label><br>
                 <select name="address" id="address" required>
                     <option value="">Select Address</option>
+                    <option value="Example">Example</option>
                     <!-- add address options here -->
                 </select><br>
 
@@ -85,16 +88,16 @@
                 ?>
                 <select><br>
 
-                <h3>Parent Information</h3>
+                <h3>Family Background</h3>
                 <label for="father_name">Father's Name:</label><br>
-                <input type="text" name="father_last" placeholder="last_name" id="father_name" required>
-                <input type="text" name="father_first" placeholder="given_name" id="father_name" required>
-                <input type="text" name="father_middle" placeholder="middle_name" id="father_name" required><br>
+                <input type="text" name="father_last" placeholder="Last Name" id="father_name" required>
+                <input type="text" name="father_first" placeholder="First Name" id="father_name" required>
+                <input type="text" name="father_middle" placeholder="Middle Name" id="father_name" required><br>
 
                 <label for="mother_name">Mother's Name:</label><br>
-                <input type="text" name="mother_last" placeholder="last_name" id="mother_name" required>
-                <input type="text" name="mother_first" placeholder="given_name" id="mother_name" required>
-                <input type="text" name="mother_middle" placeholder="middle_name" id="mother_name" required><br>
+                <input type="text" name="mother_last" placeholder="Last Name" id="mother_name" required>
+                <input type="text" name="mother_first" placeholder="First Name" id="mother_name" required>
+                <input type="text" name="mother_middle" placeholder="Middle Name" id="mother_name" required><br>
 
                 <button type="submit">Add Scholar</button>
             </form>

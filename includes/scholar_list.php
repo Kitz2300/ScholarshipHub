@@ -20,10 +20,13 @@ $result = $stmt->get_result();
             <th>Actions</th>
         </tr>
 <?php 
+
+if($result->num_rows > 0) {
 while($row = $result->fetch_assoc()) {
+    $ext_name = $row['ext_name'] == 'N/A' ? "" : $row['ext_name'];
     echo "<tr>";
     echo "<td>" . $row['student_id'] . "</td>";
-    echo "<td>" . $row['last_name'] . ", " . $row['given_name'] . " " . $row['middle_name'] . " " . $row['ext_name'] . "</td>";
+    echo "<td>" . $row['last_name'] . ", " . $row['given_name'] . " " . $row['middle_name'] . " " . $ext_name . "</td>";
     echo "<td>" . $row['scholarship_name'] . "</td>";
     echo "<td>" . $row['program_name'] . "</td>";
     echo "<td>" . $row['academic_status'] . "</td>";
@@ -31,7 +34,7 @@ while($row = $result->fetch_assoc()) {
     echo "</tr>";
 }
 
-if($result->num_rows == 0) {
+}else {
     echo "<tr><td colspan='6'>No scholars found.</td></tr>";
 }
 ?>
