@@ -16,9 +16,7 @@ session_start();
             <!-- if logged in, load page -->
         <?php } else { ?>
         <h1>Scholar List</h1>
-
-        <!-- include add_scholar fields -->
-        <?php include __DIR__ . '/../includes/add_scholar.php'; ?>
+        <a href="add_scholar.php">Add New Scholar</a>
 
         <?php include __DIR__ . '/../includes/scholar_list.php'; ?>
         

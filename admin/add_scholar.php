@@ -1,5 +1,21 @@
-<div class="add_scholar">
-            <h2>Add New Scholar</h2>
+<?php 
+include __DIR__ . '/../includes/conn.php';
+session_start();
+?>
+
+<html>
+    <head>
+        <title>Add Scholar</title>
+    </head>
+    <body>
+        <?php 
+        if(!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') { ?>
+            <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>
+            <!-- if logged in, load page -->
+        <?php } else { ?>
+        <h1>Add Scholar</h1>
+
+        <div class="add_scholar">
             <h3>Student Information</h3>
             <form action="../functions/add_scholar_process.php" method="post">
                 <label for="last_name">Name:</label><br>
@@ -100,5 +116,10 @@
                 <input type="text" name="mother_middle" placeholder="Middle Name" id="mother_name" required><br>
 
                 <button type="submit">Add Scholar</button>
+                <button onclick="window.location.href='scholar_list.php'">Cancel</button>
             </form>
         </div>
+        
+        <?php } ?>
+    </body>
+</html>
