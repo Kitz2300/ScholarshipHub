@@ -11,6 +11,10 @@
         <?php } else { ?>
         <h2>Scholar Dashboard</h2>
         <p>Welcome, Scholar!</p>
+
+        <form action="../functions/logout.php" method="POST">
+            <button>Logout</button>
+        </form>
         <?php } ?>
     </body>
 </html>
