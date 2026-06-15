@@ -3,9 +3,10 @@
         <title>Scholar Login</title>
     </head>
     <body>
+        <h1>PIT ScholarshipHub</h1>
         <nav>
             <ul>
-                <li><a href="../portal.php</li>
+                <li><a href="../portal.php">Home</a></li>
             </ul>
         </nav>
         <h2>Scholar Login</h2>

@@ -4,6 +4,12 @@
         <title>Admin Login</title>
     </head>
     <body>
+        <h1>PIT ScholarshipHub</h1>
+        <nav>
+            <ul>
+                <li><a href="../portal.php">Home</a></li>
+            </ul>
+        </nav>
         <h2>Admin Login</h2>
         <form method="post" action="../functions/admin_login_process.php">
             <label for="username">Username:</label><br>

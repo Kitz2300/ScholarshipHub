@@ -4,6 +4,12 @@
         <title>Staff Login</title>
     </head>
     <body>
+        <h1>PIT ScholarshipHub</h1>
+        <nav>
+            <ul>
+                <li><a href="../portal.php">Home</a></li>
+            </ul>
+        </nav>
         <h2>Staff Login</h2>
         <form method="post" action="../functions/staff_login_process.php">
             <label for="username">Username:</label><br>
