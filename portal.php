@@ -1,4 +1,6 @@
-<?php ?>
+<?php 
+include __DIR__ . "/includes/conn.php";
+?>
 
 <html>
     <head>
@@ -17,6 +19,20 @@
 
         <h2>Announcements:</h2>
         <!-- Fetch and display announcements from the database -->
-        
+        <?php 
+        $announcement_sql = "SELECT title, content FROM announcements WHERE is_active = 1 ORDER BY created_at DESC";
+        $announcement_stmt = $conn->prepare($announcement_sql);
+        $announcement_stmt->execute();
+        $announcement_result = $announcement_stmt->get_result();
+
+        while($row=mysqli_fetch_assoc($announcement_result)) {
+            $title = $row['title'];
+            $content = $row['content'];
+
+            echo "<h3>$title</h3>";
+            echo "<p>$content</p>";
+
+        }
+        ?>
     </body>
 </html>
