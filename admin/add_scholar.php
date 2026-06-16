@@ -54,7 +54,7 @@ session_start();
                 <label for="disability">Disability (if applicable):</label><br>
                 <select name="disability" id="disability" required>
                     <option value="">Select Disability</option>
-                    <option value="None">None</option>
+                    <option value="Not applicable">Not Applicable</option>
                     <option value="Visual Impairment">Visual Impairment</option>
                     <option value="Hearing Impairment">Hearing Impairment</option>
                     <option value="Mobility Impairment">Mobility Impairment</option>
@@ -117,8 +117,8 @@ session_start();
                 <input type="text" name="mother_middle" placeholder="Middle Name" id="mother_name" required><br>
 
                 <button type="submit">Add Scholar</button>
-                <button onclick="window.location.href='scholar_list.php'">Cancel</button>
             </form>
+            <button onclick="window.location.href='scholar_list.php'">Cancel</button>
         </div>
         
         <?php } ?>

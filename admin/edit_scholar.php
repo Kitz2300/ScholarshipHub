@@ -165,7 +165,7 @@ if($row=mysqli_fetch_assoc($scholar_result)) {
                     echo "<option value='" . $row['id'] . "'" . ($program == $row['id'] ? 'selected' : '') . ">" . $row['name'] . "</option>";
                 }
                 ?>
-                <select><br>
+                </select><br>
 
                 <label for="academic_status">Academic Status:</label><br>
                 <select name="academic_status">
@@ -186,9 +186,10 @@ if($row=mysqli_fetch_assoc($scholar_result)) {
                 <input type="text" name="mother_first" placeholder="First Name" id="mother_name" value="<?= $mother_given ?>" required>
                 <input type="text" name="mother_middle" placeholder="Middle Name" id="mother_name" value="<?= $mother_middle ?>" required><br>
 
-                <button type="submit">Add Scholar</button>
-                <button onclick="window.location.href='scholar_list.php'">Cancel</button>
+                <input type="hidden" name="scholar_id" value="<?= $scholar_id ?>">
+                <button type="submit">Update Scholar</button>
             </form>
+            <button onclick="window.location.href='scholar_list.php'">Cancel</button>
         </div>
         
         <?php } ?>
