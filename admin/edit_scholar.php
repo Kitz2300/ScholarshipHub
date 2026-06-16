@@ -85,12 +85,12 @@ if($row=mysqli_fetch_assoc($scholar_result)) {
                 <input type="text" name="first_name" placeholder="First Name" id="first_name" value="<?= $given_name ?>" required>
                 <input type="text" name="middle_name" placeholder="Middle Name" id="middle_name" value="<?= $middle_name ?>" required>
                 <select name="ext_name" id="ext_name" required>
-                    <option value="" disabled selected>Extension Name</option>
-                    <option value="N/A">Not Applicable</option>
-                    <option value="Jr.">Jr.</option>
-                    <option value="Sr.">Sr.</option>
-                    <option value="II">II</option>
-                    <option value="III">III</option>
+                    <option value="" disabled>Extension Name</option>
+                    <option value="N/A" <?= ($ext_name == 'Not applicable') ? 'selected' : '' ?> >Not Applicable</option>
+                    <option value="Jr." <?= ($ext_name == 'Jr.') ? 'selected' : '' ?>>Jr.</option>
+                    <option value="Sr." <?= ($ext_name == 'Sr.') ? 'selected' : '' ?> >Sr.</option>
+                    <option value="II" <?= ($ext_name == 'II') ? 'selected' : '' ?> >II</option>
+                    <option value="III" <?= ($ext_name == 'III.') ? 'selected' : '' ?> >III</option>
                 </select><br>
 
                 <label for="email">Email:</label><br>
@@ -104,9 +104,9 @@ if($row=mysqli_fetch_assoc($scholar_result)) {
 
                 <label for="sex">Sex:</label><br>
                 <select name="sex" id="sex" required>
-                    <option value="">Select Sex</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
+                    <option value="" disabled>Select Sex</option>
+                    <option value="Male" <?= ($sex == 0) ? 'selected' : '' ?> >Male</option>
+                    <option value="Female" <?= ($sex == 1) ? 'selected' : '' ?> >Female</option>
                 </select><br>
 
                 <label for="birth_date">Birth Date:</label><br>
@@ -114,39 +114,40 @@ if($row=mysqli_fetch_assoc($scholar_result)) {
 
                 <label for="disability">Disability (if applicable):</label><br>
                 <select name="disability" id="disability" required>
-                    <option value="">Select Disability</option>
-                    <option value="None">None</option>
-                    <option value="Visual Impairment">Visual Impairment</option>
-                    <option value="Hearing Impairment">Hearing Impairment</option>
-                    <option value="Mobility Impairment">Mobility Impairment</option>
-                    <option value="Cognitive Impairment">Cognitive Impairment</option>
+                    <option value="" disabled>Select Disability</option>
+                    <option value="Not applicable" <?= ($disability == 'Not applicable') ? 'selected' : '' ?> >Not Applicable</option>
+                    <option value="Visual Impairment" <?= ($disability == 'Visual Impairment') ? 'selected' : '' ?> >Visual Impairment</option>
+                    <option value="Hearing Impairment" <?= ($disability == 'Hearing Impairment') ? 'selected' : '' ?> >Hearing Impairment</option>
+                    <option value="Mobility Impairment" <?= ($disability == 'Mobility Impairment') ? 'selected' : '' ?> >Mobility Impairment</option>
+                    <option value="Cognitive Impairment" <?= ($disability == 'Cognitive Impairment') ? 'selected' : '' ?> >Cognitive Impairment</option>
                     <!-- Add more disability options as needed -->
                 </select><br>
 
                 <label for="ip_goup">IP Group:</label><br>
                 <select name="ip_group" id="ip_group" required>
-                    <option value="">Select IP Group</option>
-                    <option value="Not applicable">Not applicable</option>
+                    <option value="" disabled>Select IP Group</option>
+                    <option value="Not applicable" <?= ($ip_group == 'Not applicable') ? 'selected' : '' ?> >Not applicable</option>
+                    <option value="Aeta" <?= ($ip_group == 'Aeta') ? 'selected' : '' ?> >Aeta</option>
                     <!-- Add IP group options here -->
                 </select><br>
 
                 <label for="addresss">Permanent Address:</label><br>
                 <select name="address" id="address" required>
-                    <option value="">Select Address</option>
-                    <option value="Example">Example</option>
+                    <option value="" disabled>Select Address</option>
+                    <option value="Example" <?= ($address == 0) ? 'selected' : '' ?>>Example</option>
                     <!-- add address options here -->
                 </select><br>
 
                 <label for="scholarship_program">Scholarship Program</label><br>
                 <select name="scholarship_program" id="scholarship_program" required>
-                    <option value="">Select Scholarship Program</option>
+                    <option value="" disabled>Select Scholarship Program</option>
                 <?php 
                 $scholarship_program_sql = "SELECT id, name, code FROM scholarship_program";
                 $stmt = $conn->prepare($scholarship_program_sql);
                 $stmt->execute();
                 $result = $stmt->get_result();
                 while($row = $result->fetch_assoc()) {
-                    echo "<option value='" . $row['id'] . "'>" . $row['name'] . " (" . $row['code'] . ")</option>";
+                    echo "<option value='" . $row['id'] . "'" . ($scholarship_program == $row['id'] ? 'selected' : '') . "> " . $row['name'] . " (" . $row['code'] . ")</option>";
                 }
                 
                 ?>
@@ -154,17 +155,25 @@ if($row=mysqli_fetch_assoc($scholar_result)) {
 
                 <label for="program">Program</label><br>
                 <select name="program" id="program" required>
-                    <option value="" disabled selected>Select Program</option>
+                    <option value="" disabled>Select Program</option>
                 <?php 
                 $program_sql = "SELECT id, name FROM program";
                 $stmt = $conn->prepare($program_sql);
                 $stmt->execute();
                 $result = $stmt->get_result();
                 while($row = $result->fetch_assoc()) {
-                    echo "<option value='" . $row['id'] . "'>" . $row['name'] . "</option>";
+                    echo "<option value='" . $row['id'] . "'" . ($program == $row['id'] ? 'selected' : '') . ">" . $row['name'] . "</option>";
                 }
                 ?>
                 <select><br>
+
+                <label for="academic_status">Academic Status:</label><br>
+                <select name="academic_status">
+                    <option value="Active" <?= ($academic_status == "Active") ? 'selected' : '' ?>>Active</option>
+                    <option value="Graduated" <?= ($academic_status == "Graduated") ? 'selected' : '' ?>>Graduated</option>
+                    <option value="Transferred" <?= ($academic_status == "Transferred") ? 'selected' : '' ?>>Transferred</option>
+                    <option value="Dropped" <?= ($academic_status == "Dropped") ? 'selected' : '' ?>>Dropped</option>
+                </select>
 
                 <h3>Family Background</h3>
                 <label for="father_name">Father's Name:</label><br>
