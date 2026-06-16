@@ -12,10 +12,12 @@ session_start();
         <!-- check if logged in or not -->
         <?php 
         if(!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') { ?>
-            <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>
+            <script>alert('You are not logged in')</script>
+            <script>window.location.href='login.php'</script>
             <!-- if logged in, load page -->
         <?php } else { ?>
         <h1>Scholar List</h1>
+        <a href="dashboard.php">Dashboard</a><br>
         <a href="add_scholar.php">Add New Scholar</a>
 
         <?php include __DIR__ . '/../includes/scholar_list.php'; ?>

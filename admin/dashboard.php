@@ -24,6 +24,7 @@ if(isset($_SESSION['username']) && $_SESSION['role'] === 'admin') {
         <title>Admin Dashboard</title>
     </head>
     <body>
+        <!-- check if logged in or not -->
         <?php 
         if(!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {?>
             <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>

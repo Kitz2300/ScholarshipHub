@@ -8,7 +8,8 @@ session_start();
         <title>Add Scholar</title>
     </head>
     <body>
-        <?php 
+        <!-- check if logged in or not -->
+        <?php
         if(!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') { ?>
             <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>
             <!-- if logged in, load page -->

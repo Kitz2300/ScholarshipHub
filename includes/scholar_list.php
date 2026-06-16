@@ -47,8 +47,8 @@ while($row = $result->fetch_assoc()) {
     <td>
         <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST">
             <input type="hidden" name="scholar_id" value="<?=$row['id']?>"/>
-            
-            <!-- <button>Edit</button> -->
+            <?php $_SESSION['scholar_id'] = $row['id']?>
+            <a href="edit_scholar.php">Edit</a>
             <button name="delete_scholar">Delete</button>
         </form>
     </td>
