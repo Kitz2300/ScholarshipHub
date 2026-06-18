@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once __DIR__ . '/../includes/conn.php';
 
 $required_fields = ['last_name', 'first_name', 'middle_name', 'ext_name', 'email', 'student_id', 'student_contact', 'sex', 'birth_date', 'disability', 'ip_group', 'address', 'scholarship_program', 'program', 'academic_status', 'father_last', 'father_first', 'father_middle', 'mother_last', 'mother_first', 'mother_middle'];
@@ -67,9 +68,36 @@ $scholar_sql = "UPDATE scholar_info SET
                 WHERE id = ?";
 
 $scholar_stmt = $conn->prepare($scholar_sql);
-$scholar_stmt->bind_param("sssssisiisssssssssssssi", $student_id, $last_name, $first_name, $ext_name, $middle_name, $sex, $birth_date, $scholarship_program_id, $program_id, $academic_status, $father_last_name, $father_first_name, $father_middle_name, $mother_last_name, $mother_first_name, $mother_middle_name, $address, $disability, $student_contact, $email, $ip_group, $id_num);
-$scholar_stmt->execute();
+$scholar_stmt->bind_param("sssssisiissssssssssssi", 
+                $student_id, 
+                $last_name, 
+                $first_name, 
+                $ext_name, 
+                $middle_name, 
+                $sex, 
+                $birth_date,
+                $scholarship_program_id, 
+                $program_id, 
+                $academic_status, 
+                $father_last_name, 
+                $father_first_name, 
+                $father_middle_name, 
+                $mother_last_name, 
+                $mother_first_name, 
+                $mother_middle_name, 
+                $address, 
+                $disability, 
+                $student_contact, 
+                $email, 
+                $ip_group, 
+                $id_num);
+if($scholar_stmt->execute()) {
+    // success
+    $_SESSION['edit_success'] = "Scholar Updated";
+} else {
+    // failure
+    $_SESSION['edit_fail'] = "Update Failded " . $scholar_stmt->error;
+}
 
-header("Location: ../admin/scholar_list.php?success=1");
-
+header("Location: ../admin/scholar_list.php?success=1"); 
 ?>
