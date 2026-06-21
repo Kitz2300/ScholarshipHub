@@ -14,16 +14,54 @@ if(isset($_POST['delete_scholar'])) {
     }
 }
 
+// Search and filter process
+$searched = "";
+if(isset($_GET['search'])) {
+    $searched = $_GET['search'];
+}
+
 // Fetch all scholars from the database
 // unfinished sql
-$scholar_sql = "SELECT scholar_info.id, student_id, last_name, given_name, middle_name, ext_name, scholarship_program.name AS scholarship_name, program.name AS program_name, academic_status FROM scholar_info INNER JOIN scholarship_program ON scholar_info.scholarship_program_id = scholarship_program.id INNER JOIN program ON scholar_info.program_id = program.id";
-$stmt = $conn->prepare($scholar_sql);
+$scholar_sql = "SELECT scholar_info.id, student_id, 
+                last_name, 
+                given_name, 
+                middle_name, 
+                ext_name, 
+                scholarship_program.name AS scholarship_name, 
+                program.name AS program_name, 
+                academic_status 
+                FROM scholar_info 
+                INNER JOIN scholarship_program ON scholar_info.scholarship_program_id = scholarship_program.id 
+                INNER JOIN program ON scholar_info.program_id = program.id";
+
+if(!empty($searched)) {
+    
+    $scholar_sql .= " WHERE scholar_info.given_name LIKE ?";
+    $stmt = $conn->prepare($scholar_sql);
+    $search_term = "%" . $searched . "%";
+    $stmt->bind_param("s", $search_term);
+} else {
+    $stmt = $conn->prepare($scholar_sql);
+
+}
 $stmt->execute();
 $result = $stmt->get_result();
+
+
 ?>
 
 <div class="scholars">
-    <h3>Existing Scholars</h3>
+    <form action="<?= $_SERVER['PHP_SELF'] ?>" method="GET">
+        <input type="text" name="search" placeholder="Search" />
+        <label id="filter">Filter By:</label>
+        <select name="filter">
+            <option value="" disabled selected>Select Filter</option>
+            <option value="Course">Course</option>
+            <option value="College">College</option>
+            <option value="Scholarship Program">Scholarship Program</option>
+        </select>
+        <button>Search</button>
+    </form>
     <table border="1">
         <tr>
             <th>Student ID</th>

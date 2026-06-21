@@ -29,6 +29,7 @@ if(isset($_SESSION['edit_success'])) {
         <a href="dashboard.php">Dashboard</a><br>
         <a href="add_scholar.php">Add New Scholar</a>
 
+        <h3>Existing Scholars</h3>
         <?php include __DIR__ . '/../includes/scholar_list.php'; ?>
         
         <?php } ?>  
