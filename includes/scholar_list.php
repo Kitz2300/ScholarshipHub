@@ -5,8 +5,9 @@ require_once __DIR__ . '/../includes/conn.php';
 if(isset($_POST['delete_scholar'])) {
     if(!empty($_POST['scholar_id'])) {
         $scholar_id = $_POST['scholar_id'];
-        $delete_sql = "DELETE FROM scholar_info WHERE id = $scholar_id";
+        $delete_sql = "DELETE FROM scholar_info WHERE id = ?";
         $delete_stmt = $conn->prepare($delete_sql);
+        $delete_stmt->bind_param("i", $scholar_id);
         $delete_stmt->execute();
 
         header("Location: " . $_SERVER['PHP_SELF']);
@@ -15,13 +16,62 @@ if(isset($_POST['delete_scholar'])) {
 }
 
 // Search and filter process
-$searched = "";
-if(isset($_GET['search'])) {
-    $searched = $_GET['search'];
+
+// get filter parameters
+$searched = isset($_GET['search']) ? trim($_GET['search']) : "";
+$course_filter = isset($_GET['course_filter']) ? (int)$_GET['course_filter'] : 0;
+$college_filter = isset($_GET['college_filter']) ? (int)$_GET['college_filter'] : 0;
+$scholarship_filter = isset($_GET['scholarship_filter']) ? (int)$_GET['scholarship_filter'] : 0;
+
+$where_condition = [];
+$params = [];
+$types = "";
+
+if(isset($_GET['search_btn'])) {
+    if(!empty($searched)) {
+        $where_condition[] = "(scholar_info.student_id LIKE ? OR scholar_info.given_name LIKE ? OR scholar_info.last_name LIKE ?)";
+        $like = "%$searched%";
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+        $types .= "sss";
+    }
 }
 
+if(isset($_GET['filter'])) {
+    if(!empty($searched)) {
+        $where_condition[] = "(scholar_info.student_id LIKE ? OR scholar_info.given_name LIKE ? OR scholar_info.last_name LIKE ?)";
+        $like = "%$searched%";
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+        $types .= "sss";
+    }
+    
+    if($course_filter > 0) {
+        $where_condition[] = "scholar_info.program_id = ?";
+        $params[] = $course_filter;
+        $types .= "i";
+    }
+    
+    if($college_filter > 0) {
+        $where_condition[] = "program.college_id = ?";
+        $params[] = $college_filter;
+        $types .= "i";
+    }
+    
+    if($scholarship_filter > 0) {
+        $where_condition[] = "scholar_info.scholarship_program_id = ?";
+        $params[] = $scholarship_filter;
+        $types .= "i";
+    }
+}
+
+$where_sql = !empty($where_condition) ? "WHERE " . implode(" AND ", $where_condition) : "";
+
+
 // Fetch all scholars from the database
-// unfinished sql
+// unfinished sql !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 $scholar_sql = "SELECT scholar_info.id, student_id, 
                 last_name, 
                 given_name, 
@@ -32,20 +82,23 @@ $scholar_sql = "SELECT scholar_info.id, student_id,
                 academic_status 
                 FROM scholar_info 
                 INNER JOIN scholarship_program ON scholar_info.scholarship_program_id = scholarship_program.id 
-                INNER JOIN program ON scholar_info.program_id = program.id";
+                INNER JOIN program ON scholar_info.program_id = program.id
+                INNER JOIN college ON program.college_id = college.id
+                $where_sql
+                ORDER BY scholar_info.id DESC
+                ";
 
-if(!empty($searched)) {
-    
-    $scholar_sql .= " WHERE scholar_info.given_name LIKE ?";
-    $stmt = $conn->prepare($scholar_sql);
-    $search_term = "%" . $searched . "%";
-    $stmt->bind_param("s", $search_term);
-} else {
-    $stmt = $conn->prepare($scholar_sql);
-
+// if user searches concat a sql command to search for the value, if not directly prapre the statement
+$stmt = $conn->prepare($scholar_sql);
+if(!empty($params)) {
+    $stmt->bind_param($types, ...$params);
 }
 $stmt->execute();
 $result = $stmt->get_result();
+
+
+
+
 
 // dropdown filters queries
 // get list of all coursess
@@ -65,24 +118,25 @@ $scholarship_sql = "SELECT id, name FROM scholarship_program";
 $scholarship_stmt = $conn->prepare($scholarship_sql);
 $scholarship_stmt->execute();
 $scholarship_result = $scholarship_stmt->get_result();
+
+
 ?>
 
 <div class="scholars">
+    <!-- search and filter form -->
     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="GET">
         <input type="text" name="search" placeholder="Search" value="<?= !empty($searched) ? $searched : "" ?>"/>
-        <button>Search</button>
-    </form>
+        <button name="search_btn">Search</button>
 
-    <div class="filter">
-        <!-- Filter Dropdowns -->
-        <form action="<?= $_SERVER['PHP_SELF'] ?>" method="GET">
-            <label id="filter">Filter By:</label>
+        <!-- filter Dropdowns -->
+        <label id="filter">Filter By:</label>
             <!-- Course Dropdown -->
             <select name="course_filter">
                 <option value="" disabled selected>Course</option>
                 <?php 
-                while($row=mysqli_fetch_assoc($course_result)) {?>
-                    <option value="<?= $row['id'] ?>"> <?= $row['name'] ?> </option>
+                while($row= $course_result->fetch_assoc()) {
+                    $selected = (isset($_GET['course_filter']) && $_GET['course_filter'] == $row['id']) ? 'selected' : ''; ?>
+                    <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= $row['name'] ?> </option>
                 <?php }
                 ?>
             </select>
@@ -91,8 +145,9 @@ $scholarship_result = $scholarship_stmt->get_result();
             <select name="college_filter">
                 <option value="" disabled selected>College</option>
                 <?php 
-                while($row=mysqli_fetch_assoc($college_result)) {?>
-                    <option value="<?= $row['id'] ?>"> <?= $row['college_name'] ?> </option>
+                while($row= $college_result->fetch_assoc()) {
+                    $selected = (isset($_GET['college_filter']) && $_GET['college_filter'] == $row['id']) ? 'selected' : ''; ?>
+                    <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= $row['college_name'] ?> </option>
                 <?php }
                 ?>
             </select>
@@ -101,16 +156,18 @@ $scholarship_result = $scholarship_stmt->get_result();
             <select name="scholarship_filter">
                 <option value="" disabled selected>Scholarship Program</option>
                 <?php 
-                while($row=mysqli_fetch_assoc($scholarship_result)) {?>
-                    <option value="<?= $row['id'] ?>"> <?= $row['name'] ?> </option>
+                while($row= $scholarship_result->fetch_assoc()) {
+                    $selected = (isset($_GET['scholarship_filter']) && $_GET['scholarship_filter'] == $row['id']) ? 'selected' : ''; ?>
+                    <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= $row['name'] ?> </option>
                 <?php }
                 ?>
             </select>
 
-            <button>Apply Filter</button>
-        </form>
-    </div>
+            <button name="filter">Apply Filter</button>
+            <a href="<?=  $_SERVER['PHP_SELF'] ?>">Clear</a>
+    </form>
 
+    <!-- table for scholar information -->
     <table border="1">
         <tr>
             <th>Student ID</th>
@@ -122,6 +179,7 @@ $scholarship_result = $scholarship_stmt->get_result();
         </tr>
 <?php 
 
+// if scholar info not empty display scholars
 if($result->num_rows > 0) {
 while($row = $result->fetch_assoc()) {
     $ext_name = $row['ext_name'] == 'N/A' ? "" : $row['ext_name'];
@@ -132,6 +190,7 @@ while($row = $result->fetch_assoc()) {
     echo "<td>" . $row['program_name'] . "</td>";
     echo "<td>" . $row['academic_status'] . "</td>";?>
     <td>
+        <!-- delete and edit buttons -->
         <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST">
             <input type="hidden" name="scholar_id" value="<?=$row['id']?>"/>
             <?php $_SESSION['scholar_id'] = $row['id']?>
@@ -140,9 +199,9 @@ while($row = $result->fetch_assoc()) {
         </form>
     </td>
     <?php echo "</tr>";
-}
-
-}else {
+}}
+// if scholar records empty display "no scholars found"
+else {
     echo "<tr><td colspan='6' >No scholars found.</td></tr>";
 }
 ?>
