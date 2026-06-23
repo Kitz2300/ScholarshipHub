@@ -27,6 +27,7 @@ $where_condition = [];
 $params = [];
 $types = "";
 
+// search function
 if(isset($_GET['search_btn'])) {
     if(!empty($searched)) {
         $where_condition[] = "(scholar_info.student_id LIKE ? OR scholar_info.given_name LIKE ? OR scholar_info.last_name LIKE ?)";
@@ -38,6 +39,7 @@ if(isset($_GET['search_btn'])) {
     }
 }
 
+// filter function
 if(isset($_GET['filter'])) {
     if(!empty($searched)) {
         $where_condition[] = "(scholar_info.student_id LIKE ? OR scholar_info.given_name LIKE ? OR scholar_info.last_name LIKE ?)";
@@ -67,6 +69,7 @@ if(isset($_GET['filter'])) {
     }
 }
 
+// if user searches or filters, concat WHERE conditions
 $where_sql = !empty($where_condition) ? "WHERE " . implode(" AND ", $where_condition) : "";
 
 
@@ -97,9 +100,6 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 
-
-
-
 // dropdown filters queries
 // get list of all coursess
 $course_sql = "SELECT id, name FROM program";
@@ -126,7 +126,7 @@ $scholarship_result = $scholarship_stmt->get_result();
     <!-- search and filter form -->
     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="GET">
         <input type="text" name="search" placeholder="Search" value="<?= !empty($searched) ? $searched : "" ?>"/>
-        <button name="search_btn">Search</button>
+        <button name="search_btn">Search</button><br>
 
         <!-- filter Dropdowns -->
         <label id="filter">Filter By:</label>
@@ -136,7 +136,7 @@ $scholarship_result = $scholarship_stmt->get_result();
                 <?php 
                 while($row= $course_result->fetch_assoc()) {
                     $selected = (isset($_GET['course_filter']) && $_GET['course_filter'] == $row['id']) ? 'selected' : ''; ?>
-                    <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= $row['name'] ?> </option>
+                    <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= htmlspecialchars($row['name']) ?> </option>
                 <?php }
                 ?>
             </select>
@@ -147,7 +147,7 @@ $scholarship_result = $scholarship_stmt->get_result();
                 <?php 
                 while($row= $college_result->fetch_assoc()) {
                     $selected = (isset($_GET['college_filter']) && $_GET['college_filter'] == $row['id']) ? 'selected' : ''; ?>
-                    <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= $row['college_name'] ?> </option>
+                    <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= htmlspecialchars($row['college_name']) ?> </option>
                 <?php }
                 ?>
             </select>
@@ -158,7 +158,7 @@ $scholarship_result = $scholarship_stmt->get_result();
                 <?php 
                 while($row= $scholarship_result->fetch_assoc()) {
                     $selected = (isset($_GET['scholarship_filter']) && $_GET['scholarship_filter'] == $row['id']) ? 'selected' : ''; ?>
-                    <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= $row['name'] ?> </option>
+                    <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= htmlspecialchars($row['name']) ?> </option>
                 <?php }
                 ?>
             </select>
@@ -184,11 +184,11 @@ if($result->num_rows > 0) {
 while($row = $result->fetch_assoc()) {
     $ext_name = $row['ext_name'] == 'N/A' ? "" : $row['ext_name'];
     echo "<tr>";
-    echo "<td>" . $row['student_id'] . "</td>";
-    echo "<td>" . $row['last_name'] . ", " . $row['given_name'] . " " . $row['middle_name'] . " " . $ext_name . "</td>";
-    echo "<td>" . $row['scholarship_name'] . "</td>";
-    echo "<td>" . $row['program_name'] . "</td>";
-    echo "<td>" . $row['academic_status'] . "</td>";?>
+    echo "<td>" . htmlspecialchars($row['student_id']) . "</td>";
+    echo "<td>" . htmlspecialchars($row['last_name']) . ", " . htmlspecialchars($row['given_name']) . " " . htmlspecialchars($row['middle_name']) . " " . htmlspecialchars($ext_name) . "</td>";
+    echo "<td>" . htmlspecialchars($row['scholarship_name']) . "</td>";
+    echo "<td>" . htmlspecialchars($row['program_name']) . "</td>";
+    echo "<td>" . htmlspecialchars($row['academic_status']) . "</td>";?>
     <td>
         <!-- delete and edit buttons -->
         <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST">
