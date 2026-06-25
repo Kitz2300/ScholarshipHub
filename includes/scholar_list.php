@@ -15,7 +15,14 @@ if(isset($_POST['delete_scholar'])) {
     }
 }
 
-// Search and filter process
+
+// Search, filter, and pagination process
+
+// pagination variables
+$records_per_page = 2;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if($page < 1) $page = 1;
+$offset = ($page - 1) * $records_per_page;
 
 // get filter parameters
 $searched = isset($_GET['search']) ? trim($_GET['search']) : "";
@@ -72,6 +79,25 @@ if(isset($_GET['filter'])) {
 // if user searches or filters, concat WHERE conditions
 $where_sql = !empty($where_condition) ? "WHERE " . implode(" AND ", $where_condition) : "";
 
+// count total scholars and get total pages
+$count_sql = "SELECT 
+              COUNT(*) AS total 
+              FROM scholar_info
+              INNER JOIN scholarship_program ON scholar_info.scholarship_program_id = scholarship_program.id 
+              INNER JOIN program ON scholar_info.program_id = program.id
+              INNER JOIN college ON program.college_id = college.id
+              $where_sql 
+              ";
+
+$count_stmt = $conn->prepare($count_sql);
+if (!empty($params)) $count_stmt->bind_param($types, ...$params);
+$count_stmt->execute();
+$total_records = $count_stmt->get_result()->fetch_assoc()['total'];
+$total_pages = ceil($total_records / $records_per_page);
+
+$params[] = $records_per_page;
+$params[] = $offset;
+$types .= "ii";
 
 // Fetch all scholars from the database
 // unfinished sql !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -89,7 +115,10 @@ $scholar_sql = "SELECT scholar_info.id, student_id,
                 INNER JOIN college ON program.college_id = college.id
                 $where_sql
                 ORDER BY scholar_info.id DESC
+                LIMIT ?
+                OFFSET ?
                 ";
+
 
 // if user searches concat a sql command to search for the value, if not directly prapre the statement
 $stmt = $conn->prepare($scholar_sql);
@@ -98,7 +127,6 @@ if(!empty($params)) {
 }
 $stmt->execute();
 $result = $stmt->get_result();
-
 
 // dropdown filters queries
 // get list of all coursess
@@ -119,7 +147,12 @@ $scholarship_stmt = $conn->prepare($scholarship_sql);
 $scholarship_stmt->execute();
 $scholarship_result = $scholarship_stmt->get_result();
 
-
+if($page > $total_pages && $total_pages > 0) {
+    header("Location: ?pages=" . $total_pages);
+    echo "it worked";
+    exit();
+}
+    
 ?>
 
 <div class="scholars">
@@ -167,6 +200,9 @@ $scholarship_result = $scholarship_stmt->get_result();
             <a href="<?=  $_SERVER['PHP_SELF'] ?>">Clear</a>
     </form>
 
+    <!-- show total records in curren page -->
+    <p>Showing <?= $offset + 1 ?> - <?= min($offset + $records_per_page, $total_records) ?> of <?= $total_records ?> users</p>
+
     <!-- table for scholar information -->
     <table border="1">
         <tr>
@@ -181,29 +217,53 @@ $scholarship_result = $scholarship_stmt->get_result();
 
 // if scholar info not empty display scholars
 if($result->num_rows > 0) {
-while($row = $result->fetch_assoc()) {
-    $ext_name = $row['ext_name'] == 'N/A' ? "" : $row['ext_name'];
-    echo "<tr>";
-    echo "<td>" . htmlspecialchars($row['student_id']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['last_name']) . ", " . htmlspecialchars($row['given_name']) . " " . htmlspecialchars($row['middle_name']) . " " . htmlspecialchars($ext_name) . "</td>";
-    echo "<td>" . htmlspecialchars($row['scholarship_name']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['program_name']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['academic_status']) . "</td>";?>
-    <td>
-        <!-- delete and edit buttons -->
-        <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST">
-            <input type="hidden" name="scholar_id" value="<?=$row['id']?>"/>
-            <?php $_SESSION['scholar_id'] = $row['id']?>
-            <a href="edit_scholar.php">Edit</a>
-            <button name="delete_scholar">Delete</button>
-        </form>
-    </td>
-    <?php echo "</tr>";
-}}
+    while($row = $result->fetch_assoc()) {
+        $ext_name = $row['ext_name'] == 'N/A' ? "" : $row['ext_name'];
+        echo "<tr>";
+        echo "<td>" . htmlspecialchars($row['student_id']) . "</td>";
+        echo "<td>" . htmlspecialchars($row['last_name']) . ", " . htmlspecialchars($row['given_name']) . " " . htmlspecialchars($row['middle_name']) . " " . htmlspecialchars($ext_name) . "</td>";
+        echo "<td>" . htmlspecialchars($row['scholarship_name']) . "</td>";
+        echo "<td>" . htmlspecialchars($row['program_name']) . "</td>";
+        echo "<td>" . htmlspecialchars($row['academic_status']) . "</td>";?>
+        <td>
+            <!-- delete and edit buttons -->
+            <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST">
+                <input type="hidden" name="scholar_id" value="<?=$row['id']?>"/>
+                <?php $_SESSION['scholar_id'] = $row['id']?>
+                <a href="edit_scholar.php">Edit</a>
+                <button name="delete_scholar">Delete</button>
+            </form>
+        </td>
+        <?php echo "</tr>";
+    }?>
+</table>
+<?php if($total_pages > 1): ?>
+    <div class="pagination">
+        <!-- previous page -->
+        <?php if ($page > 1): ?>
+            <a href="?page=<?= $page - 1 ?>">Previous</a>
+        <?php endif; ?>
+        
+        <!-- number of pages -->
+        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+            <?php if($i == $page): ?>
+                <strong><?= $i ?></strong>
+            <?php else: ?>
+                <a href="?page=<?= $i ?>"><?= $i ?></a>
+            <?php endif; ?>
+        <?php endfor; ?>
+
+        <!-- next page -->
+        <?php if($page < $total_pages): ?>
+            <a href="?page=<?= $page + 1?>">Next</a>
+        <?php endif; ?>
+    </div>
+<?php endif; 
+}
 // if scholar records empty display "no scholars found"
 else {
-    echo "<tr><td colspan='6' >No scholars found.</td></tr>";
-}
-?>
+    echo "<tr><td colspan='6' >No scholars found.</td></tr>";?>
     </table>
+<?php } ?>
+
 </div>
