@@ -2,7 +2,7 @@
 include __DIR__ . '/../includes/conn.php';
 session_start();
 
-$scholar_id = $_SESSION['scholar_id'];
+$scholar_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $scholar_sql = "SELECT * FROM scholar_info WHERE id = $scholar_id";
 $scholar_stmt = $conn->prepare($scholar_sql);
 $scholar_stmt->execute();
@@ -60,7 +60,7 @@ if($row=mysqli_fetch_assoc($scholar_result)) {
     $mother_middle = $row['mother_middle_name'];
 } else {
     echo "<script>alert('scholar not available')</script>";
-    // echo "<script>window.location.href='scholar_list.php'</script>";
+    echo "<script>window.location.href='scholar_list.php'</script>";
 }
 ?>
 

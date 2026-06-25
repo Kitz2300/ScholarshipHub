@@ -229,8 +229,7 @@ if($result->num_rows > 0) {
             <!-- delete and edit buttons -->
             <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST">
                 <input type="hidden" name="scholar_id" value="<?=$row['id']?>"/>
-                <?php $_SESSION['scholar_id'] = $row['id']?>
-                <a href="edit_scholar.php">Edit</a>
+                <a href="scholar_profile.php?id=<?= $row['id'] ?>">View</a>
                 <button name="delete_scholar">Delete</button>
             </form>
         </td>
