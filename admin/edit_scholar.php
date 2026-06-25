@@ -189,7 +189,7 @@ if($row=mysqli_fetch_assoc($scholar_result)) {
                 <input type="hidden" name="scholar_id" value="<?= $scholar_id ?>">
                 <button type="submit">Update Scholar</button>
             </form>
-            <button onclick="window.location.href='scholar_list.php'">Cancel</button>
+            <button onclick="window.location.href='scholar_profile.php?id=<?= $scholar_id ?>'">Cancel</button>
         </div>
         
         <?php } ?>

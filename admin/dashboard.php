@@ -54,7 +54,7 @@ $scholarship_stmt = $conn->prepare($scholarship_sql);
         $scholarship_stmt->execute();
         $scholarship_result = $scholarship_stmt->get_result();
         
-        while($row=mysqli_fetch_assoc($scholarship_result)) {
+        while($row=$scholarship_result->fetch_assoc()) {
             // $scholarship_name = $row['program_name'];    will be used later
             // store values in variables
             $scholarship_code = $row['program_code'];

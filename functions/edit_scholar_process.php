@@ -99,5 +99,5 @@ if($scholar_stmt->execute()) {
     $_SESSION['edit_fail'] = "Update Failded " . $scholar_stmt->error;
 }
 
-header("Location: ../admin/scholar_list.php?success=1"); 
+header("Location: ../admin/scholar_profile.php?id=$id_num"); 
 ?>

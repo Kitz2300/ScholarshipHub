@@ -2,6 +2,14 @@
 include __DIR__ . '/../includes/conn.php';
 session_start();
 
+if(isset($_SESSION['edit_success'])) {
+    echo "<script>alert('" . $_SESSION['edit_success'] . "')</script>";
+    unset($_SESSION['edit_success']);
+} else if(isset($_SESSION['edit_fail'])) {
+    echo "<script>alert('" . $_SESSION['edit_fail'] . "')</script>";
+    unset($_SESSION['edit_fail']);
+}
+
 $scholar_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $scholar_sql = "SELECT *, 
                 scholarship_program.name AS scholarship_program_name,  
@@ -92,6 +100,7 @@ if($row=$scholar_result->fetch_assoc()) {
         <?php } else { ?>
         <h1>Scholar Profile</h1>
         <a href="scholar_list.php">Back</a><br>
+        <a href="edit_scholar.php?id=<?= $scholar_id ?>">Edit</a><br>
 
         <!-- personal information -->
         <h3>Personal Information</h3>
