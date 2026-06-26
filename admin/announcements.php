@@ -2,6 +2,14 @@
 include __DIR__ . "/../includes/conn.php";
 session_start();
 
+if(isset($_SESSION['edit_success'])) {
+    echo "<script>alert('" . $_SESSION['edit_success'] . "')</script>";
+    unset($_SESSION['edit_success']);
+} else if(isset($_SESSION['edit_fail'])) {
+    echo "<script>alert('" . $_SESSION['edit_fail'] . "')</script>";
+    unset($_SESSION['edit_fail']);
+}
+
 $announcement_sql = "SELECT
                         announcements.id AS announcement_id,
                         title, 

@@ -1,6 +1,7 @@
 <?php 
 include __DIR__ . "/../includes/conn.php";
 session_start();
+
 $announcement_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 $announcement_sql = "SELECT * FROM announcements WHERE id=?";
@@ -52,7 +53,7 @@ if($row=$result->fetch_assoc()) {
                 <option value="0" <?= $status == 0 ? "selected" : "" ?>>Not Active</option>
             </select><br><br>
 
-            <input type="hidden" name="announement_id" value="<?= htmlspecialchars($announcement_id) ?>"/>
+            <input type="hidden" name="announcement_id" value="<?= htmlspecialchars($announcement_id) ?>"/>
 
             <button>Update Announcement</button>
             <button type="button" onclick="window.location.href='announcements.php'">Cancel</button>

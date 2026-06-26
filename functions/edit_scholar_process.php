@@ -100,4 +100,5 @@ if($scholar_stmt->execute()) {
 }
 
 header("Location: ../admin/scholar_profile.php?id=$id_num"); 
+exit();
 ?>

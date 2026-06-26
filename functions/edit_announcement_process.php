@@ -13,10 +13,12 @@ if(isset($_POST['title'], $_POST['content'], $_POST['status'], $_POST['announcem
     $update_stmt->bind_param("ssii", $title, $content, $status, $announcement_id);
 
     if($update_stmt->execute()) {
-
+        $_SESSION['edit_success'] = "Announcement Updated";
+    } else {
+        $_SESSION['edit_fail'] = "Update Failed " . $update_stmt->error;
     }
 
 } 
-header("Location: ../announcements.php");
+header("Location: ../admin/announcements.php");
 exit();
 ?>
