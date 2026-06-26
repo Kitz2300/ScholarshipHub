@@ -25,10 +25,10 @@ $scholarship_sql = "SELECT
                         COUNT(scholar_info.id) AS scholar_count
                     FROM 
                         scholarship_program
-                    INNER JOIN
-                        scholar_info ON scholar_info.scholarship_program_id = scholarship_program_id
+                    LEFT JOIN
+                        scholar_info ON scholar_info.scholarship_program_id = scholarship_program.id
                     GROUP BY
-                        scholarship_program.id, scholarship_program.name    
+                        scholarship_program.id, scholarship_program.name  
                     ";
 $scholarship_stmt = $conn->prepare($scholarship_sql);
 
@@ -42,12 +42,13 @@ $scholarship_stmt = $conn->prepare($scholarship_sql);
     <body>
         <!-- check if logged in or not -->
         <?php 
-        if(!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {?>
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {?>
             <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>
         <?php } else { ?>
         <h2>Admin Dashboard</h2>
         <p>Welcome, Admin!</p>
         <a href="scholar_list.php">Scholar List</a><br>
+        <a href="announcements.php">Announcements</a><br>
 
         <?php 
         // get scholarship program names and count scholars
@@ -56,6 +57,7 @@ $scholarship_stmt = $conn->prepare($scholarship_sql);
         
         while($row=$scholarship_result->fetch_assoc()) {
             // $scholarship_name = $row['program_name'];    will be used later
+            
             // store values in variables
             $scholarship_code = $row['program_code'];
             $count = $row['scholar_count'];

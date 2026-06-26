@@ -16,9 +16,9 @@ if(isset($_POST['username']) && isset($_POST['password'])) {
 
 
      // if a matching admin is found, store username and role in session variables and redirect to admin dashboard
-    if($result->num_rows > 0) {
+    if($row=$result->fetch_assoc()) {
         // Login successful
-        $_SESSION['username'] = $username;
+        $_SESSION['user_id'] = $row['id'];
         $_SESSION['role'] = 'admin';
         header("Location: ../admin/dashboard.php");
         exit();

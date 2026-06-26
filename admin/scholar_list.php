@@ -12,7 +12,7 @@ session_start();
     <body>
         <!-- check if logged in or not -->
         <?php 
-        if(!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') { ?>
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') { ?>
             <script>alert('You are not logged in')</script>
             <script>window.location.href='login.php'</script>
             <!-- if logged in, load page -->

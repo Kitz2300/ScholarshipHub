@@ -71,7 +71,7 @@ if($row=mysqli_fetch_assoc($scholar_result)) {
     <body>
         <!-- check if logged in or not -->
         <?php
-        if(!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') { ?>
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') { ?>
             <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>
             <!-- if logged in, load page -->
         <?php } else { ?>

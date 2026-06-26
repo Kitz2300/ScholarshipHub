@@ -93,11 +93,12 @@ if($row=$scholar_result->fetch_assoc()) {
     <body>
          <!-- check if logged in or not -->
         <?php 
-        if(!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') { ?>
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') { ?>
+            <!-- if not logged in, redirect user to login page -->
             <script>alert('You are not logged in')</script>
             <script>window.location.href='login.php'</script>
-            <!-- if logged in, load page -->
         <?php } else { ?>
+        <!-- if logged in, load page -->
         <h1>Scholar Profile</h1>
         <a href="scholar_list.php">Back</a><br>
         <a href="edit_scholar.php?id=<?= $scholar_id ?>">Edit</a><br>

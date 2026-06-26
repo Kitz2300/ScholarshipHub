@@ -158,7 +158,7 @@ if($page > $total_pages && $total_pages > 0) {
 <div class="scholars">
     <!-- search and filter form -->
     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="GET">
-        <input type="text" name="search" placeholder="Search" value="<?= !empty($searched) ? $searched : "" ?>"/>
+        <input type="search" name="search" placeholder="Search" value="<?= !empty($searched) ? $searched : "" ?>"/>
         <button name="search_btn">Search</button><br>
 
         <!-- filter Dropdowns -->
