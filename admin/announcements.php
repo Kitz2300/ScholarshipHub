@@ -2,12 +2,12 @@
 include __DIR__ . "/../includes/conn.php";
 session_start();
 
-if(isset($_SESSION['edit_success'])) {
-    echo "<script>alert('" . $_SESSION['edit_success'] . "')</script>";
-    unset($_SESSION['edit_success']);
-} else if(isset($_SESSION['edit_fail'])) {
-    echo "<script>alert('" . $_SESSION['edit_fail'] . "')</script>";
-    unset($_SESSION['edit_fail']);
+if(isset($_SESSION['success'])) {
+    echo "<script>alert('" . $_SESSION['success'] . "')</script>";
+    unset($_SESSION['success']);
+} else if(isset($_SESSION['fail'])) {
+    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+    unset($_SESSION['fail']);
 }
 
 $announcement_sql = "SELECT
@@ -32,6 +32,26 @@ $announcement_sql = "SELECT
 $announcement_stmt = $conn->prepare($announcement_sql);
 $announcement_stmt->execute();
 $announcement_result = $announcement_stmt->get_result();
+
+if(isset($_POST['delete'])) {
+    if(isset($_POST['announcement_id'])) {
+        $announcement_id = (int) $_POST['announcement_id'];
+        $delete_sql = "DELETE FROM announcements WHERE id = ?";
+        $delete_stmt = $conn->prepare($delete_sql);
+        $delete_stmt->bind_param("i", $announcement_id);
+        
+        if($delete_stmt->execute()) {
+            $_SESSION['success'] = "Announcement has been deleted";
+        } else {
+            $_SESSION['fail'] = "Failed to delete announcement";
+        }
+
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+        
+    }
+}
+
 ?>
 
 <html>
@@ -66,6 +86,11 @@ $announcement_result = $announcement_stmt->get_result();
             <p>Created By: <?= htmlspecialchars($created_by) ?> - <?= htmlspecialchars($role) ?></p>
             <a href="edit_announcement.php?id=<?= $row['announcement_id'] ?>">Edit Announcement</a>
 
+            <!-- delete button -->
+            <form action="<?= $_SERVER['PHP_SELF'] ?>" method="post">
+                <input type="hidden" name="announcement_id" value="<?= $row['announcement_id'] ?>"/>
+                <button name="delete" onclick="return confirm('Delete this announcement?')">Delete Announcement</button>
+            </form>
         <?php }
         
         } ?>
