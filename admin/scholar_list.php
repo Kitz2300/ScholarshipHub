@@ -19,9 +19,11 @@ session_start();
         <?php } else { ?>
         <h1>Scholar List</h1>
         <a href="dashboard.php">Dashboard</a><br>
-        <a href="add_scholar.php">Add New Scholar</a>
+        <a href="add_scholar.php">Add New Scholar</a><br>
+        <a href="upload_excel.php">Upload Excel File</a>
 
         <h3>Existing Scholars</h3>
+        <!-- existing scholar list -->
         <?php include __DIR__ . '/../includes/scholar_list.php'; } ?>  
     </body>
 </html>

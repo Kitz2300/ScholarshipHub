@@ -12,7 +12,13 @@ if(!empty($user_id) && isset($_POST['title']) && isset($_POST['content']) && iss
     $add_stmt = $conn->prepare($add_sql);
     $add_stmt->bind_param("ssii", $title, $content, $status, $user_id);
     $add_stmt->execute();
-    
+
+    $audit_sql = "INSERT INTO audit_trail(user_id, action) VALUES(?, ?)";
+    $audit_stmt = $conn->prepare($audit_sql);
+    $action = "Added a new announcement: " . $title;
+    $audit_stmt->bind_param("is", $user_id, $action);
+    $audit_stmt->execute();
+
     header("Location: ../admin/announcements.php?success");
     exit();
 } else {

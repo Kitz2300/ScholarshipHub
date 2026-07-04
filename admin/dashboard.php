@@ -87,7 +87,7 @@ $status_result = $status_stmt->get_result();
 
         <!-- logout button -->
         <form action="../functions/logout.php" method="post">
-            <button type="submit">Logout</button>
+            <button onclick="return confirm('Logout?')" type="submit">Logout</button>
         </form>
         <?php } ?>
     </body>

@@ -11,7 +11,7 @@ if(isset($_SESSION['edit_success'])) {
 }
 
 $scholar_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$scholar_sql = "SELECT *, 
+$scholar_sql = "SELECT scholar_info.*, 
                 scholarship_program.name AS scholarship_program_name,  
                 program.name AS program_name,
                 college_name
@@ -93,7 +93,7 @@ if($row=$scholar_result->fetch_assoc()) {
     <body>
          <!-- check if logged in or not -->
         <?php 
-        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') { ?>
+        if(!isset($_SESSION['user_id']) && $_SESSION['role'] !== 'admin') { ?>
             <!-- if not logged in, redirect user to login page -->
             <script>alert('You are not logged in')</script>
             <script>window.location.href='login.php'</script>
