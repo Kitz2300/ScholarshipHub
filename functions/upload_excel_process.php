@@ -23,26 +23,54 @@ function validateStudentId($id, $conn) {
     $result = $stmt->get_result();
     if ($result->num_rows > 0) {
         $errors[] = "Student ID '$id' already exists in the database.";
-        return $errors;
     }
+    return $errors;
     
 }
 
 function validateName($fieldName, $value) {
     $errors = [];
-    
+
     // Check if empty
     if (empty($value)) {
         $errors[] = "$fieldName is required.";
         return $errors;
     }
+
     
     // Check if contains only letters, spaces, hyphens, apostrophes, periods
     if (!preg_match('/^[A-Za-z\s\-\.\']+$/', $value)) {
         $errors[] = "$fieldName contains invalid characters. Use only letters, spaces, or hyphens.";
+    }
+    return $errors;
+    
+}
+
+function validateExtName($value) {
+    $errors = [];
+
+    if(empty($value)) {
+            return $errors;
+    }
+
+    if(!preg_match('/^[A-Za-z\s\.]+$/', $value)) {
+        $errors[] = "Extension Name contains invalid characters. Use only letters, spaces, or periods.";
+    }
+    return $errors;
+}
+
+function validateParentName($fieldName, $value) {
+    $errors = [];
+
+    if(empty($value)) {
         return $errors;
     }
-    
+
+    if(!preg_match('/^[A-Za-z\s\-\.\']+$/', $value)) {
+        $errors[] = "$fieldName contains invalid characters. Use only letters, spaces, or hyphens.";
+    }
+
+    return $errors;
 }
 
 function validateSex($value) {
@@ -58,8 +86,8 @@ function validateSex($value) {
     
     if (!in_array($value, [0, 1])) {
         $errors[] = "Sex must be 0 (Male) or 1 (Female).";
-        return $errors;
     }
+    return $errors;
     
 }
 
@@ -81,23 +109,32 @@ function validateBirthdate($value) {
     // Check if date is in the future
     if ($date->getTimestamp() > time()) {
         $errors[] = "Birthdate cannot be in the future.";
-        return $errors;
     }
+    return $errors;
     
 }
 
 function validateProgram($value, $conn) {
     $errors = [];
+   
+    // check if empty
+    if($value == "" || $value == null) {
+        $errors[] = "Program is required";
+        return $errors;
+    }
 
-    $sql = "SELECT id FROM program WHERE name = ?";
+    // check if program exists in the db
+    $sql = "SELECT name FROM program WHERE name = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $value);
     $stmt->execute();
     $result = $stmt->get_result();
-    if($row=$result->fetch_assoc()) {
-        $
+
+    if($result->num_rows == 0) {
+        $errors[] = "The program '$value' does not exist in this school";
     }
 
+    return $errors;
 }
 
 function validateYearLevel($value) {
@@ -110,44 +147,87 @@ function validateYearLevel($value) {
     
     if (!is_numeric($value) || $value < 1 || $value > 6) {
         $errors[] = "Year Level must be a number between 1 and 6.";
-        return $errors;
     }
+    return $errors;
     
 }
 
 function validateStreetBarangay($value) {
     $errors = [];
 
-    if ($value === '' || $value === null) {
-        $errors[] = "Street & Barangay is required";
+    if(empty($value)) {
         return $errors;
     }
 
     if (!preg_match('/^[A-Za-z\s\.\']+$/', $value)) {
-        $errors[] = "Street & Barangay contains invalid characters. Use only letters, spaces, .";
+        $errors[] = "Street & Barangay contains invalid characters. Use only letters, spaces, ., '";
+    }
+    return $errors; 
+}
+
+function validateZipcode($value) {
+    $errors = [];
+
+    if(empty($value)) {
         return $errors;
     }
 
+    if(!ctype_digit($value)) {
+        $errors[] = "Zipcode must contain only digits.";
+    }
+    return $errors;
+}
 
+function validateDisability($value) {
+    $errors = [];
+
+    if(empty($value)) {
+        return $errors;
+    }
+
+    if(!preg_match('/^[A-Za-z0-9\s\-\.\,\(\)\/]+$/', $value)) {
+        $errors[] = "Disability contains invalid characters. Use only letters, spaces, commas, periods, parentheses, or hyphens.";
+    }
+
+    return $errors;
 }
 
 function validateEmail($value) {
     $errors = [];
+
+    if(empty($value)) {
+        return $errors;
+    }
     
     if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "Email format is invalid.";
-    }
-    
+    }   
     return $errors;
-}
+}  
 
 function validateContactNumber($value) {
     $errors = [];
     
+    if(empty($value)) {
+        return $errors;
+    }
+
     if (!ctype_digit($value)) {
         $errors[] = "Contact Number must contain only digits.";
+        return $errors;
     }
-    
+}
+
+function validateIPgroup($value) {
+    $errors = [];
+
+    if(empty($value)) {
+        return $errors;
+    }
+
+    if(!preg_match('/^[A-Za-z0-9\s\-\.\,\(\)\/]+$/', $value)) {
+        $errors[] = "IP Group contains invalid characters. Use only letters, spaces, commas, periods, parentheses, or hyphens.";
+    }
     return $errors;
 }
 
@@ -182,21 +262,24 @@ function validateFullRow($rowData, $conn) {
     $allErrors['student_id'] = validateStudentId($student_id, $conn);
     $allErrors['last_name'] = validateName('Last Name', $last_name);
     $allErrors['given_name'] = validateName('Given Name', $given_name);
-    $allErrors['ext_name'] = validateName('Ext. Name', $ext_name);
+    $allErrors['ext_name'] = validateExtName($ext_name);
     $allErrors['middle_name'] = validateName('Middle Name', $middle_name);
-    $allErrors['father_last_name'] = validateName('Last Name', $father_last_name);
-    $allErrors['father_ext_name'] = validateName('Given Name', $father_given_name);
-    $allErrors['father_middle_name'] = validateName('Middle Name', $father_middle_name);
-    $allErrors['mother_last_name'] = validateName('Last Name', $mother_last_name);
-    $allErrors['mother_given_name'] = validateName('Given Name', $mother_given_name);
-    $allErrors['mother_middle_name'] = validateName('Middle Name', $mother_middle_name);
+    $allErrors['father_last_name'] = validateParentName('Father Last Name', $father_last_name);
+    $allErrors['father_given_name'] = validateParentName('Father Given Name', $father_given_name);
+    $allErrors['father_middle_name'] = validateParentName('Father Middle Name', $father_middle_name);
+    $allErrors['mother_last_name'] = validateParentName('Mother Last Name', $mother_last_name);
+    $allErrors['mother_given_name'] = validateParentName('Mother Given Name', $mother_given_name);
+    $allErrors['mother_middle_name'] = validateParentName('Mother Middle Name', $mother_middle_name);
     $allErrors['sex'] = validateSex($sex);
     $allErrors['birthdate'] = validateBirthdate($birthdate);
-    $allErrors['program'] = validateProgram($program);
+    $allErrors['program'] = validateProgram($program, $conn);
     $allErrors['year_level'] = validateYearLevel($year_lvl);
     $allErrors['street_barangay'] = validateStreetBarangay($street_barangay);
+    $allErrors['zipcode'] = validateZipcode($zipcode);
+    $allErrors['disability'] = validateDisability($disability);
     $allErrors['email'] = validateEmail($email);
     $allErrors['contact_num'] = validateContactNumber($contact_num);
+    $allErrors['ip_group'] = validateIPgroup($ip_group);
     
     // Remove fields that have no errors (keep only fields with errors)
     $allErrors = array_filter($allErrors, function($fieldErrors) {
