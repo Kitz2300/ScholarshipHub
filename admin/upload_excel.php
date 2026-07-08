@@ -96,7 +96,20 @@ if(isset($_FILES['excel_file']) && $_POST['headers']) {
             <label for="upload">Import Excel File:</label><br>
             <input type="file" name="excel_file" accept=".xls, .xlsx" id="upload" required/><br><br>
             <label for="headers">How many rows as headers:</label>
-            <input type="numbers" name="headers" required/><br><br>
+            <input type="numbers" name="headers" id="headers" required/><br><br>
+            <label for="scholarship">Scholarship Program</label>
+            <select name="scholarship_program">
+                <?php 
+                $sql = "SELECT id, name FROM scholarship_program";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute();
+                $results = $stmt->get_result();
+                
+                while($row=$results->fetch_assoc()): ?>
+                    <option value="<?= $row['id'] ?>" > <?= $row['name'] ?></option>
+                <?php endwhile; ?>
+                ?>
+            </select>
             <button name="open">Import</button>
         </form>
 
@@ -110,6 +123,11 @@ if(isset($_FILES['excel_file']) && $_POST['headers']) {
             <h3>Import Summary:</h3>
             <p>Valid rows: <?= count($valid_rows) ?></p>
             <p>Rows with errors: <?= count($errors_by_row) ?></p>
+
+            <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST">
+                <button name="cancel">Cancel</button>
+                <button name="confirm">Proceed</button>
+            </form>
         <?php else: ?>
             <h3>Import Summary</h3>
             <p>Excel file is empty.</p>
