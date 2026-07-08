@@ -1,6 +1,6 @@
 <?php 
 include __DIR__ . '/../includes/conn.php';
-include __DIR__ . '/../upload_excel_process.php';
+include __DIR__ . '/../functions/upload_excel_process.php';
 session_start();
 
 require '../lib/vendor/autoload.php';
@@ -10,11 +10,11 @@ use PhpOffice\PhpSpreadsheet\Reader\Exception as ReaderException;
 
 // declare variables for displaying data
 $rows = [];
-$skip_rows = 0;
 
 // check if file is uploadeds
-if(isset($_FILES['excel_file'])) {
+if(isset($_FILES['excel_file']) && $_POST['headers']) {
     $excel_file = $_FILES['excel_file'];
+    $skip_rows = (int) $_POST['headers'];
     $file_name = $excel_file['name'];
 
 
@@ -53,6 +53,25 @@ if(isset($_FILES['excel_file'])) {
     $rows = $worksheet->toArray();
     $rows = array_slice($rows, $skip_rows);
 
+    $errors_by_row = [];
+    $valid_rows = [];
+
+    foreach($rows as $row => $rowData) {
+        if(empty(array_filter($rowData))) {
+            continue;
+        }
+
+        $rowErrors = validateFullRow($rowData, $conn);
+
+        if(empty($rowErros)) {
+            $valid_rows[] = $rowData;
+        } else {
+            $errors_by_row[] = [
+                'row_number' => $row + 1,
+                'row_error' => $rowErrors
+            ];
+        }
+    }
     
 }
 
@@ -75,7 +94,9 @@ if(isset($_FILES['excel_file'])) {
         
         <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" enctype="multipart/form-data">
             <label for="upload">Import Excel File:</label><br>
-            <input type="file" name="excel_file" accept=".xls, .xlsx" required/><br><br>
+            <input type="file" name="excel_file" accept=".xls, .xlsx" id="upload" required/><br><br>
+            <label for="headers">How many rows as headers:</label>
+            <input type="numbers" name="headers" required/><br><br>
             <button name="open">Import</button>
         </form>
 
@@ -84,6 +105,15 @@ if(isset($_FILES['excel_file'])) {
             <li>Use the template provided by the scholarship office</li>
             <li>Required Columns: ???</li>
         </ul>
+
+        <?php if(!empty($errors_by_row) || !empty($valid_rows)): ?>
+            <h3>Import Summary:</h3>
+            <p>Valid rows: <?= count($valid_rows) ?></p>
+            <p>Rows with errors: <?= count($errors_by_row) ?></p>
+        <?php else: ?>
+            <h3>Import Summary</h3>
+            <p>Excel file is empty.</p>
+        <?php endif; ?>
         <?php } ?> 
     </body>
 </html>
