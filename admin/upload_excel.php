@@ -1,6 +1,6 @@
 <?php 
 include __DIR__ . '/../includes/conn.php';
-include __DIR__ . '/../functions/upload_excel_process.php';
+include __DIR__ . '/../functions/upload_validation.php';
 session_start();
 
 require '../lib/vendor/autoload.php';
@@ -8,15 +8,25 @@ require '../lib/vendor/autoload.php';
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Exception as ReaderException;
 
-// declare variables for displaying data
+// declare variables for the data, invalid rows and valid rows
 $rows = [];
+$errors_by_row = [];
+$valid_rows = [];
+$import_processed = false;
+$scholarship_program_id = 0;
 
 // check if file is uploadeds
 if(isset($_FILES['excel_file']) && $_POST['headers']) {
     $excel_file = $_FILES['excel_file'];
     $skip_rows = (int) $_POST['headers'];
     $file_name = $excel_file['name'];
+    $scholarship_program_id = (int) $_POST['scholarship_program'];
 
+
+    // check if a scholarship program has been selected
+    if (empty($scholarship_program_id)) {
+        die('A Scholarship program has not been selected');
+    }
 
     // check for upload errors
     if ($excel_file['error'] !== UPLOAD_ERR_OK) {
@@ -53,17 +63,19 @@ if(isset($_FILES['excel_file']) && $_POST['headers']) {
     $rows = $worksheet->toArray();
     $rows = array_slice($rows, $skip_rows);
 
-    $errors_by_row = [];
-    $valid_rows = [];
 
     foreach($rows as $row => $rowData) {
+
+        // skip row if whole row is empty
         if(empty(array_filter($rowData))) {
             continue;
         }
 
+        // validate each row
         $rowErrors = validateFullRow($rowData, $conn);
 
-        if(empty($rowErros)) {
+        // append valid rows to valid_rows array if there are no errors, otherwise append row error to errors_by_row array
+        if(empty($rowErrors)) {
             $valid_rows[] = $rowData;
         } else {
             $errors_by_row[] = [
@@ -72,12 +84,12 @@ if(isset($_FILES['excel_file']) && $_POST['headers']) {
             ];
         }
     }
-    
+    // set true if process is successful
+    $import_processed = true;  
 }
 
 ?>
 
-<html>
     <head>
         <title>Excel File Upload</title>
     </head>
@@ -92,13 +104,17 @@ if(isset($_FILES['excel_file']) && $_POST['headers']) {
         <h1>Upload Excel File</h1>
         <a href="scholar_list.php">Back</a>
         
+        <!-- form for uploading excel file -->
         <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" enctype="multipart/form-data">
             <label for="upload">Import Excel File:</label><br>
             <input type="file" name="excel_file" accept=".xls, .xlsx" id="upload" required/><br><br>
             <label for="headers">How many rows as headers:</label>
             <input type="numbers" name="headers" id="headers" required/><br><br>
-            <label for="scholarship">Scholarship Program</label>
-            <select name="scholarship_program">
+
+            <!-- select which scholarship program does the uploaded scholar record belong -->
+            <label for="scholarship">Scholarship Program:</label>
+            <select name="scholarship_program" required>
+                <option value="" disabled selected>Select Scholarship Program</option>
                 <?php 
                 $sql = "SELECT id, name FROM scholarship_program";
                 $stmt = $conn->prepare($sql);
@@ -109,29 +125,38 @@ if(isset($_FILES['excel_file']) && $_POST['headers']) {
                     <option value="<?= $row['id'] ?>" > <?= $row['name'] ?></option>
                 <?php endwhile; ?>
                 ?>
-            </select>
-            <button name="open">Import</button>
+            </select><br><br>
+            <button>Import</button>
         </form>
 
+        <!-- instructions for file requirement -->
         <label for="instructions">Instructions:</label>
         <ul>
             <li>Use the template provided by the scholarship office</li>
             <li>Required Columns: ???</li>
         </ul>
 
-        <?php if(!empty($errors_by_row) || !empty($valid_rows)): ?>
-            <h3>Import Summary:</h3>
-            <p>Valid rows: <?= count($valid_rows) ?></p>
-            <p>Rows with errors: <?= count($errors_by_row) ?></p>
-
-            <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST">
-                <button name="cancel">Cancel</button>
-                <button name="confirm">Proceed</button>
-            </form>
-        <?php else: ?>
-            <h3>Import Summary</h3>
-            <p>Excel file is empty.</p>
-        <?php endif; ?>
+        <?php if($import_processed):
+                if(!empty($errors_by_row) || !empty($valid_rows)): ?>
+                    <!-- import summary: num of valid rows and invalid rows -->
+                    <h3>Import Summary:</h3>
+                    <p>Valid rows: <?= count($valid_rows) ?></p>
+                    <p>Rows with errors: <?= count($errors_by_row) ?></p>
+                    
+                    <?php foreach($errors_by_row as $row => $rowError):
+                        foreach($rowError as $data): 
+                            echo $data . " ";
+                        endforeach;
+                    endforeach; ?>
+                    <!-- insert confirmation -->
+                    <form action="../functions/upload_data_insert.php" method="POST">
+                        <input type="hidden" name="scholarsip_program_id" value="<?= $scholarship_program_id ?>" />
+                        <input type="hidden" name="valid_rows" value="<?= $valid_rows ?>" />
+                        <button name="confirm">Add Scholar Record</button>
+                    </form>
+                    <button onclick="window.location.href='upload_excel.php'" >Cancel</button>
+                    <?php endif;
+            endif; ?>
         <?php } ?> 
     </body>
 </html>
