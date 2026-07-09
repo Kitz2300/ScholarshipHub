@@ -16,7 +16,7 @@ $import_processed = false;
 $scholarship_program_id = 0;
 
 // check if file is uploadeds
-if(isset($_FILES['excel_file']) && $_POST['headers']) {
+if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
     $excel_file = $_FILES['excel_file'];
     $skip_rows = (int) $_POST['headers'];
     $file_name = $excel_file['name'];
@@ -90,10 +90,11 @@ if(isset($_FILES['excel_file']) && $_POST['headers']) {
 
 ?>
 
+<html>
     <head>
         <title>Excel File Upload</title>
     </head>
-
+    <body>
         <!-- check if Logged in or not -->
         <?php 
         if(!isset($_SESSION['user_id']) && $_SESSION['role'] !== 'admin') { ?>
@@ -104,12 +105,14 @@ if(isset($_FILES['excel_file']) && $_POST['headers']) {
         <h1>Upload Excel File</h1>
         <a href="scholar_list.php">Back</a>
         
+        <hr>
+
         <!-- form for uploading excel file -->
         <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" enctype="multipart/form-data">
             <label for="upload">Import Excel File:</label><br>
             <input type="file" name="excel_file" accept=".xls, .xlsx" id="upload" required/><br><br>
             <label for="headers">How many rows as headers:</label>
-            <input type="numbers" name="headers" id="headers" required/><br><br>
+            <input type="number" name="headers" id="headers" required/><br><br>
 
             <!-- select which scholarship program does the uploaded scholar record belong -->
             <label for="scholarship">Scholarship Program:</label>
@@ -129,6 +132,8 @@ if(isset($_FILES['excel_file']) && $_POST['headers']) {
             <button>Import</button>
         </form>
 
+        <hr>
+
         <!-- instructions for file requirement -->
         <label for="instructions">Instructions:</label>
         <ul>
@@ -143,15 +148,31 @@ if(isset($_FILES['excel_file']) && $_POST['headers']) {
                     <p>Valid rows: <?= count($valid_rows) ?></p>
                     <p>Rows with errors: <?= count($errors_by_row) ?></p>
                     
-                    <?php foreach($errors_by_row as $row => $rowError):
-                        foreach($rowError as $data): 
-                            echo $data . " ";
-                        endforeach;
-                    endforeach; ?>
+                    <?php if(!empty($errors_by_row)): ?>
+                        <!-- display row errors -->
+                        <table border="1">
+                            <tr>
+                                <th>Row</th>
+                                <th>Field</th>
+                                <th>Error</th>
+                            </tr>
+                        <?php foreach($errors_by_row as $row => $rowError):
+                            foreach($rowError['row_error'] as $field => $fieldError):
+                                foreach($fieldError as $error): ?>
+                                <tr>
+                                    <td> <?= htmlspecialchars($rowError['row_number']) ?> </td>
+                                    <td> <?= htmlspecialchars($field) ?></td>
+                                    <td> <?= htmlspecialchars($error) ?></td>
+                                </tr>
+                            <?php endforeach;
+                            endforeach;
+                        endforeach; ?>
+                        </table><br>
+                    <?php endif; ?>
                     <!-- insert confirmation -->
                     <form action="../functions/upload_data_insert.php" method="POST">
-                        <input type="hidden" name="scholarsip_program_id" value="<?= $scholarship_program_id ?>" />
-                        <input type="hidden" name="valid_rows" value="<?= $valid_rows ?>" />
+                        <input type="hidden" name="scholarship_program_id" value="<?= $scholarship_program_id ?>" />
+                        <input type="hidden" name="valid_rows" value="<?= urlencode(json_encode($valid_rows)) ?>" />
                         <button name="confirm">Add Scholar Record</button>
                     </form>
                     <button onclick="window.location.href='upload_excel.php'" >Cancel</button>
