@@ -65,6 +65,8 @@ $status_result = $status_stmt->get_result();
         <a href="scholar_list.php">Scholar List</a><br>
         <a href="announcements.php">Announcements</a><br>
 
+        <hr>
+
         <?php 
 
         // get and display total count of scholars

@@ -70,11 +70,10 @@ session_start();
                 </select><br>
 
                 <label for="addresss">Permanent Address:</label><br>
-                <select name="address" id="address" required>
-                    <option value="">Select Address</option>
-                    <option value="Example">Example</option>
-                    <!-- add address options here -->
-                </select><br>
+                <input type="text" name="address" placeholder="Brgy, Town/City, Province" required/><br>
+
+                <label for="zipcode">Zipcode:</label><br>
+                <input type="number" name="zipcode" placholder="e.g. 6538" required />
 
                 <label for="scholarship_program">Scholarship Program</label><br>
                 <select name="scholarship_program" id="scholarship_program" required>

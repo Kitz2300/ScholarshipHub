@@ -2,6 +2,13 @@
 include '../includes/conn.php';
 session_start();
 
+if(isset($_SESSION['success'])) {
+    echo "<script>alert('" . $_SESSION['success'] . "')</script>";
+    unset($_SESSION['success']);
+} else if(isset($_SESSION['fail'])) {
+    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+    unset($_SESSION['fail']);
+}
 ?>
 
 <!DOCTYPE html>

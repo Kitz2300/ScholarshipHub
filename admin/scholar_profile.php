@@ -66,7 +66,8 @@ if($row=$scholar_result->fetch_assoc()) {
     $program = $row['program_name'];
     $college = $row['college_name'];
     $academic_status = $row['academic_status'];
-    $address = $row['address_id'];
+    $address = $row['permanent_address'];
+    $zipcode = $row['zipcode'];
     $disability = $row['disability'];
     $contact_num = $row['contact_num'];
     $email = $row['email'];
@@ -103,8 +104,10 @@ if($row=$scholar_result->fetch_assoc()) {
         <a href="scholar_list.php">Back</a><br>
         <a href="edit_scholar.php?id=<?= $scholar_id ?>">Edit</a><br>
 
+        <hr>
+
         <!-- personal information -->
-        <h3>Personal Information</h3>
+        <h2>Personal Information</h2>
         <h4>Given Name</h4>
         <p><?= htmlspecialchars($given_name) ?></p>
         
@@ -141,6 +144,9 @@ if($row=$scholar_result->fetch_assoc()) {
         <h4>Address</h4>
         <p><?= htmlspecialchars($address) ?></p>
         
+        <h4>Zipcode</h4>
+        <p><?= htmlspecialchars($zipcode) ?></p>
+
         <h4>Disability</h4>
         <p><?= htmlspecialchars($disability) ?></p>
         
@@ -153,9 +159,11 @@ if($row=$scholar_result->fetch_assoc()) {
         <h4>IP Group</h4>
         <p><?= htmlspecialchars($ip_group) ?></p>
 
-        <h3>Family Background</h3>
+        <hr>
 
-        <h4>Father</h4>
+        <h2>Family Background</h2>
+
+        <h3>Father</h2>
         <h4>Given Name</h4>
         <p><?= htmlspecialchars($father_given) ?></p>
         
@@ -165,7 +173,7 @@ if($row=$scholar_result->fetch_assoc()) {
         <h4>Last Name</h4>
         <p><?= htmlspecialchars($father_last) ?></p>
         
-        <h4>Mother</h4>
+        <h3>Mother</h3>
         <h4>Given Name</h4>
         <p><?= htmlspecialchars($mother_given) ?></p>
         

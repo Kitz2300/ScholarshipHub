@@ -152,7 +152,7 @@ function validateYearLevel($value) {
     
 }
 
-function validateStreetBarangay($value) {
+function validatePermanentAddress($value) {
     $errors = [];
 
     if(empty($value)) {
@@ -160,7 +160,7 @@ function validateStreetBarangay($value) {
     }
 
     if (!preg_match('/^[A-Za-z\s\.\']+$/', $value)) {
-        $errors[] = "Street & Barangay contains invalid characters. Use only letters, spaces, ., '";
+        $errors[] = "Permanent Address contains invalid characters. Use only letters, spaces, ., '";
     }
     return $errors; 
 }
@@ -251,7 +251,7 @@ function validateFullRow($rowData, $conn) {
     $mother_last_name = $rowData[13] ?? '';
     $mother_given_name = $rowData[14] ?? '';
     $mother_middle_name = $rowData[15] ?? '';
-    $street_barangay = $rowData[16] ?? '';
+    $permanent_address = $rowData[16] ?? '';
     $zipcode = $rowData[17] ?? '';
     $disability = $rowData[18] ?? '';
     $contact_num = $rowData[19] ?? '';
@@ -274,7 +274,7 @@ function validateFullRow($rowData, $conn) {
     $allErrors['birthdate'] = validateBirthdate($birthdate);
     $allErrors['program'] = validateProgram($program, $conn);
     $allErrors['year_level'] = validateYearLevel($year_lvl);
-    $allErrors['street_barangay'] = validateStreetBarangay($street_barangay);
+    $allErrors['permanent_address'] = validatePermanentAddress($permanent_address);
     $allErrors['zipcode'] = validateZipcode($zipcode);
     $allErrors['disability'] = validateDisability($disability);
     $allErrors['email'] = validateEmail($email);

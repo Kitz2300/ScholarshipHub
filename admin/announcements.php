@@ -80,6 +80,8 @@ if(isset($_POST['delete'])) {
             $created_by = isset($row['middle_name']) ? $row['given_name'] . " " . $row['middle_name'] . " " . $row['last_name'] : $row['given_name'] . " " . $row['last_name'] ;
             $role = $row['role'];?>
 
+            <hr>
+
             <h3><?= htmlspecialchars($title) ?> - <?= htmlspecialchars($is_active) ?></h3>
             <p>Created At: <?= htmlspecialchars($created_at) ?></p>
             <p><?= htmlspecialchars($content) ?></p>

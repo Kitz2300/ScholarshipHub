@@ -20,6 +20,7 @@ $scholarship_program = 0;
 $program = 0;
 $academic_status = "";
 $address = "";
+$zipcode = "";
 $disability = "";
 $contact_num = "";
 $email = "";
@@ -45,7 +46,8 @@ if($row=mysqli_fetch_assoc($scholar_result)) {
     $scholarship_program = $row['scholarship_program_id'];
     $program = $row['program_id'];
     $academic_status = $row['academic_status'];
-    $address = $row['address_id'];
+    $address = $row['permanent_address'];
+    $zipcode = $row['zipcode'];
     $disability = $row['disability'];
     $contact_num = $row['contact_num'];
     $email = $row['email'];
@@ -131,12 +133,11 @@ if($row=mysqli_fetch_assoc($scholar_result)) {
                     <!-- Add IP group options here -->
                 </select><br>
 
-                <label for="addresss">Permanent Address:</label><br>
-                <select name="address" id="address" required>
-                    <option value="" disabled>Select Address</option>
-                    <option value="Example" <?= ($address == 0) ? 'selected' : '' ?>>Example</option>
-                    <!-- add address options here -->
-                </select><br>
+                <label for="address">Permanent Address:</label><br>
+                <input type="text" name="address" id="address" value="<?= $address ?>" required /><br>
+
+                <label for="zipcode">Zipcode:</label><br>
+                <input type="number" name="zipcode" value="<?= $zipcode ?>" placholder="e.g. 6538" required /><br>
 
                 <label for="scholarship_program">Scholarship Program</label><br>
                 <select name="scholarship_program" id="scholarship_program" required>

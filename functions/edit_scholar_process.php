@@ -2,7 +2,7 @@
 session_start();
 require_once __DIR__ . '/../includes/conn.php';
 
-$required_fields = ['last_name', 'first_name', 'middle_name', 'ext_name', 'email', 'student_id', 'student_contact', 'sex', 'birth_date', 'disability', 'ip_group', 'address', 'scholarship_program', 'program', 'academic_status', 'father_last', 'father_first', 'father_middle', 'mother_last', 'mother_first', 'mother_middle'];
+$required_fields = ['last_name', 'first_name', 'middle_name', 'ext_name', 'email', 'student_id', 'student_contact', 'sex', 'birth_date', 'disability', 'ip_group', 'address', 'zipcode', 'scholarship_program', 'program', 'academic_status', 'father_last', 'father_first', 'father_middle', 'mother_last', 'mother_first', 'mother_middle'];
 
 $missing_fields = [];
 
@@ -30,6 +30,7 @@ $birth_date = $_POST['birth_date'];
 $disability = $_POST['disability'];
 $ip_group = $_POST['ip_group'];
 $address = $_POST['address'];
+$zipcode = $_POST['zipcode'];
 $scholarship_program_id = $_POST['scholarship_program'];
 $program_id = $_POST['program'];
 $academic_status = $_POST['academic_status'];
@@ -60,7 +61,8 @@ $scholar_sql = "UPDATE scholar_info SET
                 mother_last_name = ?, 
                 mother_given_name = ?, 
                 mother_middle_name = ?, 
-                address_id = ?, 
+                permanent_address = ?,
+                zipcode = ?, 
                 disability = ?, 
                 contact_num = ?, 
                 email = ?,
@@ -68,7 +70,7 @@ $scholar_sql = "UPDATE scholar_info SET
                 WHERE id = ?";
 
 $scholar_stmt = $conn->prepare($scholar_sql);
-$scholar_stmt->bind_param("sssssisiissssssssssssi", 
+$scholar_stmt->bind_param("sssssisiissssssssissssi", 
                 $student_id, 
                 $last_name, 
                 $first_name, 
@@ -85,7 +87,8 @@ $scholar_stmt->bind_param("sssssisiissssssssssssi",
                 $mother_last_name, 
                 $mother_first_name, 
                 $mother_middle_name, 
-                $address, 
+                $address,
+                $zipcode,
                 $disability, 
                 $student_contact, 
                 $email, 
