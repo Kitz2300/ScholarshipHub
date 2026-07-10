@@ -56,8 +56,8 @@ if($row=$result->fetch_assoc()) {
             <input type="hidden" name="announcement_id" value="<?= htmlspecialchars($announcement_id) ?>"/>
 
             <button>Update Announcement</button>
-            <button type="button" onclick="window.location.href='announcements.php'">Cancel</button>
         </form>
+        <button type="button" onclick="window.location.href='announcements.php'">Cancel</button>
         <?php } ?>
     </body>
 </html>

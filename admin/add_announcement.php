@@ -23,7 +23,7 @@ session_start();
             <input type="text" name="title" id="title" required/><br><br>
             
             <label for="content">Content:</label><br>
-            <textarea name="content" id="content" required></textarea><br><br>
+            <textarea name="content" id="content" style="width: 500px; height: 300px;" required></textarea><br><br>
 
             <label for="status">Status:</label>
             <select name="status">

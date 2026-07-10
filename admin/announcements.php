@@ -84,7 +84,7 @@ if(isset($_POST['delete'])) {
 
             <h3><?= htmlspecialchars($title) ?> - <?= htmlspecialchars($is_active) ?></h3>
             <p>Created At: <?= htmlspecialchars($created_at) ?></p>
-            <p><?= htmlspecialchars($content) ?></p>
+            <p style="white-space: pre-wrap; word-wrap: break-word;"><?= htmlspecialchars($content, ENT_QUOTES, 'UTF-8') ?></p>
             <p>Created By: <?= htmlspecialchars($created_by) ?> - <?= htmlspecialchars($role) ?></p>
             <a href="edit_announcement.php?id=<?= $row['announcement_id'] ?>">Edit Announcement</a>
 
