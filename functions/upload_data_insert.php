@@ -2,11 +2,14 @@
 require_once __DIR__ . "/../includes/conn.php";
 session_start();
 
+// count of success and errors 
+$success_count = 0;
+$error_count = 0;
+
 if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
     $scholarship_program_id = $_POST['scholarship_program_id'];
     $valid_rows_json = urldecode($_POST['valid_rows']);
     $valid_rows = json_decode($valid_rows_json, true);
-    $program_id = 0;
 
     foreach($valid_rows as $rows => $rowData) {
         $student_id = $rowData[1];
@@ -17,6 +20,7 @@ if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
         $sex = $rowData[6];
         $birthdate = $rowData[7];
         $program = $rowData[8];
+        $program_id = 0;
         $year_lvl = $rowData[9];
         $father_last_name = $rowData[10];
         $father_given_name = $rowData[11];
@@ -26,10 +30,13 @@ if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
         $mother_middle_name = $rowData[15];
         $permanent_address = $rowData[16];
         $zipcode = $rowData[17];
-        $disability = $rowData[18];
+        $disability = empty($rowData[18]) ? "Not applicable" : $rowData[18];
         $contact_num = $rowData[19];
         $email = $rowData[20];
-        $ip_group = $rowData[21];
+        $ip_group = empty($rowData[21]) ? "Not applicable" : $rowData[21];
+
+        // hashing password for scholar
+        $hashed_pass = password_hash($student_id, PASSWORD_BCRYPT);
 
         $program_sql = "SELECT id FROM program WHERE name = ?";
         $program_stmt = $conn->prepare($program_sql);
@@ -42,18 +49,28 @@ if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
         $insert_sql = "INSERT INTO scholar_info(student_id, last_name, given_name, ext_name, middle_name, sex, birthdate, scholarship_program_id, program_id, academic_status, father_last_name, father_given_name, father_middle_name, mother_last_name, mother_given_name, mother_middle_name, permanent_address, zipcode, disability, contact_num, email, ip_group, username, password) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $insert_stmt = $conn->prepare($insert_sql);
-        $insert_stmt->bind_param("sssssisiisssssssissssss", $student_id, $last_name, $given_name, $ext_name, $middle_name, $sex, $birthdate, $scholarship_program_id, $program_id, $father_last_name, $father_given_name, $father_middle_name, $mother_last_name, $mother_given_name, $mother_middle_name, $permanent_address, $zipcode, $disability, $contact_num, $email, $ip_group, $student_id, $student_id);
+        $insert_stmt->bind_param("sssssisiisssssssissssss", $student_id, $last_name, $given_name, $ext_name, $middle_name, $sex, $birthdate, $scholarship_program_id, $program_id, $father_last_name, $father_given_name, $father_middle_name, $mother_last_name, $mother_given_name, $mother_middle_name, $permanent_address, $zipcode, $disability, $contact_num, $email, $ip_group, $student_id, $hashed_pass);
+        
+        
 
         if($insert_stmt->execute()) {
-            $_SESSION['success'] = "Scholar record successfully imported.";
-            header("Location: ../admin/scholar_list.php");
-            exit();
+
+            $success_count++;
         } else {
-            $_SESSION['fail'] = "Scholar record import failed.";
-            header("Location: ../admin/upload_excel.php");
-            exit();
+            $error_count++;
         }
+
     }
+
+if($success_count > 0 && $error_count == 0) {
+    $_SESSION['success'] = "Scholar record successfully imported.";
+    header("Location: ../admin/scholar_list.php");
+    exit();
+} else {
+    $_SESSION['fail'] = "Scholar record import failed. row errors: $error_count";
+    header("Location: ../admin/upload_excel.php");
+    exit();
+}
 
 }
 ?>

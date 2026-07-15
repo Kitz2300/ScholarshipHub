@@ -36,7 +36,7 @@ if($row=$result->fetch_assoc()) {
             <script>window.location.href='login.php'</script>
         <?php } else { ?>
         <!-- if logged in, load page -->
-        <h1>Add Announcement</h1>
+        <h1>Edit Announcement</h1>
         <a href="announcements.php">Back</a>
 
         <!-- Edit Announcement Form -->
