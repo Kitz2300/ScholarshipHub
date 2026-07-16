@@ -7,14 +7,18 @@ $success_count = 0;
 $error_count = 0;
 
 if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
+    // get values and row array from input form
     $scholarship_program_id = $_POST['scholarship_program_id'];
     $valid_rows_json = urldecode($_POST['valid_rows']);
     $valid_rows = json_decode($valid_rows_json, true);
 
     foreach($valid_rows as $rows => $rowData) {
+        // store each values from each row to variables
         $student_id = $rowData[1];
         $last_name = $rowData[2];
         $given_name = $rowData[3];
+
+        // optional: if empty store "N/A"
         $ext_name = $rowData[4] == "" || $rowData[4] == null ? "N/A" : $rowData[4];
         $middle_name = $rowData[5];
         $sex = $rowData[6];
@@ -30,9 +34,11 @@ if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
         $mother_middle_name = $rowData[15];
         $permanent_address = $rowData[16];
         $zipcode = $rowData[17];
-        $disability = empty($rowData[18]) ? "Not applicable" : $rowData[18];
         $contact_num = $rowData[19];
         $email = $rowData[20];
+        
+        // optional: if empty store "Not applicable"
+        $disability = empty($rowData[18]) ? "Not applicable" : $rowData[18];
         $ip_group = empty($rowData[21]) ? "Not applicable" : $rowData[21];
 
         // hashing password for scholar
@@ -44,24 +50,25 @@ if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
         $program_stmt->execute();
         $program_result = $program_stmt->get_result();
         
+        // get program id and store in the variable
         if($row=$program_result->fetch_assoc()) $program_id = $row['id'];
 
-        $insert_sql = "INSERT INTO scholar_info(student_id, last_name, given_name, ext_name, middle_name, sex, birthdate, scholarship_program_id, program_id, academic_status, father_last_name, father_given_name, father_middle_name, mother_last_name, mother_given_name, mother_middle_name, permanent_address, zipcode, disability, contact_num, email, ip_group, username, password) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $insert_sql = "INSERT INTO scholar_info(student_id, last_name, given_name, ext_name, middle_name, sex, birthdate, scholarship_program_id, program_id, year_level, academic_status, father_last_name, father_given_name, father_middle_name, mother_last_name, mother_given_name, mother_middle_name, permanent_address, zipcode, disability, contact_num, email, ip_group, username, password) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $insert_stmt = $conn->prepare($insert_sql);
-        $insert_stmt->bind_param("sssssisiisssssssissssss", $student_id, $last_name, $given_name, $ext_name, $middle_name, $sex, $birthdate, $scholarship_program_id, $program_id, $father_last_name, $father_given_name, $father_middle_name, $mother_last_name, $mother_given_name, $mother_middle_name, $permanent_address, $zipcode, $disability, $contact_num, $email, $ip_group, $student_id, $hashed_pass);
+        $insert_stmt->bind_param("sssssisiiisssssssissssss", $student_id, $last_name, $given_name, $ext_name, $middle_name, $sex, $birthdate, $scholarship_program_id, $program_id, $year_lvl, $father_last_name, $father_given_name, $father_middle_name, $mother_last_name, $mother_given_name, $mother_middle_name, $permanent_address, $zipcode, $disability, $contact_num, $email, $ip_group, $student_id, $hashed_pass);
         
-        
-
+        // if row insertion is success full increment success count else increment error count
         if($insert_stmt->execute()) {
-
             $success_count++;
         } else {
             $error_count++;
+            continue;
         }
 
     }
 
+// success / fail message
 if($success_count > 0 && $error_count == 0) {
     $_SESSION['success'] = "Scholar record successfully imported.";
     header("Location: ../admin/scholar_list.php");

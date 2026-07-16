@@ -34,6 +34,7 @@ $sex = 0;
 $birthdate = "";
 $scholarship_program = "";
 $program = "";
+$year_lvl = "";
 $college = "";
 $academic_status = "";
 $address = "";
@@ -80,6 +81,33 @@ if($row=$scholar_result->fetch_assoc()) {
     $mother_last = $row['mother_last_name'];
     $mother_given = $row['mother_given_name'];
     $mother_middle = $row['mother_middle_name'];
+
+    switch ($row['year_level']) {
+        case 1:
+            $year_lvl = "1st Year";
+            break;
+        case 2:
+            $year_lvl = "2nd Year";
+            break;
+        case 3:
+            $year_lvl = "3rd Year";
+            break;
+        case 4:
+            $year_lvl = "4th Year";
+            break;
+        case 5:
+            $year_lvl = "5th Year";
+            break;
+        case 6:
+            $year_lvl = "6th Year";
+            break;
+        default:
+            $year_lvl = "Year Level not found or invalid";
+            break;
+    }
+
+
+
 } else {
     echo "<script>alert('scholar not available')</script>";
     echo "<script>window.location.href='scholar_list.php'</script>";
@@ -135,6 +163,9 @@ if($row=$scholar_result->fetch_assoc()) {
         <h4>Program</h4>
         <p><?= htmlspecialchars($program) ?></p>
         
+        <h4>Year Level</h4>
+        <p><?= htmlspecialchars($year_lvl) ?></p>
+
         <h4>College</h4>
         <p><?= htmlspecialchars($college) ?></p>
         
