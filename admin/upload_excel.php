@@ -14,6 +14,7 @@ $errors_by_row = [];
 $valid_rows = [];
 $import_processed = false;
 $scholarship_program_id = 0;
+$file_name = "";
 
 // check if file is uploadeds
 if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
@@ -97,11 +98,11 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
     <body>
         <!-- check if Logged in or not -->
         <?php 
-        if(!isset($_SESSION['user_id']) && $_SESSION['role'] !== 'admin') { ?>
+        if(!isset($_SESSION['user_id']) && $_SESSION['role'] !== 'admin') : ?>
             <!-- if not logged in, redirect user to login page -->
             <script>alert('You are not logged in')</script>
             <script>window.location.href='login.php'</script>
-        <?php } else { ?>
+        <?php else : ?>
         <h1>Upload Excel File</h1>
         <a href="scholar_list.php">Back</a>
         
@@ -173,11 +174,39 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
                     <form action="../functions/upload_data_insert.php" method="POST">
                         <input type="hidden" name="scholarship_program_id" value="<?= $scholarship_program_id ?>" />
                         <input type="hidden" name="valid_rows" value="<?= urlencode(json_encode($valid_rows)) ?>" />
+                        <input type="hidden" name="file_name" value="<?= $file_name ?>" />
                         <button name="confirm">Add Scholar Record</button>
                     </form>
                     <button onclick="window.location.href='upload_excel.php'" >Cancel</button>
                     <?php endif;
-            endif; ?>
-        <?php } ?> 
+            endif; 
+            
+            $history_sql = "SELECT imported_at, filename, scholarship_users.role FROM import_history LEFT JOIN scholarship_users ON import_history.user_id = scholarship_users.id";
+            $history_stmt = $conn->prepare($history_sql);?>
+
+            <h3>Import History</h3>
+            <table border="2">
+                <tr>
+                    <th>File Name</th>
+                    <th>Imported At</th>
+                    <th>User</th>
+                </tr>
+            <?php if($history_stmt->execute()) :
+                $history_result = $history_stmt->get_result();
+                while($row=$history_result->fetch_assoc()) : ?>
+                    <tr>
+                        <td><?= $row['filename'] ?></td>
+                        <td><?= $row['imported_at'] ?></td>
+                        <td><?= $row['role'] ?></td>
+                    </tr>
+                <?php endwhile;
+
+            else :?>
+                <tr>
+                    <td colspan="3">No History of Excel Import</td>
+                </tr>
+            <?php endif;?>
+            </table>
+        <?php endif; ?> 
     </body>
 </html>

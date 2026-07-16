@@ -8,6 +8,7 @@ $error_count = 0;
 
 if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
     // get values and row array from input form
+    $file_name = $_POST['file_name'];
     $scholarship_program_id = $_POST['scholarship_program_id'];
     $valid_rows_json = urldecode($_POST['valid_rows']);
     $valid_rows = json_decode($valid_rows_json, true);
@@ -41,7 +42,7 @@ if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
         $disability = empty($rowData[18]) ? "Not applicable" : $rowData[18];
         $ip_group = empty($rowData[21]) ? "Not applicable" : $rowData[21];
 
-        // hashing password for scholar
+        // bcrypt hashing password for scholar
         $hashed_pass = password_hash($student_id, PASSWORD_BCRYPT);
 
         $program_sql = "SELECT id FROM program WHERE name = ?";
@@ -67,6 +68,11 @@ if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
         }
 
     }
+
+$history_sql = "INSERT INTO import_history(user_id, filename) VALUE( ?, ?)";
+$history_stmt = $conn->prepare($history_sql);
+$history_stmt->bind_param('is', $_SESSION['user_id'], $file_name);
+$history_stmt->execute();
 
 // success / fail message
 if($success_count > 0 && $error_count == 0) {
