@@ -8,16 +8,16 @@ session_start();
     </head>
     <body>
         <?php
-        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') { ?>
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
             <!-- if not logged in, redirect user to login page -->
             <script>alert('You are not logged in')</script>
             <script>window.location.href='login.php'</script>
-        <?php } else { ?>
+        <?php else : ?>
         <!-- if logged in, load page -->
         <h1>Add Announcement</h1>
         <a href="announcements.php">Back</a><br><br>
 
-        <!-- Announcement Form -->
+        <!-- Add Announcement Form -->
         <form action="../functions/add_announcement_process.php" method="post">
             <label for="title">Title:</label>
             <input type="text" name="title" id="title" required/><br><br>
@@ -25,6 +25,7 @@ session_start();
             <label for="content">Content:</label><br>
             <textarea name="content" id="content" style="width: 500px; height: 300px;" required></textarea><br><br>
 
+            <!-- announcement status, this determines whether the announcement should be displayed or not -->
             <label for="status">Status:</label>
             <select name="status">
                 <option value="1">Active</option>
@@ -32,8 +33,9 @@ session_start();
             </select><br><br>
 
             <button>Create Announcement</button>
-            <button onclick="window.location.href='announcements.php'">Cancel</button>
         </form>
-        <?php } ?>
+        <!-- cancel button returns user to the announcement page -->
+        <button onclick="window.location.href='announcements.php'">Cancel</button>
+        <?php endif; ?>
     </body>
 </html>
