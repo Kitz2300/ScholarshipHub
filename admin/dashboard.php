@@ -2,21 +2,6 @@
 include '../includes/conn.php';
 session_start();
 
-// $user_name = '';
-
-// fetch name of the user
-// if(isset($_SESSION['username']) && $_SESSION['role'] === 'admin') {
-//     $username = $_SESSION['username'];
-//     $user_sql = "SELECT * FROM scholarship_users WHERE username = '$username' AND role = 'admin'";
-//     $user_stmt = $conn->prepare($user_sql);
-//     $user_stmt->execute();
-//     $user_result = $user_stmt->get_result();
-
-//     if($row = mysqli_fetch_assoc($user_result)) {
-//         $user_name = $row['given_name'] . ' ' . $row['middle_name'] . ' ' . $row['last_name'];
-//     }
-// }
-
 // sql query for total count of scholars
 
 $scholars_sql = "SELECT COUNT(*) AS scholar_count FROM scholar_info";
@@ -57,9 +42,9 @@ $status_result = $status_stmt->get_result();
     <body>
         <!-- check if logged in or not -->
         <?php 
-        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {?>
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') :?>
             <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>
-        <?php } else { ?>
+        <?php else : ?>
         <h2>Admin Dashboard</h2>
         <p>Welcome, Admin!</p>
         <a href="scholar_list.php">Scholar List</a><br>
@@ -91,6 +76,6 @@ $status_result = $status_stmt->get_result();
         <form action="../functions/logout.php" method="post">
             <button onclick="return confirm('Logout?')" type="submit">Logout</button>
         </form>
-        <?php } ?>
+        <?php endif; ?>
     </body>
 </html>

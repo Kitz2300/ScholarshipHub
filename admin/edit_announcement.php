@@ -30,17 +30,18 @@ if($row=$result->fetch_assoc()) {
     </head>
     <body>
         <?php
-        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') { ?>
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
             <!-- if not logged in, redirect user to login page -->
             <script>alert('You are not logged in')</script>
             <script>window.location.href='login.php'</script>
-        <?php } else { ?>
+        <?php else : ?>
         <!-- if logged in, load page -->
         <h1>Edit Announcement</h1>
         <a href="announcements.php">Back</a>
 
         <!-- Edit Announcement Form -->
         <form action="../functions/edit_announcement_process.php" method="post">
+            <!-- every input has current values that are editable -->
             <label for="title">Title:</label>
             <input type="text" name="title" id="title" value="<?= htmlspecialchars($title) ?>" required/><br><br>
             
@@ -57,7 +58,8 @@ if($row=$result->fetch_assoc()) {
 
             <button>Update Announcement</button>
         </form>
+        <!-- cancel button redirects user to announcements page -->
         <button type="button" onclick="window.location.href='announcements.php'">Cancel</button>
-        <?php } ?>
+        <?php endif; ?>
     </body>
 </html>

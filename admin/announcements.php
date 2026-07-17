@@ -2,6 +2,7 @@
 include __DIR__ . "/../includes/conn.php";
 session_start();
 
+// succes/fail session variables used by the process to send success/fail messages
 if(isset($_SESSION['success'])) {
     echo "<script>alert('" . $_SESSION['success'] . "')</script>";
     unset($_SESSION['success']);
@@ -10,6 +11,7 @@ if(isset($_SESSION['success'])) {
     unset($_SESSION['fail']);
 }
 
+// query all the announcements, active and not active alike
 $announcement_sql = "SELECT
                         announcements.id AS announcement_id,
                         title, 
@@ -33,6 +35,7 @@ $announcement_stmt = $conn->prepare($announcement_sql);
 $announcement_stmt->execute();
 $announcement_result = $announcement_stmt->get_result();
 
+// delete announcement function
 if(isset($_POST['delete'])) {
     if(isset($_POST['announcement_id'])) {
         $announcement_id = (int) $_POST['announcement_id'];
@@ -40,12 +43,14 @@ if(isset($_POST['delete'])) {
         $delete_stmt = $conn->prepare($delete_sql);
         $delete_stmt->bind_param("i", $announcement_id);
         
+        // insert success/fail message to session variables to display success/fail message after reloading page
         if($delete_stmt->execute()) {
             $_SESSION['success'] = "Announcement has been deleted";
         } else {
             $_SESSION['fail'] = "Failed to delete announcement";
         }
 
+        // reload page to display success/fail message and refresh announcements displayed
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
         
@@ -60,17 +65,20 @@ if(isset($_POST['delete'])) {
     </head>
     <body>
         <?php
-        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') { ?>
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
             <!-- if not logged in, redirect user to login page -->
             <script>alert('You are not logged in')</script>
             <script>window.location.href='login.php'</script>
-        <?php } else { ?>
+        <?php else : ?>
         <!-- if logged in, load page -->
         <h1>Announcements</h1>
+
+        <!-- redirects to pages specified -->
         <a href="dashboard.php">Back</a><br>
         <a href="add_announcement.php">Add Announcement</a>
         <?php 
-        while($row=$announcement_result->fetch_assoc()) {
+        // loop through rows and display values
+        while($row=$announcement_result->fetch_assoc()) :
             $title = $row['title'];
             $content = $row['content'];
             $is_active = $row['is_active'] == 1 ? "Active" : "Not Active";
@@ -82,10 +90,12 @@ if(isset($_POST['delete'])) {
 
             <hr>
 
+            <!-- display announcement with status, date posted/created, created by user name-->
             <h3><?= htmlspecialchars($title) ?> - <?= htmlspecialchars($is_active) ?></h3>
             <p>Created At: <?= htmlspecialchars($created_at) ?></p>
             <p style="white-space: pre-wrap; word-wrap: break-word;"><?= htmlspecialchars($content, ENT_QUOTES, 'UTF-8') ?></p>
             <p>Created By: <?= htmlspecialchars($created_by) ?> - <?= htmlspecialchars($role) ?></p>
+            <!-- edit button to edit selected announcement -->
             <a href="edit_announcement.php?id=<?= $row['announcement_id'] ?>">Edit Announcement</a>
 
             <!-- delete button -->
@@ -93,8 +103,8 @@ if(isset($_POST['delete'])) {
                 <input type="hidden" name="announcement_id" value="<?= $row['announcement_id'] ?>"/>
                 <button name="delete" onclick="return confirm('Delete this announcement?')">Delete Announcement</button>
             </form>
-        <?php }
+        <?php endwhile;
         
-        } ?>
+        endif; ?>
     </body>
 </html>
