@@ -2,14 +2,16 @@
 include __DIR__ . '/../includes/conn.php';
 session_start();
 
-if(isset($_SESSION['edit_success'])) {
-    echo "<script>alert('" . $_SESSION['edit_success'] . "')</script>";
-    unset($_SESSION['edit_success']);
-} else if(isset($_SESSION['edit_fail'])) {
-    echo "<script>alert('" . $_SESSION['edit_fail'] . "')</script>";
-    unset($_SESSION['edit_fail']);
+// succes/fail session variables used by the process to send success/fail messages
+if(isset($_SESSION['success'])) {
+    echo "<script>alert('" . $_SESSION['success'] . "')</script>";
+    unset($_SESSION['success']);
+} else if(isset($_SESSION['fail'])) {
+    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+    unset($_SESSION['fail']);
 }
 
+// get scholar id from url
 $scholar_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $scholar_sql = "SELECT scholar_info.*, 
                 scholarship_program.name AS scholarship_program_name,  
@@ -19,16 +21,17 @@ $scholar_sql = "SELECT scholar_info.*,
                 INNER JOIN scholarship_program ON scholar_info.scholarship_program_id = scholarship_program.id
                 INNER JOIN program ON scholar_info.program_id = program.id
                 INNER JOIN college ON program.college_id = college.id
-                WHERE scholar_info.id = $scholar_id";
+                WHERE scholar_info.id = ?";
 $scholar_stmt = $conn->prepare($scholar_sql);
+$scholar_stmt->bind_param('i', $scholar_id);
 $scholar_stmt->execute();
 $scholar_result = $scholar_stmt->get_result();
 
+// initialize variables
 $last_name = "";
 $given_name = "";
 $ext_name = "";
 $middle_name = "";
-// $fullname = "";
 $id_num = "";
 $sex = 0;
 $birthdate = "";
@@ -53,18 +56,18 @@ $mother_middle = "";
 
 
 if($row=$scholar_result->fetch_assoc()) {
+    // store column values in variables
     $last_name = $row['last_name'];
     $given_name = $row['given_name'];
     $ext_name = $row['ext_name'] === "N/A" ? "Not Applicable" : $row['ext_name'];
     $middle_name = $row['middle_name'];
-    
-    // $fullname = $given_name . " " . $middle_name . " " . $last_name . " " . $ext_name;
 
     $id_num = $row['student_id'];
     $sex = $row['sex'] === 0 ? "Male" : "Female";
     $birthdate = $row['birthdate'];
     $scholarship_program = $row['scholarship_program_name'];
     $program = $row['program_name'];
+    $year = $row['year_level'];
     $college = $row['college_name'];
     $academic_status = $row['academic_status'];
     $address = $row['permanent_address'];
@@ -82,7 +85,8 @@ if($row=$scholar_result->fetch_assoc()) {
     $mother_given = $row['mother_given_name'];
     $mother_middle = $row['mother_middle_name'];
 
-    switch ($row['year_level']) {
+    // display school year depending on what number
+    switch ($year) {
         case 1:
             $year_lvl = "1st Year";
             break;
@@ -92,14 +96,8 @@ if($row=$scholar_result->fetch_assoc()) {
         case 3:
             $year_lvl = "3rd Year";
             break;
-        case 4:
-            $year_lvl = "4th Year";
-            break;
-        case 5:
-            $year_lvl = "5th Year";
-            break;
-        case 6:
-            $year_lvl = "6th Year";
+        case $year > 3 || $year < 7:
+            $year_lvl = $year . "th Year";
             break;
         default:
             $year_lvl = "Year Level not found or invalid";
@@ -122,11 +120,11 @@ if($row=$scholar_result->fetch_assoc()) {
     <body>
          <!-- check if logged in or not -->
         <?php 
-        if(!isset($_SESSION['user_id']) && $_SESSION['role'] !== 'admin') { ?>
+        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
             <!-- if not logged in, redirect user to login page -->
             <script>alert('You are not logged in')</script>
             <script>window.location.href='login.php'</script>
-        <?php } else { ?>
+        <?php else : ?>
         <!-- if logged in, load page -->
         <h1>Scholar Profile</h1>
         <a href="scholar_list.php">Back</a><br>
@@ -134,7 +132,8 @@ if($row=$scholar_result->fetch_assoc()) {
 
         <hr>
 
-        <!-- personal information -->
+        <!-- Display Scholar Information -->
+        <!-- personal information section -->
         <h2>Personal Information</h2>
         <h4>Given Name</h4>
         <p><?= htmlspecialchars($given_name) ?></p>
@@ -192,6 +191,7 @@ if($row=$scholar_result->fetch_assoc()) {
 
         <hr>
 
+        <!-- family background section -->
         <h2>Family Background</h2>
 
         <h3>Father</h2>
@@ -214,7 +214,7 @@ if($row=$scholar_result->fetch_assoc()) {
         <h4>Last Name</h4>
         <p><?= htmlspecialchars($mother_last) ?></p>
         
-        <?php } ?>  
+        <?php endif; ?>  
 
     </body>
 </html>
