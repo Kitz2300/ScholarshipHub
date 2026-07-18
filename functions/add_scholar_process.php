@@ -31,6 +31,10 @@ $address = $_POST['address'];
 $zipcode = $_POST['zipcode'];
 $scholarship_program_id = $_POST['scholarship_program'];
 $program_id = $_POST['program'];
+$year_lvl = $_POST['year_lvl'];
+
+// bcrypt hashing password for scholar
+$hashed_pass = password_hash($student_id, PASSWORD_BCRYPT);
 
 // father information
 $father_last_name = $_POST['father_last'];
@@ -43,10 +47,10 @@ $mother_first_name = $_POST['mother_first'];
 $mother_middle_name = $_POST['mother_middle'];
 
 // insert process
-$scholar_sql = "INSERT INTO scholar_info(student_id, last_name, given_name, ext_name, middle_name, sex, birthdate, scholarship_program_id, program_id, academic_status, father_last_name, father_given_name, father_middle_name, mother_last_name, mother_given_name, mother_middle_name, permanent_address, zipcode, disability, contact_num, email, ip_group, username, password) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+$scholar_sql = "INSERT INTO scholar_info(student_id, last_name, given_name, ext_name, middle_name, sex, birthdate, scholarship_program_id, program_id, year_level, academic_status, father_last_name, father_given_name, father_middle_name, mother_last_name, mother_given_name, mother_middle_name, permanent_address, zipcode, disability, contact_num, email, ip_group, username, password) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 $scholar_stmt = $conn->prepare($scholar_sql);
-$scholar_stmt->bind_param("sssssisiisssssssissssss", $student_id, $last_name, $first_name, $ext_name, $middle_name, $sex, $birth_date, $scholarship_program_id, $program_id, $father_last_name, $father_first_name, $father_middle_name, $mother_last_name, $mother_first_name, $mother_middle_name, $address, $zipcode, $disability, $student_contact, $email, $ip_group, $student_id, $student_id);
+$scholar_stmt->bind_param("sssssisiiisssssssissssss", $student_id, $last_name, $first_name, $ext_name, $middle_name, $sex, $birth_date, $scholarship_program_id, $program_id, $year_lvl,$father_last_name, $father_first_name, $father_middle_name, $mother_last_name, $mother_first_name, $mother_middle_name, $address, $zipcode, $disability, $student_contact, $email, $ip_group, $student_id, $hashed_pass);
 $scholar_stmt->execute();
 
 header("Location: ../admin/scholar_list.php?success=1");
