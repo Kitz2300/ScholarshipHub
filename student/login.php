@@ -1,3 +1,13 @@
+<?php 
+session_start();
+
+// if login fails alert user
+if(isset($_SESSION['fail'])) {
+    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+    unset($_SESSION['fail']);
+}
+?>
+
 <html>
     <head>
         <title>Scholar Login</title>

@@ -6,7 +6,7 @@
         <title>Scholar Dashboard</title>
     </head>
     <body>
-        <?php if(!isset($_SESSION['username'])) {?>
+        <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== "student") {?>
             <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>
         <?php } else { ?>
         <h2>Scholar Dashboard</h2>
