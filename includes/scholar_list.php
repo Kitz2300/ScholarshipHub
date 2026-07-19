@@ -19,7 +19,7 @@ if(isset($_POST['delete_scholar'])) {
 // Search, filter, and pagination process
 
 // pagination variables
-$records_per_page = 2;
+$records_per_page = 5;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if($page < 1) $page = 1;
 $offset = ($page - 1) * $records_per_page;

@@ -1,5 +1,5 @@
 <?php 
-require_once __DIR__ . "/../includes/conn.php";
+require_once __DIR__ . "/../../includes/conn.php";
 session_start();
 
 // check if user id is not empty
@@ -31,7 +31,7 @@ if(!empty($user_id) && isset($_POST['title']) && isset($_POST['content']) && iss
     }
 
     // redirect user after the process
-    header("Location: ../admin/announcements.php");
+    header("Location: ../../admin/announcements.php");
     exit();
 } 
  

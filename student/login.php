@@ -20,7 +20,7 @@ if(isset($_SESSION['fail'])) {
             </ul>
         </nav>
         <h2>Scholar Login</h2>
-        <form action="../functions/scholar_login_process.php" method="post">
+        <form action="../functions/student/scholar_login_process.php" method="post">
             <label for="username">Username:</label><br>
             <input type="text" id="username" name="username" required><br><br>
             <label for="password">Password:</label><br>

@@ -1,5 +1,5 @@
 <?php 
-require_once __DIR__ . "/../includes/conn.php";
+require_once __DIR__ . "/../../includes/conn.php";
 session_start();
 
 if(isset($_POST['title'], $_POST['content'], $_POST['status'], $_POST['announcement_id'])) {
@@ -21,7 +21,7 @@ if(isset($_POST['title'], $_POST['content'], $_POST['status'], $_POST['announcem
         $_SESSION['fail'] = "Update Failed " . $update_stmt->error;
     }
 
-    header("Location: ../admin/announcements.php");
+    header("Location: ../../admin/announcements.php");
     exit();
 } 
 ?>

@@ -107,8 +107,9 @@ if($row=$scholar_result->fetch_assoc()) {
 
 
 } else {
-    echo "<script>alert('scholar not available')</script>";
-    echo "<script>window.location.href='scholar_list.php'</script>";
+    $_SESSION['fail'] = "Scholar not available";
+    header("Location: scholar_list.php");
+    exit();
 }
 
 ?>

@@ -19,8 +19,7 @@ if(isset($_SESSION['success'])) {
     </head>
     <body>
         <!-- check if logged in or not -->
-        <?php 
-        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
+        <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
             <script>alert('You are not logged in')</script>
             <script>window.location.href='login.php'</script>
             <!-- if logged in, load page -->
@@ -30,7 +29,8 @@ if(isset($_SESSION['success'])) {
         <!-- redirect user to specific page -->
         <a href="dashboard.php">Dashboard</a><br>
         <a href="add_scholar.php">Add New Scholar</a><br>
-        <a href="upload_excel.php">Upload Excel File</a>
+        <a href="upload_excel.php">Upload Excel File</a><br>
+        <a href="export_scholars.php">Export Scholar Record</a>
 
         <h3>Existing Scholars</h3>
         <!-- existing scholar list -->

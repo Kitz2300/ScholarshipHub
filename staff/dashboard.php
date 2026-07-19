@@ -6,7 +6,7 @@
         <title>Staff Dashboard</title>
     </head>
     <body>
-        <?php if(!isset($_SESSION['username']) || $_SESSION['role'] !== 'staff') {?>
+        <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'staff') {?>
             <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>
         <?php } else { ?>
         <h2>Staff Dashboard</h2>

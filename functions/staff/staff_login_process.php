@@ -1,5 +1,5 @@
 <?php 
-require_once __DIR__ . '../../../includes/conn.php';
+require_once __DIR__ . '/../../includes/conn.php';
 session_start();
 
 if(isset($_POST['username']) && isset($_POST['password'])) {

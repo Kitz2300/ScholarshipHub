@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/../includes/conn.php';
+require_once __DIR__ . '/../../includes/conn.php';
 
 // store every input names in an array
 $required_fields = ['last_name', 'first_name', 'middle_name', 'ext_name', 'email', 'student_id', 'student_contact', 'sex', 'birth_date', 'disability', 'ip_group', 'address', 'zipcode', 'scholarship_program', 'program', 'academic_status', 'father_last', 'father_first', 'father_middle', 'mother_last', 'mother_first', 'mother_middle'];
@@ -19,7 +19,7 @@ $id_num = $_POST['scholar_id'];
 // if there are missing fields notify user of it
 if(!empty($missing_fields)) {
     $_SESSION['fail'] = "Missing Fields: " . implode(",", $missing_fields);
-    header("Location: ../admin/edit_scholar.php?id=$id_num"); 
+    header("Location: ../../admin/edit_scholar.php?id=$id_num"); 
     exit();
 }
 
@@ -120,6 +120,6 @@ if($scholar_stmt->execute()) {
 }
 
 // redirect user to scholar_profile page
-header("Location: ../admin/scholar_profile.php?id=$id_num"); 
+header("Location: ../../admin/scholar_profile.php?id=$id_num"); 
 exit();
 ?>

@@ -41,9 +41,9 @@ $status_result = $status_stmt->get_result();
     </head>
     <body>
         <!-- check if logged in or not -->
-        <?php 
-        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') :?>
-            <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>
+        <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') :?>
+            <script>alert('You are not logged in')</script>
+            <script>window.location.href='login.php'</script>
         <?php else : ?>
         <h2>Admin Dashboard</h2>
         <p>Welcome, Admin!</p>

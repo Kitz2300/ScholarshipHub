@@ -1,5 +1,5 @@
 <?php 
-require_once __DIR__ . '/../includes/conn.php';
+require_once __DIR__ . '/../../includes/conn.php';
 session_start();
 
 if(isset($_POST['username']) && isset($_POST['password'])) {
@@ -20,13 +20,13 @@ if(isset($_POST['username']) && isset($_POST['password'])) {
         // Login successful
         $_SESSION['user_id'] = $row['id'];
         $_SESSION['role'] = 'admin';
-        header("Location: ../admin/dashboard.php");
+        header("Location: ../../admin/dashboard.php");
         exit();
     } else {
         // Login failed
         echo "<script>
         alert('Invalid username or password. Please try again.'); 
-        window.location.href = '../admin/login.php';
+        window.location.href = '../../admin/login.php';
         </script>";
     }
 }
