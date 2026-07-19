@@ -1,5 +1,5 @@
 <?php 
-require_once __DIR__ . '/../includes/conn.php';
+require_once __DIR__ . '../../../includes/conn.php';
 session_start();
 
 if(isset($_POST['username']) && isset($_POST['password'])) {
@@ -20,7 +20,7 @@ if(isset($_POST['username']) && isset($_POST['password'])) {
             // Login successful, store user id and role in session variable
             $_SESSION['user_id'] = $row['id'];
             $_SESSION['role'] = "student";
-            header("Location: ../student/dashboard.php");
+            header("Location: ../../student/dashboard.php");
             exit();
         }
     } 
