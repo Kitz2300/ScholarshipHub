@@ -1,6 +1,6 @@
 <?php 
 include __DIR__ . '/../includes/conn.php';
-include __DIR__ . '/../functions/upload_validation.php';
+include __DIR__ . '/../functions/admin/upload_validation.php';
 session_start();
 
 require '../lib/vendor/autoload.php';
@@ -15,6 +15,8 @@ $valid_rows = [];
 $import_processed = false;
 $scholarship_program_id = 0;
 $file_name = "";
+$extra_cols = false;
+$num_extra_cols = 0;
 
 // check if file is uploadeds
 if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
@@ -46,7 +48,7 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
     $mime_type = finfo_file($file_info, $excel_file['tmp_name']);
 
     if(!in_array($mime_type, $allowedMimeTypes)) {
-        die('Invalid file type. Please upload a valid Exce File.');
+        die('Invalid file type. Please upload a valid Excel File.');
     }
 
     // catch error if file fails to load
@@ -60,16 +62,25 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
     // get worksheet
     $worksheet = $spreadsheet->getActiveSheet();
     
-    // convert worksheet to array and slice array to remove header rows
+    // convert worksheet to array slice array to remove header rows
     $rows = $worksheet->toArray();
     $rows = array_slice($rows, $skip_rows);
 
+    // initialize variable for extra columns
+    $max_columns = 0;
+    $mapped_columns = 22;
 
     foreach($rows as $row => $rowData) {
 
         // skip row if whole row is empty
         if(empty(array_filter($rowData))) {
             continue;
+        }
+
+        // count columns per row for checking extra columns
+        $column_count = count($rowData);
+        if($column_count > $max_columns) {
+            $max_columns = $column_count;
         }
 
         // validate each row
@@ -84,9 +95,18 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
                 'row_error' => $rowErrors
             ];
         }
+
     }
-    // set true if process is successful
+
+    // check if max columns is greater than mapped columns
+    if($max_columns > $mapped_columns) {
+        $extra_cols = true;
+        $num_extra_cols = $max_columns - $mapped_columns;
+    }
+
+    // set true if process is successful, and get a sample row
     $import_processed = true;  
+    $sample_row = !empty($valid_rows) ? $valid_rows[0] : [];
 }
 
 ?>
@@ -171,16 +191,40 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
                         </table><br>
                     <?php endif; ?>
                     <!-- insert confirmation -->
-                    <form action="../functions/upload_data_insert.php" method="POST">
+                    <form action="../functions/admin/upload_data_insert.php" method="POST">
+                        <!-- if there are extra columns. allow user to name each column -->
+                        <?php if($extra_cols) : ?>
+                            <table border="2">
+                                <tr>
+                                    <th>Column Data</th>
+                                    <th>Name Of This Column</th>
+                                </tr>
+                            <?php for($i = 22; $i < 22 + $num_extra_cols; $i++) : 
+                                    $sample_value = $sample_row[$i] ?? "";
+                                ?>
+                                <tr>
+                                    <td>
+                                        <strong>Column <?= $i + 1 ?></strong>
+                                        <small>Sample: <?= htmlspecialchars($sample_value) ?></small>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="column_names[<?= $i ?>]" required/>
+                                    </td>
+                                </tr>
+                            <?php endfor; ?>
+
+                            </table>
+                        <?php endif; ?>
                         <input type="hidden" name="scholarship_program_id" value="<?= $scholarship_program_id ?>" />
                         <input type="hidden" name="valid_rows" value="<?= urlencode(json_encode($valid_rows)) ?>" />
-                        <input type="hidden" name="file_name" value="<?= $file_name ?>" />
+                        <input type="hidden" name="file_name" value="<?= htmlspecialchars($file_name) ?>" />
                         <button name="confirm">Add Scholar Record</button>
                     </form>
                     <button onclick="window.location.href='upload_excel.php'" >Cancel</button>
                     <?php endif;
-            endif; 
-            
+            endif;
+
+            // import history query
             $history_sql = "SELECT imported_at, filename, scholarship_users.role FROM import_history LEFT JOIN scholarship_users ON import_history.user_id = scholarship_users.id";
             $history_stmt = $conn->prepare($history_sql);?>
 
@@ -193,17 +237,22 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
                 </tr>
             <?php if($history_stmt->execute()) :
                 $history_result = $history_stmt->get_result();
-                while($row=$history_result->fetch_assoc()) : ?>
+                if($history_result->num_rows > 0) :
+                    while($row=$history_result->fetch_assoc()) : ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row['filename']) ?></td>
+                            <td><?= htmlspecialchars($row['imported_at']) ?></td>
+                            <td><?= htmlspecialchars($row['role']) ?></td>
+                        </tr>
+                    <?php endwhile;
+                else:?>
                     <tr>
-                        <td><?= $row['filename'] ?></td>
-                        <td><?= $row['imported_at'] ?></td>
-                        <td><?= $row['role'] ?></td>
+                        <td colspan="3">No History of Excel Import</td>
                     </tr>
-                <?php endwhile;
-
+                <?php endif;
             else :?>
                 <tr>
-                    <td colspan="3">No History of Excel Import</td>
+                    <td colspan="3">Error Loading Import History</td>
                 </tr>
             <?php endif;?>
             </table>

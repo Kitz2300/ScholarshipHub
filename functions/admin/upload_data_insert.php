@@ -1,5 +1,5 @@
 <?php 
-require_once __DIR__ . "/../includes/conn.php";
+require_once __DIR__ . "/../../includes/conn.php";
 session_start();
 
 // count of success and errors 
@@ -12,6 +12,7 @@ if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
     $scholarship_program_id = $_POST['scholarship_program_id'];
     $valid_rows_json = urldecode($_POST['valid_rows']);
     $valid_rows = json_decode($valid_rows_json, true);
+    $column_names = isset($_POST['column_names']) ? $_POST['column_names'] : [];
 
     foreach($valid_rows as $rows => $rowData) {
         // store each values from each row to variables
@@ -67,6 +68,34 @@ if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
             continue;
         }
 
+        // insert extra columns to scholar notes after scholar_info insert
+        if(count($rowData) > 21) {
+            $extra_data = []; 
+            for($i = 22; $i < count($rowData); $i++) {
+                // get column values of each extra column per row
+                $col_name = isset($column_names[$i]) ? $column_names[$i] : "col_" . $i;
+                $col_value = trim($rowData[$i] ?? '');
+                if(!empty($col_name) && !empty($col_value)) {
+                    $extra_data[$col_name] = $col_value;
+                }
+            }
+        }
+
+        if(!empty($extra_data)) {
+            // get the newly inserted scholar_id
+            $scholar_id = $conn->insert_id;
+
+            // convert extra data into JSON
+            $note_content = json_encode($extra_data);
+
+            // insert notes query
+            $note_sql = "INSERT INTO scholar_notes(scholar_id, notes) VALUES(?, ?)";
+            $note_stmt = $conn->prepare($note_sql);
+            $note_stmt->bind_param("is", $scholar_id, $note_content);
+            $note_stmt->execute();
+
+        }
+
     }
 
 $history_sql = "INSERT INTO import_history(user_id, filename) VALUE( ?, ?)";
@@ -77,11 +106,11 @@ $history_stmt->execute();
 // success / fail message
 if($success_count > 0 && $error_count == 0) {
     $_SESSION['success'] = "Scholar record successfully imported.";
-    header("Location: ../admin/scholar_list.php");
+    header("Location: ../../admin/scholar_list.php");
     exit();
 } else {
     $_SESSION['fail'] = "Scholar record import failed. row errors: $error_count";
-    header("Location: ../admin/upload_excel.php");
+    header("Location: ../../admin/upload_excel.php");
     exit();
 }
 
