@@ -16,9 +16,27 @@ $required_cols = ['student_id', 'last_name', 'given_name', 'ext_name', 'middle_n
 $scholarship_program = !empty($_POST['scholar_program']) ? $_POST['scholar_program'] : '';
 $program = !empty($_POST['program']) ? $_POST['program'] : '';
 $filename = !empty($_POST['filename']) ? $_POST['filename'] : '';
+$selected_cols = $_POST['columns'] ?? [];
+
+// if user selected father_name or mmother_name then expand name into last, given, and middle
+$expanded_cols = [];
+foreach($selected_cols as $cols) {
+    if($cols === "father_name") {
+        $expanded_cols[] = "father_last";
+        $expanded_cols[] = "father_given";
+        $expanded_cols[] = "father_middle";
+    } else if($cols === "mother_name") {
+        $expanded_cols[] = "mother_last";
+        $expanded_cols[] = "mother_given";
+        $expanded_cols[] = "mother_middle";
+    } else {
+        $expanded_cols[] = $cols;
+    }
+}
+
 
 // merge required columns and selected columns by user
-$export_cols = array_merge($required_cols, $_POST['columns'] ?? []);
+$export_cols = array_merge($required_cols, $expanded_cols);
 
 // column mapping
 $column_map = [
@@ -33,9 +51,15 @@ $column_map = [
     'year_level' => 'scholar_info.year_level',
     'scholarship_program' => 'scholarship_program.name',
     'academic_status' => 'scholar_info.academic_status',
-    // for father and mother's name select last name, given name, and middle name
-    'father_name' => "CONCAT(scholar_info.father_last_name, ', ', scholar_info.father_given_name, ' ', scholar_info.father_middle_name)",
-    'mother_name' => "CONCAT(scholar_info.mother_last_name, ', ', scholar_info.mother_given_name, ' ', scholar_info.mother_middle_name)",
+
+    'father_last' => 'scholar_info.father_last_name',
+    'father_given' => 'scholar_info.father_given_name',
+    'father_middle' => 'scholar_info.father_middle_name',
+
+    'mother_last' => 'scholar_info.mother_last_name',
+    'mother_given' => 'scholar_info.mother_given_name',
+    'mother_middle' => 'scholar_info.mother_middle_name',
+
     'permanent_address' => 'scholar_info.permanent_address',
     'disability' => 'scholar_info.disability',
     'contact' => 'scholar_info.contact_num',
@@ -55,8 +79,12 @@ $display_headers = [
     'year_level' => 'Year Level',
     'scholarship_program' => 'Scholarship Program',
     'academic_status' => 'Academic Status',
-    'father_name' => "Father's Name",
-    'mother_name' => "Mother's Name",
+    'father_last' => "Father's Last Name",
+    'father_given' => "Father's Given Name",
+    'father_middle' => "Father's Middle Name",
+    'mother_last' => "Mother's Last Name",
+    'mother_given' => "Mother's Given Name",
+    'mother_middle' => "Mother's Middle Name",
     'permanent_address' => 'Permanent Address',
     'disability' => 'Disability',
     'contact' => 'Contact Number',
