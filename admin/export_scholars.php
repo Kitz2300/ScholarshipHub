@@ -2,6 +2,7 @@
 include __DIR__ . "/../includes/conn.php";
 session_start();
 
+// show error message if any
 if(isset($_SESSION['fail'])) {
     echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
     unset($_SESSION['fail']);
@@ -33,7 +34,9 @@ if(isset($_SESSION['fail'])) {
             
             <form action="../functions/admin/export_scholars_process.php" method="POST">
                 <h4>Select Filters:</h4>
-                <!-- TODO: filters for excel file. what scholarship program, college, departmen/program, etc. -->
+                <!-- filters and column selection options for exporting the file -->
+
+                <!-- scholarship program filter selection -->
                 <label for="scholar_program">Scholarship Program</label>
                 <select name="scholar_program" id="scholar_program" required>
                     <option value="all">All Scholarship Program</option>
@@ -48,6 +51,7 @@ if(isset($_SESSION['fail'])) {
                 <?php endwhile; ?>
                 </select><br><br>
 
+                <!-- program filter selection -->
                 <label for="program">Program:</label>
                 <select name="program" id="program" required>
                     <option value="all">All Program</option>
@@ -66,6 +70,7 @@ if(isset($_SESSION['fail'])) {
 
                 <h4>Select columns to include:</h4>
 
+                <!-- checkbox required fields which shows checked and user cannot uncheck -->
                 <h4>Required Fields</h4>
                 <input type="checkbox" id="student_id" checked disabled/>
                 <label for="student_id">Student ID (Required)</label><br>
@@ -93,6 +98,7 @@ if(isset($_SESSION['fail'])) {
                 
                 <h4>Optional Fields</h4>
 
+                <!-- checkbox for optional fields -->
                 <input type="checkbox" id="father_name" name="columns[]" value="father_name"/>
                 <label for="father_name">Father's Name</label><br>
                 
@@ -120,6 +126,7 @@ if(isset($_SESSION['fail'])) {
                 <input type="checkbox" id="ip_group" name="columns[]" value="ip_group"/>
                 <label for="ip_group">IP Group</label><br>
                 
+                <!-- dynamic checkbox for extra fields (if any) to include or not -->
                 <?php 
                 $extra_keys = [];
                 $extra_sql = "SELECT notes FROM scholar_notes WHERE notes IS NOT NULL AND notes <> ''";
@@ -128,6 +135,7 @@ if(isset($_SESSION['fail'])) {
                 $extra_result = $extra_stmt->get_result();
 
                 while($row = $extra_result->fetch_assoc()) {
+                    // data from db is a json so we decode it
                     $data = json_decode($row['notes'], true);
                     if(is_array($data)) {
                         foreach(array_keys($data) as $key) {
@@ -149,6 +157,7 @@ if(isset($_SESSION['fail'])) {
                 
                 <hr>
 
+                <!-- filename input to name the file -->
                 <label for="filename">Filename:</label>
                 <input type="text" name="filename" id="filename" required/><br><br>
 
