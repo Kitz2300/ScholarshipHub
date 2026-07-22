@@ -2,6 +2,10 @@
 include __DIR__ . "/../includes/conn.php";
 session_start();
 
+if(isset($_SESSION['fail'])) {
+    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+    unset($_SESSION['fail']);
+}
 
 ?>
 
@@ -26,84 +30,129 @@ session_start();
 
             <hr>
             
-            <!-- TODO: filters for excel file. what scholarship program, college, departmen/program, etc. -->
-
-            <hr>
-
+            
             <form action="../functions/admin/export_scholars_process.php" method="POST">
+                <h4>Select Filters:</h4>
+                <!-- TODO: filters for excel file. what scholarship program, college, departmen/program, etc. -->
+                <label for="scholar_program">Scholarship Program</label>
+                <select name="scholar_program" id="scholar_program" required>
+                    <option value="all">All Scholarship Program</option>
+                <?php 
+                $scholarship_program_sql = "SELECT name, code FROM scholarship_program WHERE is_active = 1";
+                $scholarship_program_stmt = $conn->prepare($scholarship_program_sql);
+                $scholarship_program_stmt->execute();
+                $scholarship_program_result = $scholarship_program_stmt->get_result();
+                
+                while($row=$scholarship_program_result->fetch_assoc()) : ?>
+                    <option value="<?= $row['name'] ?>"><?= $row['name'] ?> (<?= $row['code'] ?>)</option>
+                <?php endwhile; ?>
+                </select><br><br>
+
+                <label for="program">Program:</label>
+                <select name="program" id="program" required>
+                    <option value="all">All Program</option>
+                    <?php 
+                    $program_sql = "SELECT name FROM program";
+                    $program_stmt = $conn->prepare($program_sql);
+                    $program_stmt->execute();
+                    $program_result = $program_stmt->get_result();
+
+                    while($row=$program_result->fetch_assoc()) : ?>
+                        <option value="<?= $row['name'] ?>"><?= $row['name'] ?></option>
+                    <?php endwhile; ?>
+                </select>
+
+                <hr>
+
                 <h4>Select columns to include:</h4>
 
                 <h4>Required Fields</h4>
-                <input type="checkbox" id="student_id" name="student_id" checked disabled/>
+                <input type="checkbox" id="student_id" checked disabled/>
                 <label for="student_id">Student ID (Required)</label><br>
 
-                <input type="checkbox" id="last_name" name="last_name" checked disabled/>
+                <input type="checkbox" id="last_name" checked disabled/>
                 <label for="last_name">Last Name (Required)</label><br>
                 
-                <input type="checkbox" id="given_name" name="given_name" checked disabled/>
+                <input type="checkbox" id="given_name" checked disabled/>
                 <label for="given_name">Given Name (Required)</label><br>
                 
-                <input type="checkbox" id="ext_name" name="ext_name" checked disabled/>
+                <input type="checkbox" id="ext_name" checked disabled/>
                 <label for="ext_name">Extended Name (Required)</label><br>
                 
-                <input type="checkbox" id="middle_name" name="middle_name" checked disabled/>
+                <input type="checkbox" id="middle_name" checked disabled/>
                 <label for="middle_name">Middle Name (Required)</label><br>
                 
-                <input type="checkbox" id="sex" name="sex" checked disabled/>
-                <label for="sex">Sex (Required)</label><br>
-                
-                <input type="checkbox" id="birthdate" name="birthdate" checked disabled/>
-                <label for="birthdate">Birthdate (Required)</label><br>
-                
-                <input type="checkbox" id="program_name" name="program_name" checked disabled/>
+                <input type="checkbox" id="program_name" checked disabled/>
                 <label for="program_name">Program Name (Required)</label><br>
+
+                <input type="checkbox" id="scholarship" checked disabled/>
+                <label for="scholarship">Scholarship Program (Required)</label><br>
                 
-                <input type="checkbox" id="year_level" name="year_level" checked disabled/>
+                <input type="checkbox" id="year_level" checked disabled/>
                 <label for="year_level">Year Level (Required)</label><br>
                 
                 <h4>Optional Fields</h4>
 
-                <input type="checkbox" id="father_name" name="father_name" value="father_name"/>
+                <input type="checkbox" id="father_name" name="columns[]" value="father_name"/>
                 <label for="father_name">Father's Name</label><br>
                 
-                <input type="checkbox" id="mother_name" name="mother_name" value="mother_name"/>
+                <input type="checkbox" id="mother_name" name="columns[]" value="mother_name"/>
                 <label for="mother_name">Mother's Name</label><br>
                 
-                <input type="checkbox" id="permanent_address" name="permanent_address" value="permanent_address"/>
+                <input type="checkbox" id="permanent_address" name="columns[]" value="permanent_address"/>
                 <label for="permanent_address">Permanent Address</label><br>
                 
-                <input type="checkbox" id="disability" name="disability" value="disability"/>
+                <input type="checkbox" id="disability" name="columns[]" value="disability"/>
                 <label for="disability">Disability</label><br>
                 
-                <input type="checkbox" id="contact" name="contact" value="contact"/>
+                <input type="checkbox" id="contact" name="columns[]" value="contact"/>
                 <label for="contact">Contact Number</label><br>
 
-                <input type="checkbox" id="email" name="email" value="email"/>
+                <input type="checkbox" id="birthdate" name="columns[]" value="birthdate"/>
+                <label for="birthdate">Birthdate</label><br>
+
+                <input type="checkbox" id="sex" name="columns[]" value="sex"/>
+                <label for="sex">Sex</label><br>
+
+                <input type="checkbox" id="email" name="columns[]" value="email"/>
                 <label for="email">Email Address:</label><br>
                 
-                <input type="checkbox" id="ip_group" name="ip_group" value="ip_group"/>
+                <input type="checkbox" id="ip_group" name="columns[]" value="ip_group"/>
                 <label for="ip_group">IP Group</label><br>
                 
                 <?php 
-                $extra_sql = "SELECT * FROM scholar_notes WHERE notes IS NOT NULL AND notes <> ''";
+                $extra_keys = [];
+                $extra_sql = "SELECT notes FROM scholar_notes WHERE notes IS NOT NULL AND notes <> ''";
                 $extra_stmt = $conn->prepare($extra_sql);
                 $extra_stmt->execute();
                 $extra_result = $extra_stmt->get_result();
 
-                if($extra_result->num_rows > 0) {
-                    while($row=$extra_result->fetch_assoc()) {
-                        // TODO: checkbox for each extra column
+                while($row = $extra_result->fetch_assoc()) {
+                    $data = json_decode($row['notes'], true);
+                    if(is_array($data)) {
+                        foreach(array_keys($data) as $key) {
+                            if(!in_array($key, $extra_keys)) {
+                                $extra_keys[] = $key;
+                            }
+                        }
                     }
                 }
 
+                if(!empty($extra_keys)) : ?>
+                    <p><strong>Extra Fields (from scholar notes):</strong></p>
+                    <?php foreach($extra_keys as $key) : ?>
+                        <input type="checkbox" id="extra_<?= $key ?>" name="columns[]" value="extra_<?= $key ?>"/>
+                        <label for="extra_<?= $key ?>" class="optional"><?= htmlspecialchars($key) ?></label><br>
+                    <?php endforeach;
+                endif;
                 ?>
                 
                 <hr>
 
-                <lable for="filename">Filename:</lable>
-                <input type="text" name="filename" id="filename" required/><br>
+                <label for="filename">Filename:</label>
+                <input type="text" name="filename" id="filename" required/><br><br>
 
-                <button>Export</button>
+                <button name="export" onclick="return confirm('Export scholar list?')" >Export</button>
             </form>
             
         <?php endif; ?>
