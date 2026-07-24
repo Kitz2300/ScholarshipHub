@@ -99,31 +99,31 @@ if(isset($_SESSION['fail'])) {
                 <h4>Optional Fields</h4>
 
                 <!-- checkbox for optional fields -->
-                <input type="checkbox" id="father_name" name="columns[]" value="father_name"/>
+                <input type="checkbox" id="father_name" name="columns[]" value="father_name" checked/>
                 <label for="father_name">Father's Name</label><br>
                 
-                <input type="checkbox" id="mother_name" name="columns[]" value="mother_name"/>
+                <input type="checkbox" id="mother_name" name="columns[]" value="mother_name" checked/>
                 <label for="mother_name">Mother's Name</label><br>
                 
-                <input type="checkbox" id="permanent_address" name="columns[]" value="permanent_address"/>
+                <input type="checkbox" id="permanent_address" name="columns[]" value="permanent_address" checked/>
                 <label for="permanent_address">Permanent Address</label><br>
                 
-                <input type="checkbox" id="disability" name="columns[]" value="disability"/>
+                <input type="checkbox" id="disability" name="columns[]" value="disability" checked/>
                 <label for="disability">Disability</label><br>
                 
-                <input type="checkbox" id="contact" name="columns[]" value="contact"/>
+                <input type="checkbox" id="contact" name="columns[]" value="contact" checked/>
                 <label for="contact">Contact Number</label><br>
 
-                <input type="checkbox" id="birthdate" name="columns[]" value="birthdate"/>
+                <input type="checkbox" id="birthdate" name="columns[]" value="birthdate" checked/>
                 <label for="birthdate">Birthdate</label><br>
 
-                <input type="checkbox" id="sex" name="columns[]" value="sex"/>
+                <input type="checkbox" id="sex" name="columns[]" value="sex" checked/>
                 <label for="sex">Sex</label><br>
 
-                <input type="checkbox" id="email" name="columns[]" value="email"/>
+                <input type="checkbox" id="email" name="columns[]" value="email" checked/>
                 <label for="email">Email Address:</label><br>
                 
-                <input type="checkbox" id="ip_group" name="columns[]" value="ip_group"/>
+                <input type="checkbox" id="ip_group" name="columns[]" value="ip_group" checked/>
                 <label for="ip_group">IP Group</label><br>
                 
                 <!-- dynamic checkbox for extra fields (if any) to include or not -->
