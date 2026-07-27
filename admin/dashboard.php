@@ -49,6 +49,7 @@ $status_result = $status_stmt->get_result();
         <p>Welcome, Admin!</p>
         <a href="scholar_list.php">Scholar List</a><br>
         <a href="announcements.php">Announcements</a><br>
+        <a href="scholarship_program.php">Scholasrhip Programs</a><br>
 
         <hr>
 
