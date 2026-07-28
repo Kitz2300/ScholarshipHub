@@ -16,9 +16,11 @@ $scholarships_stmt = $conn->prepare($scholarships_sql);
 $scholarships_stmt->execute();
 $scholarships_result = $scholarships_stmt->get_result();
 
+// delete scholarship program process
 if(isset($_POST['delete']) && isset($_POST['scholarship_program_id'])) {
     $scholarship_id = (int) $_POST['scholarship_program_id'];
 
+    // delete scholar list of the scholarship program
     $delete_sql = "DELETE FROM scholarship_program WHERE id = ?";
     $delete_list_sql = "DELETE FROM scholar_info WHERE scholarship_program_id = ?";
 
@@ -56,11 +58,17 @@ if(isset($_POST['delete']) && isset($_POST['scholarship_program_id'])) {
             <a href="add_scholarship.php">Add Scholarship Program</a><br>
 
             <hr>
+            <!-- list of scholarship programs -->
             <?php if($scholarships_result->num_rows > 0) : ?>
                 <?php while($row=$scholarships_result->fetch_assoc()) : ?>
                     <h2><?= htmlspecialchars($row['name']) ?></h2>
                     <h4><?= htmlspecialchars($row['description']) ?></h4>
+
+                    <!-- navigation links -->
                     <a href="scholarship_scholar_list.php?id=<?= $row['id'] ?>">View Scholar List</a>
+                    <a href="edit_scholarship_program.php?id=<?= $row['id'] ?>">Edit</a>
+
+                    <!-- delete button -->
                     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST">
                         <input type="hidden" name="scholarship_program_id" value="<?= $row['id'] ?>"/>
                         <button name="delete" onclick="return confirm('Deleting a Scholarship Program also deletes its list of scholars. Proceed?')">Delete</button>
@@ -68,6 +76,7 @@ if(isset($_POST['delete']) && isset($_POST['scholarship_program_id'])) {
                     <hr>
                 <?php endwhile; ?>
             <?php else: ?>
+                <!-- if there are no scholarship programs, show this -->
                 <h2>No Scholarship Programs</h2>
             <?php endif; ?>
         <?php endif; ?>
