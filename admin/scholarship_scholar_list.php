@@ -22,6 +22,7 @@ if(isset($_POST['delete']) && isset($_POST['scholar_id'])) {
     $delete_stmt = $conn->prepare($delete_sql);
     $delete_stmt->bind_param('i', $scholar_id);
     
+    // condition if query is successful or not
     if($delete_stmt->execute()) {
         $_SESSION['success'] = "Scholar Removed";
         header("Location: scholarship_scholar_list.php?id=$scholarship_id");
@@ -79,6 +80,8 @@ if($scholarship_name_stmt->execute()) {
         <?php else : ?>
             <h1><?= htmlspecialchars($scholarship_name) ?> Scholar List</h1>
             <a href="scholarship_program.php">Back</a>
+
+            <!-- scholar list table -->
                 <table border="1">
                     <tr>
                         <th>Student ID</th>
@@ -108,6 +111,7 @@ if($scholarship_name_stmt->execute()) {
                         </tr>
                     <?php endwhile; ?>
                 <?php else : ?>
+                    <!-- if list is blank display this -->
                     <tr><td colspan="5">No scholars under this scholarship.</td></tr>
                 <?php endif; ?>
                 </table>
