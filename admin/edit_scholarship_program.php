@@ -20,6 +20,7 @@ $scholarship_stmt->bind_param('i', $scholarship_id);
 $scholarship_stmt->execute();
 $scholarship_result = $scholarship_stmt->get_result();
 
+
 if($scholarship_result->num_rows > 0) {
     if($row=$scholarship_result->fetch_assoc()) {
         $name = $row['name'];
@@ -30,6 +31,11 @@ if($scholarship_result->num_rows > 0) {
         $is_grant = $row['financial_grant'];
         $is_active = $row['is_active'];
     }
+} else {
+    // alert user if query returned 0 results
+    $_SESSION['fail'] = "Scholarship program does not exist!";
+    header("Location: scholarship_program.php");
+    exit();
 }
 ?>
 
@@ -45,6 +51,7 @@ if($scholarship_result->num_rows > 0) {
         <?php else : ?>
             <h1>Edit Scholarship Program</h1>
 
+            <!-- edit form -->
             <form action="../functions/admin/edit_scholarship_process.php" method="POST">
                 <label for="name" >Scholarship Name:</label><br>
                 <input type="text" name="name" id="name" value="<?= htmlspecialchars($name) ?>" required/><br><br>
