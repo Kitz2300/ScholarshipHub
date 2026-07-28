@@ -20,6 +20,7 @@ if(isset($_SESSION['fail'])) {
         <?php else : ?>
             <h1>Add Scholarship Program</h1>
 
+            <!-- add form -->
             <form action="../functions/admin/add_scholarship_process.php" method="POST">
                 <label for="name" >Scholarship Name:</label><br>
                 <input type="text" name="name" id="name" required/><br><br>
@@ -42,6 +43,7 @@ if(isset($_SESSION['fail'])) {
 
                 <button name="add">Add</button>
             </form>
+            <!-- cancel button -->
             <button onclick="window.location.href='scholarship_program.php'">Cancel</button>
         <?php endif; ?>
     </body>
