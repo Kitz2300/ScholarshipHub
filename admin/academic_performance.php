@@ -2,7 +2,7 @@
 include __DIR__ . "/../includes/conn.php";
 session_start();
 
-$scholar_id = $_GET['scholar_id'] ?? 0;
+$scholar_id = (int) $_GET['scholar_id'] ?? 0;
 $name = "";
 
 $scholar_sql = "SELECT last_name, given_name FROM scholar_info WHERE id = ?";
@@ -15,7 +15,7 @@ if($scholar_result->num_rows > 0) {
     if($row=$scholar_result->fetch_assoc()) $name = $row['last_name'] . ", " . $row['given_name'];
 } else {
     $_SESSION['fail'] = "Scholar does not exist!";
-    header("Location: sholar_profile.php?id=$name");
+    header("Location: scholar_profile.php?id=$scholar_id");
     exit();
 }
 ?>
@@ -32,11 +32,11 @@ if($scholar_result->num_rows > 0) {
             <script>alert('You are not logged in')</script>
             <script>window.location.href='login.php'</script>
         <?php else : ?>
-            <h2><?= $name ?>'s Academic Performance</h2>
+            <h2><?= htmlspecialchars($name) ?>'s Academic Performance</h2>
             <a href="scholar_profile.php?scholar_id=<?= $scholar_id ?>">Back</a><br>
             <a href="add_academic_performance.php?scholar_id=<?= $scholar_id ?>">Add Record</a><br><br>
             <?php 
-            $academic_sql = "SELECT * FROM academic_performance WHERE scholar_id = ?";
+            $academic_sql = "SELECT * FROM academic_performance WHERE scholar_id = ? ORDER BY school_year DESC, semester DESC";
             $academic_stmt = $conn->prepare($academic_sql);
             $academic_stmt->bind_param('i', $scholar_id);
             $academic_stmt->execute();
