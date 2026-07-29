@@ -12,7 +12,7 @@ if(isset($_SESSION['success'])) {
 }
 
 // get scholar id from url
-$scholar_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$scholar_id = isset($_GET['scholar_id']) ? (int)$_GET['scholar_id'] : 0;
 $scholar_sql = "SELECT scholar_info.*, 
                 scholarship_program.name AS scholarship_program_name,  
                 program.name AS program_name,
@@ -67,7 +67,7 @@ if($row=$scholar_result->fetch_assoc()) {
     $birthdate = $row['birthdate'];
     $scholarship_program = $row['scholarship_program_name'];
     $program = $row['program_name'];
-    $year = $row['year_level'];
+    $year = $row['year_level'] ?? 0;
     $college = $row['college_name'];
     $academic_status = $row['academic_status'];
     $address = $row['permanent_address'];
@@ -169,9 +169,6 @@ if($row=$scholar_result->fetch_assoc()) {
         <h4>College</h4>
         <p><?= htmlspecialchars($college) ?></p>
         
-        <h4>Academic Status</h4>
-        <p><?= htmlspecialchars($academic_status) ?></p>
-        
         <h4>Address</h4>
         <p><?= htmlspecialchars($address) ?></p>
         
@@ -215,6 +212,33 @@ if($row=$scholar_result->fetch_assoc()) {
         <h4>Last Name</h4>
         <p><?= htmlspecialchars($mother_last) ?></p>
         
+        <hr>
+
+        <!-- academic information (status, gwa, and units) -->
+        <h2>Academic Information</h2>
+
+        <p><strong>Current Academic Status:</strong> <?= htmlspecialchars($academic_status) ?></p>
+
+        <!-- manage gwa and units -->
+        <a href="academic_performance.php?scholar_id=<?= $scholar_id ?>">Manage GWA & Units</a>
+
+        <!-- get scholar's academic performace and display -->
+        <?php 
+            $academic_performance_sql = "SELECT * FROM academic_performance WHERE scholar_id = ?";
+            $academic_performance_stmt = $conn->prepare($academic_performance_sql);
+            $academic_performance_stmt->bind_param('i', $scholar_id);
+            $academic_performance_stmt->execute();
+            $academic_performance_result = $academic_performance_stmt->get_result();
+            
+            if($academic_performance_result->num_rows > 0) : ?>
+                <?php while($row=$academic_performance_result->fetch_assoc()) : ?>
+                    <p><strong>Current GWA:</strong> <?= htmlspecialchars($row['gwa']) ?></p>
+                    <p><strong>Units:</strong> <?= htmlspecialchars($row['units']) ?></p>
+                    <p><strong>Term:</strong> <?= htmlspecialchars($row['term']) ?></p>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <p>No Academic Records Found</p>
+            <?php endif; ?>
         <?php endif; ?>  
 
     </body>
