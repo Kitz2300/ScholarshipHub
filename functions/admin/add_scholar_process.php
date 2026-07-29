@@ -1,18 +1,24 @@
 <?php
 require_once __DIR__ . '/../../includes/conn.php';
+session_start();
 
 $required_fields = ['last_name', 'first_name', 'middle_name', 'ext_name', 'email', 'student_id', 'student_contact', 'sex', 'birth_date', 'disability', 'ip_group', 'address', 'zipcode', 'scholarship_program', 'program', 'father_last', 'father_first', 'father_middle', 'mother_last', 'mother_first', 'mother_middle'];
 
 $missing_fields = [];
 
+// loop through each fields and validate
 foreach ($required_fields as $field) {
     if(empty($_POST[$field])) {
         $missing_fields[] = $field;
     }
 }
 
+// if there are missing fields alert user
 if(!empty($missing_fields)) {
-    die("Missing Fields: " . implode(",", $missing_fields));
+    // die("Missing Fields: " . implode(",", $missing_fields));
+    $_SESSION['fail'] = "Missing Fields: " . implode(",", $missing_fields);
+    header("Location: ../../admin/add_scholar.php");
+    exit();
 }
 
 // student information
