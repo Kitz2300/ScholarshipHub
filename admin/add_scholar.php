@@ -2,6 +2,12 @@
 include __DIR__ . '/../includes/conn.php';
 session_start();
 
+// if add failed alert users
+if(isset($_SESSION['fail'])) {
+    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+    unset($_SESSION['fail']);
+}
+
 // to be used in selecting a year level
 $year = "";
 ?>
