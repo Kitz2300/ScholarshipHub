@@ -100,7 +100,7 @@ if($scholarship_name_stmt->execute()) {
                             <td>
                                 
                                 <!-- view scholar info button -->
-                                <a href="scholar_profile.php?id=<?= $row['scholar_id'] ?>">View</a>
+                                <a href="scholar_profile.php?scholar_id=<?= $row['scholar_id'] ?>">View</a>
                                 
                                 <form action="<?= $_SERVER['PHP_SELF'] ?>?id=<?= $scholarship_id ?>" method="POST">
                                     <!-- delete button -->
