@@ -160,15 +160,6 @@ if($row=$scholar_result->fetch_assoc()) {
         <h4>Scholarship Program</h4>
         <p><?= htmlspecialchars($scholarship_program) ?></p>
         
-        <h4>Program</h4>
-        <p><?= htmlspecialchars($program) ?></p>
-        
-        <h4>Year Level</h4>
-        <p><?= htmlspecialchars($year_lvl) ?></p>
-
-        <h4>College</h4>
-        <p><?= htmlspecialchars($college) ?></p>
-        
         <h4>Address</h4>
         <p><?= htmlspecialchars($address) ?></p>
         
@@ -223,6 +214,9 @@ if($row=$scholar_result->fetch_assoc()) {
         <a href="academic_performance.php?scholar_id=<?= $scholar_id ?>">Manage GWA & Units</a>
 
         <!-- get scholar's academic performace and display -->
+        <p><strong>Program:</strong> <?= htmlspecialchars($program) ?></p>
+        <p><strong>College:</strong> <?= htmlspecialchars($college) ?></p>
+        <p><strong>Year Level:</strong> <?= htmlspecialchars($year_lvl) ?></p>
         <?php 
             $academic_performance_sql = "SELECT * FROM academic_performance WHERE scholar_id = ?";
             $academic_performance_stmt = $conn->prepare($academic_performance_sql);
@@ -233,8 +227,8 @@ if($row=$scholar_result->fetch_assoc()) {
             if($academic_performance_result->num_rows > 0) : ?>
                 <?php while($row=$academic_performance_result->fetch_assoc()) : ?>
                     <p><strong>Current GWA:</strong> <?= htmlspecialchars($row['gwa']) ?></p>
-                    <p><strong>Units:</strong> <?= htmlspecialchars($row['units']) ?></p>
-                    <p><strong>Term:</strong> <?= htmlspecialchars($row['term']) ?></p>
+                    <p><strong>Current Units:</strong> <?= htmlspecialchars($row['units']) ?></p>
+                    <p><strong>Semester:</strong> <?= htmlspecialchars($row['semester']) ?></p>
                 <?php endwhile; ?>
             <?php else: ?>
                 <p>No Academic Records Found</p>
