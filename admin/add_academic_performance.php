@@ -3,7 +3,7 @@ include __DIR__ . "/../includes/conn.php";
 session_start();
 
 // get scholar id from url param
-$scholar_id = (int) $_GET['scholar_id'] ?? 0;
+$scholar_id = (int) ($_GET['scholar_id'] ?? 0);
 
 // validate id
 if($scholar_id == 0) {
