@@ -3,7 +3,7 @@ include __DIR__ . "/../includes/conn.php";
 session_start();
 
 // get id from url
-$scholarship_id =  $_GET['id'] ?? 0;
+$scholarship_id =  (int) ($_GET['id'] ?? 0);;
 
 // initialize variables
 $name = "";

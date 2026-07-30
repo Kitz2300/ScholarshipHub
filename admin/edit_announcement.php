@@ -2,7 +2,7 @@
 include __DIR__ . "/../includes/conn.php";
 session_start();
 
-$announcement_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$announcement_id = (int) ($_GET['id'] ?? 0);
 
 $announcement_sql = "SELECT * FROM announcements WHERE id=?";
 $announcement_stmt = $conn->prepare($announcement_sql);

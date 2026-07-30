@@ -12,7 +12,7 @@ if(isset($_SESSION['success'])) {
 }
 
 // get scholar id from url
-$scholar_id = isset($_GET['scholar_id']) ? (int)$_GET['scholar_id'] : 0;
+$scholar_id = (int) ($_GET['scholar_id'] ?? 0);
 $scholar_sql = "SELECT scholar_info.*, 
                 scholarship_program.name AS scholarship_program_name,  
                 program.name AS program_name,

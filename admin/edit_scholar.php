@@ -9,7 +9,7 @@ if(isset($_SESSION['fail'])) {
 }
 
 // get scholar id from the url and query scholar info with that id
-$scholar_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$scholar_id = (int) ($_GET['id'] ?? 0);
 $scholar_sql = "SELECT * FROM scholar_info WHERE id = ?";
 $scholar_stmt = $conn->prepare($scholar_sql);
 $scholar_stmt->bind_param("i", $scholar_id);

@@ -11,7 +11,7 @@ if(isset($_SESSION['success'])) {
     unset($_SESSION['fail']);
 }
 
-$scholarship_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+$scholarship_id = (int) ($_GET['id'] ?? 0);
 $scholarship_name = "";
 
 // delete scholarship process

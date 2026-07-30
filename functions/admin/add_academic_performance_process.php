@@ -4,10 +4,10 @@
 
     if(isset($_POST['add']) && isset($_POST['scholar_id'])) {
         // store input values in variabled
-        $scholar_id = (int) $_POST['scholar_id'] ?? 0;
+        $scholar_id = (int) ($_POST['scholar_id'] ?? 0);
         $sem = $_POST['sem'] ?? "";
-        $gwa = (float) $_POST['gwa'] ?? 0;
-        $units = (float) $_POST['units'] ?? 0;
+        $gwa = (float) ($_POST['gwa'] ?? 0);
+        $units = (float) ($_POST['units'] ?? 0);
         $year_lvl = "";
         $school_year =  $_POST['start_year'] . " - " . $_POST['end_year'];
 
