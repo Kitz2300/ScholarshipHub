@@ -2,6 +2,15 @@
 include __DIR__ . "/../includes/conn.php";
 session_start();
 
+// succes/fail session variables used by the process to send success/fail messages
+if(isset($_SESSION['success'])) {
+    echo "<script>alert('" . $_SESSION['success'] . "')</script>";
+    unset($_SESSION['success']);
+} else if(isset($_SESSION['fail'])) {
+    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+    unset($_SESSION['fail']);
+}
+
 $scholar_id = (int) $_GET['scholar_id'] ?? 0;
 $name = "";
 
@@ -15,7 +24,7 @@ if($scholar_result->num_rows > 0) {
     if($row=$scholar_result->fetch_assoc()) $name = $row['last_name'] . ", " . $row['given_name'];
 } else {
     $_SESSION['fail'] = "Scholar does not exist!";
-    header("Location: scholar_profile.php?id=$scholar_id");
+    header("Location: scholar_list.php");
     exit();
 }
 ?>
