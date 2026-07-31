@@ -1,0 +1,190 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    color: #333;
+    min-height: 100vh;
+    background-image: url('../images/background.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    position: relative;
+}
+
+/* Dark overlay over the background so text is always readable */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.15); /* 15% dark tint - adjust if needed */
+    z-index: -1;
+    pointer-events: none;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+    /* Centers the content vertically on the screen */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 90vh;
+}
+
+/* --- GLASSMORPHISM BASE STYLES --- */
+.header, .welcome, .role-card, .announcements {
+    background: rgba(255, 255, 255, 0.85); /* Semi-transparent white */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Header - updated to match the forest green tones in the image */
+.header {
+    background: rgba(26, 59, 34, 0.85) !important; /* Deep forest green */
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 20px 0;
+    text-align: center;
+    border-radius: 8px 8px 0 0;
+}
+
+.header h1 {
+    font-size: 32px;
+}
+
+.header p {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.header img {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 12px;
+}
+
+/* Welcome Section */
+.welcome {
+    padding: 25px;
+    margin: 20px 0;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.welcome h2 {
+    color: #1e4628; /* Matches the header */
+}
+
+.welcome p {
+    color: #444;
+    margin-top: 10px;
+}
+
+/* Login Cards */
+.role-cards {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.role-card {
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+    flex: 1;
+    max-width: 250px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    color: #333;
+}
+
+.role-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.role-card .icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.role-card .role-name {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.role-card .role-desc {
+    font-size: 14px;
+    color: #555;
+}
+
+.role-card.admin { border-top: 4px solid #2ecc71; }
+.role-card.staff { border-top: 4px solid #3498db; }
+.role-card.student { border-top: 4px solid #e67e22; }
+
+/* Announcements */
+.announcements {
+    padding: 25px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.announcements h2 {
+    border-bottom: 2px solid #3fb524;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    color: #1e4628;
+}
+
+.announcement-item {
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.announcement-item:last-child {
+    border-bottom: none;
+}
+
+.announcement-item .title {
+    font-weight: bold;
+    font-size: 18px;
+    color: #1e4628;
+}
+
+.announcement-item .date {
+    font-size: 12px;
+    color: #666;
+    margin-left: 10px;
+}
+
+.announcement-item .content {
+    color: #444;
+    margin-top: 5px;
+    white-space: pre-wrap; 
+    word-wrap: break-word;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .role-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+    .role-card {
+        max-width: 100%;
+        width: 100%;
+    }
+}

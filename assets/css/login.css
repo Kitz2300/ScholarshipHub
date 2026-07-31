@@ -1,0 +1,212 @@
+/* login.css - Admin Login Page (Matched to Background) */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    
+    /* Matching background from the main portal */
+    background-image: url('../images/background.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+/* Dark overlay to ensure text stands out */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: -1;
+    pointer-events: none;
+}
+
+img {
+    width: 40px;
+    height: 40px;
+}
+
+/* Glassmorphism Container */
+.container {
+    max-width: 450px;
+    width: 100%;
+    margin: 20px;
+    background: rgba(255, 255, 255, 0.85); /* Semi-transparent */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* Header - Updated to Forest Green to match the trees in the background */
+.header {
+    background: rgba(26, 59, 34, 0.85) !important; /* Deep forest green */
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 30px 20px 25px;
+    text-align: center;
+}
+
+.header img {
+    width: 90px;
+    height: 90px;
+    margin-bottom: 12px;
+    padding: 5px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.5);
+    background-color: rgba(255, 255, 255, 0.818);
+}
+
+.header h1 {
+    font-size: 28px;
+}
+
+.header p {
+    font-size: 14px;
+    opacity: 0.85;
+    margin-top: 5px;
+}
+
+/* Login Box */
+.login-box {
+    padding: 30px;
+}
+
+.login-box h2 {
+    color: #1e4628; /* Matches header */
+    font-size: 24px;
+    text-align: center;
+}
+
+.login-box .subtitle {
+    color: #555;
+    text-align: center;
+    font-size: 14px;
+    margin: 5px 0 20px 0;
+}
+
+/* Error Message */
+.error-msg {
+    background: rgba(248, 215, 218, 0.9);
+    color: #721c24;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: center;
+    border: 1px solid rgba(114, 28, 36, 0.2);
+}
+
+/* Form */
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border 0.3s;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.form-group input:focus {
+    border-color: #1e4628;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(26, 59, 34, 0.15);
+}
+
+/* Login Button - Updated to solid forest green */
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    background: #1e4628;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.login-btn:hover {
+    background: #2a6b37;
+    transform: translateY(-2px);
+}
+
+.login-btn:active {
+    transform: scale(0.98);
+}
+
+/* Links */
+.login-links {
+    text-align: center;
+    margin-top: 18px;
+}
+
+.login-links a {
+    color: #1e4628;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.login-links a:hover {
+    text-decoration: underline;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 15px 20px;
+    color: #666;
+    font-size: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .container {
+        margin: 10px;
+        border-radius: 8px;
+    }
+    
+    .login-box {
+        padding: 20px;
+    }
+    
+    .header h1 {
+        font-size: 22px;
+    }
+}
