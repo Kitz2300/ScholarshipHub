@@ -27,7 +27,7 @@ if(isset($_POST['username']) && isset($_POST['password'])) {
 
     // Login failed
     $_SESSION['fail'] = "Invalid username or password, please try again";
-    header("Location: ../student/login.php");
+    header("Location: ../../student/login.php");
     exit();
 }
 ?>

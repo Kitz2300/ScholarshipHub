@@ -120,6 +120,6 @@ if($scholar_stmt->execute()) {
 }
 
 // redirect user to scholar_profile page
-header("Location: ../../admin/scholar_profile.php?id=$id_num"); 
+header("Location: ../../admin/scholar_profile.php?scholar_id=" . $id_num); 
 exit();
 ?>

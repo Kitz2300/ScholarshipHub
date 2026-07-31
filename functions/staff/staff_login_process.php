@@ -24,10 +24,9 @@ if(isset($_POST['username']) && isset($_POST['password'])) {
         exit();
     } else {
         // Login failed
-        echo "<script>
-        alert('Invalid username or password. Please try again.'); 
-        window.location.href = '../staff/login.php';
-        </script>";
+        $_SESSION['fail'] = "Invalid username or password, please try again";
+        header("Location: ../../staff/login.php");
+        exit();
     }
 }
 ?>

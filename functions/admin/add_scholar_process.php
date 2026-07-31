@@ -59,6 +59,6 @@ $scholar_stmt = $conn->prepare($scholar_sql);
 $scholar_stmt->bind_param("sssssisiiisssssssissssss", $student_id, $last_name, $first_name, $ext_name, $middle_name, $sex, $birth_date, $scholarship_program_id, $program_id, $year_lvl,$father_last_name, $father_first_name, $father_middle_name, $mother_last_name, $mother_first_name, $mother_middle_name, $address, $zipcode, $disability, $student_contact, $email, $ip_group, $student_id, $hashed_pass);
 $scholar_stmt->execute();
 
-header("Location: ../../admin/scholar_list.php?success=1");
+header("Location: ../../admin/scholar_list.php");
 
 ?>
