@@ -2,177 +2,248 @@
 include __DIR__ . '/../includes/conn.php';
 session_start();
 
-// if add failed alert users
 if(isset($_SESSION['fail'])) {
     echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
     unset($_SESSION['fail']);
 }
 
-// to be used in selecting a year level
 $year = "";
 ?>
 
+<!DOCTYPE html>
 <html>
-    <head>
-        <title>Add Scholar</title>
-    </head>
-    <body>
-        <!-- check if logged in or not -->
-        <?php
-        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
-            <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>
-            <!-- if logged in, load page -->
-        <?php else : ?>
-        <!-- Add Scholar Form -->
-        <h1>Add Scholar</h1>
+<head>
+    <title>Add Scholar - PIT ScholarshipHub</title>
+    <link rel="stylesheet" href="../assets/css/form.css">
+    <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+</head>
+<body>
+    <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
+        <script>alert('You are not logged in')</script>
+        <script>window.location.href='login.php'</script>
+    <?php else : ?>
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-left">
+                    <img src="../assets/images/PIT%20LOGO.png" alt="PIT Logo">
+                    <div>
+                        <h1>PIT ScholarshipHub</h1>
+                        <p>Add New Scholar</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <span class="welcome-text">Welcome, Admin!</span>
+                    <form action="../functions/logout.php" method="post" style="display: inline;">
+                        <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
+                    </form>
+                </div>
+            </div>
 
-        <div class="add_scholar">
-            <form action="../functions/add_scholar_process.php" method="post">
-                <!-- Student Information Section -->
-                <h3>Student Information</h3>
-                <!-- student fullname (last, first middle extended) -->
-                <label for="last_name">Name:</label><br>
-                <input type="text" name="last_name" placeholder="Last Name" id="last_name" required>
-                <input type="text" name="first_name" placeholder="First Name" id="first_name" required>
-                <input type="text" name="middle_name" placeholder="Middle Name" id="middle_name" required>
-                <select name="ext_name" id="ext_name" required>
-                    <option value="" selected disabled>Extension Name</option>
-                    <option value="N/A">Not Applicable</option>
-                    <option value="Jr.">Jr.</option>
-                    <option value="Sr.">Sr.</option>
-                    <option value="II">II</option>
-                    <option value="III">III</option>
-                </select><br>
+            <!-- Navigation -->
+            <nav class="nav-bar">
+                <ul>
+                    <li><a href="dashboard.php">Dashboard</a></li>
+                    <li><a href="scholar_list.php" class="active">Scholars</a></li>
+                    <li><a href="announcements.php">Announcements</a></li>
+                    <li><a href="scholarship_program.php">Scholarship Programs</a></li>
+                    <li><a href="upload_excel.php">Import Excel</a></li>
+                    <li><a href="export_scholars.php">Export Excel</a></li>
+                </ul>
+            </nav>
 
-                <!-- student email -->
-                <label for="email">Email:</label><br>
-                <input type="email" name="email" placeholder="john.doe@example.com" required><br>
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h2>Add New Scholar</h2>
+                    <div class="page-actions">
+                        <a href="scholar_list.php" class="btn btn-secondary">Back to List</a>
+                    </div>
+                </div>
 
-                <!-- student id -->
-                <label for="student_id">Student ID:</label><br>
-                <input type="text" name="student_id" placeholder="23-0223-403" required><br>
+                <!-- Add Scholar Form -->
+                <form action="../functions/admin/add_scholar_process.php" method="POST" class="scholar-form">
+                    <!-- Student Information -->
+                    <div class="form-section">
+                        <h3>Student Information</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="last_name">Last Name</label>
+                                <input type="text" name="last_name" id="last_name" placeholder="Enter last name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="first_name">First Name</label>
+                                <input type="text" name="first_name" id="first_name" placeholder="Enter first name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="middle_name">Middle Name</label>
+                                <input type="text" name="middle_name" id="middle_name" placeholder="Enter middle name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="ext_name">Extension Name</label>
+                                <select name="ext_name" id="ext_name" required>
+                                    <option value="" selected disabled>Select</option>
+                                    <option value="N/A">Not Applicable</option>
+                                    <option value="Jr.">Jr.</option>
+                                    <option value="Sr.">Sr.</option>
+                                    <option value="II">II</option>
+                                    <option value="III">III</option>
+                                </select>
+                            </div>
+                        </div>
 
-                <!-- student contact number -->
-                <label for="student_contact">Contact Number:</label><br>
-                <input type="text" name="student_contact" placeholder="09123456789" required><br>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" name="email" id="email" placeholder="john.doe@example.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="student_id">Student ID</label>
+                                <input type="text" name="student_id" id="student_id" placeholder="23-0223-403" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="student_contact">Contact Number</label>
+                                <input type="text" name="student_contact" id="student_contact" placeholder="09123456789" required>
+                            </div>
+                        </div>
 
-                <!-- student sex (0 - male, 1 - female) -->
-                <label for="sex">Sex:</label><br>
-                <select name="sex" id="sex" required>
-                    <option value="" selected disabled>Select Sex</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                </select><br>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="sex">Sex</label>
+                                <select name="sex" id="sex" required>
+                                    <option value="" selected disabled>Select Sex</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="birth_date">Birth Date</label>
+                                <input type="date" name="birth_date" id="birth_date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="disability">Disability</label>
+                                <input type="text" name="disability" id="disability" placeholder="e.g., Visual impairment, Dyslexia, Mobility impairment" />
+                            </div>
+                            <div class="form-group">
+                                <label for="ip_group">IP Group</label>
+                                <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa, Maranao, B'laan, Teduray" />
+                            </div>
+                        </div>
 
-                <!-- student birthdate -->
-                <label for="birth_date">Birth Date:</label><br>
-                <input type="date" name="birth_date" id="birth_date" required><br>
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="address">Permanent Address</label>
+                                <input type="text" name="address" id="address" placeholder="Brgy, Town/City, Province" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="zipcode">Zipcode</label>
+                                <input type="number" name="zipcode" id="zipcode" placeholder="6538" required>
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- student disability (if applicable, if not select not applicable) -->
-                <label for="disability">Disability (if applicable):</label><br>
-                <select name="disability" id="disability" required>
-                    <option value="" selected disabled>Select Disability</option>
-                    <option value="Not applicable">Not Applicable</option>
-                    <option value="Visual Impairment">Visual Impairment</option>
-                    <option value="Hearing Impairment">Hearing Impairment</option>
-                    <option value="Mobility Impairment">Mobility Impairment</option>
-                    <option value="Cognitive Impairment">Cognitive Impairment</option>
-                    <!-- Add more disability options as needed -->
-                </select><br>
+                    <!-- Scholarship Information -->
+                    <div class="form-section">
+                        <h3>Scholarship Information</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="scholarship_program">Scholarship Program</label>
+                                <select name="scholarship_program" id="scholarship_program" required>
+                                    <option value="" selected disabled>Select Scholarship Program</option>
+                                    <?php 
+                                    $scholarship_program_sql = "SELECT id, name, code FROM scholarship_program";
+                                    $stmt = $conn->prepare($scholarship_program_sql);
+                                    $stmt->execute();
+                                    $result = $stmt->get_result();
+                                    while($row = $result->fetch_assoc()) : ?>
+                                        <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['name']) ?> (<?= htmlspecialchars($row['code']) ?>)</option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="program">Program / Course</label>
+                                <select name="program" id="program" required>
+                                    <option value="" selected disabled>Select Program</option>
+                                    <?php 
+                                    $program_sql = "SELECT id, name FROM program";
+                                    $stmt = $conn->prepare($program_sql);
+                                    $stmt->execute();
+                                    $result = $stmt->get_result();
+                                    while($row = $result->fetch_assoc()) : ?>
+                                        <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['name']) ?></option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="year_lvl">Year Level</label>
+                                <select name="year_lvl" id="year_lvl" required>
+                                    <option value="" selected disabled>Select Year Level</option>
+                                    <?php for($i = 1; $i <= 6; $i++) : 
+                                        switch ($i) {
+                                            case 1: $year = "1st Year"; break;
+                                            case 2: $year = "2nd Year"; break;
+                                            case 3: $year = "3rd Year"; break;
+                                            default: $year = $i . "th Year"; break;
+                                        }
+                                    ?>
+                                        <option value="<?= $i ?>"><?= $year ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- student ip group (if applicable, if not select not applicable) -->
-                <label for="ip_goup">IP Group:</label><br>
-                <select name="ip_group" id="ip_group" required>
-                    <option value="" selected disabled>Select IP Group</option>
-                    <option value="Not applicable">Not applicable</option>
-                    <!-- Add IP group options here -->
-                </select><br>
+                    <!-- Family Background -->
+                    <div class="form-section">
+                        <h3>Family Background</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="father_last">Father's Last Name</label>
+                                <input type="text" name="father_last" id="father_last" placeholder="Last Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="father_first">Father's First Name</label>
+                                <input type="text" name="father_first" id="father_first" placeholder="First Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="father_middle">Father's Middle Name</label>
+                                <input type="text" name="father_middle" id="father_middle" placeholder="Middle Name" required>
+                            </div>
+                        </div>
 
-                <!-- student address -->
-                <label for="addresss">Permanent Address:</label><br>
-                <input type="text" name="address" placeholder="Brgy, Town/City, Province" required/><br>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="mother_last">Mother's Maiden Last Name</label>
+                                <input type="text" name="mother_last" id="mother_last" placeholder="Last Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="mother_first">Mother's Maiden First Name</label>
+                                <input type="text" name="mother_first" id="mother_first" placeholder="First Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="mother_middle">Mother's Maiden Middle Name</label>
+                                <input type="text" name="mother_middle" id="mother_middle" placeholder="Middle Name" required>
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- address zipcode -->
-                <label for="zipcode">Zipcode:</label><br>
-                <input type="number" name="zipcode" placholder="e.g. 6538" required /><br>
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">Add Scholar</button>
+                        <a href="scholar_list.php" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
 
-                <!-- student scholarship program -->
-                <label for="scholarship_program">Scholarship Program</label><br>
-                <select name="scholarship_program" id="scholarship_program" required>
-                    <option value="" selected disabled>Select Scholarship Program</option>
-                <?php 
-                $scholarship_program_sql = "SELECT id, name, code FROM scholarship_program";
-                $stmt = $conn->prepare($scholarship_program_sql);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                while($row = $result->fetch_assoc()) :?>
-                    echo "<option value=" <?= $row['id'] ?> "> <?= $row['name'] ?> (<?= $row['code'] ?>)</option>";
-                <?php endwhile; ?>
-                
-                ?>
-                </select><br>
-
-                <!-- student program/bachelor -->
-                <label for="program">Program</label><br>
-                <select name="program" id="program" required>
-                    <option value="" disabled selected>Select Program</option>
-                <?php 
-                $program_sql = "SELECT id, name FROM program";
-                $stmt = $conn->prepare($program_sql);
-                $stmt->execute();
-                $result = $stmt->get_result();
-
-                while($row = $result->fetch_assoc()) : ?>
-                    <option value=" <?= $row['id'] ?> "> <?= $row['name'] ?></option>;
-                <?php endwhile; ?>
-                <select><br>
-
-                <!-- select student academic year level -->
-                <label for="year_lvl">Year Level:</label><br>
-                <select name="year_lvl" id="year_lvl">
-                    <option selected disabled>Select Year Level</option>
-                    <!-- display as "1st year" but insert to db as number -->
-                    <?php for($i = 1; $i < 7; $i++) : 
-                        switch ($i) {
-                            case 1 :
-                                $year = "1st Year";
-                                break;
-                            case 2 :
-                                $year = "2nd Year";
-                                break;
-                            case 3:
-                                $year = "3rd Year";
-                                break;
-                            case $i > 3:
-                                $year = (string)$i . "th Year";
-                                break;
-                        }
-                        ?>
-                        <option value="<?= $i ?>"><?= $year ?></option> 
-                    <?php endfor; ?>
-                </select><br>
-
-                <!-- student family information section -->
-                <h3>Family Background</h3>
-
-                <!-- father's name (last, first middle) -->
-                <label for="father_name">Father's Name:</label><br>
-                <input type="text" name="father_last" placeholder="Last Name" id="father_name" required>
-                <input type="text" name="father_first" placeholder="First Name" id="father_name" required>
-                <input type="text" name="father_middle" placeholder="Middle Name" id="father_name" required><br>
-
-                <!-- mother's name (last, first middle) -->
-                <label for="mother_name">Mother's Name:</label><br>
-                <input type="text" name="mother_last" placeholder="Last Name" id="mother_name" required>
-                <input type="text" name="mother_first" placeholder="First Name" id="mother_name" required>
-                <input type="text" name="mother_middle" placeholder="Middle Name" id="mother_name" required><br>
-
-                <button type="submit">Add Scholar</button>
-            </form>
-            <!-- cancel button returns user to the scholar list -->
-            <button onclick="window.location.href='scholar_list.php'">Cancel</button>
+            <!-- Footer -->
+            <div class="footer">
+                © 2026 PIT ScholarshipHub. All rights reserved.
+            </div>
         </div>
-        
-        <?php endif; ?>
-    </body>
+    <?php endif; ?>
+</body>
 </html>
