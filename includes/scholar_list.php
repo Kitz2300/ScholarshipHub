@@ -1,7 +1,7 @@
-    <?php
+<?php
 require_once __DIR__ . '/../includes/conn.php';
 
-// delete scholar process
+// Delete scholar process
 if(isset($_POST['delete_scholar'])) {
     if(!empty($_POST['scholar_id'])) {
         $scholar_id = $_POST['scholar_id'];
@@ -15,16 +15,13 @@ if(isset($_POST['delete_scholar'])) {
     }
 }
 
-
 // Search, filter, and pagination process
-
-// pagination variables
 $records_per_page = 5;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if($page < 1) $page = 1;
 $offset = ($page - 1) * $records_per_page;
 
-// get filter parameters
+// Get filter parameters
 $searched = isset($_GET['search']) ? trim($_GET['search']) : "";
 $course_filter = isset($_GET['course_filter']) ? (int)$_GET['course_filter'] : 0;
 $college_filter = isset($_GET['college_filter']) ? (int)$_GET['college_filter'] : 0;
@@ -34,7 +31,7 @@ $where_condition = [];
 $params = [];
 $types = "";
 
-// search function
+// Search function
 if(isset($_GET['search_btn'])) {
     if(!empty($searched)) {
         $where_condition[] = "(scholar_info.student_id LIKE ? OR scholar_info.given_name LIKE ? OR scholar_info.last_name LIKE ?)";
@@ -46,7 +43,7 @@ if(isset($_GET['search_btn'])) {
     }
 }
 
-// filter function
+// Filter function
 if(isset($_GET['filter'])) {
     if(!empty($searched)) {
         $where_condition[] = "(scholar_info.student_id LIKE ? OR scholar_info.given_name LIKE ? OR scholar_info.last_name LIKE ?)";
@@ -76,10 +73,9 @@ if(isset($_GET['filter'])) {
     }
 }
 
-// if user searches or filters, concat WHERE conditions
 $where_sql = !empty($where_condition) ? "WHERE " . implode(" AND ", $where_condition) : "";
 
-// count total scholars and get total pages
+// Count total records
 $count_sql = "SELECT 
               COUNT(*) AS total 
               FROM scholar_info
@@ -99,8 +95,7 @@ $params[] = $records_per_page;
 $params[] = $offset;
 $types .= "ii";
 
-// Fetch all scholars from the database
-// unfinished sql !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// Fetch scholars
 $scholar_sql = "SELECT scholar_info.id, student_id, 
                 last_name, 
                 given_name, 
@@ -119,8 +114,6 @@ $scholar_sql = "SELECT scholar_info.id, student_id,
                 OFFSET ?
                 ";
 
-
-// if user searches concat a sql command to search for the value, if not directly prapre the statement
 $stmt = $conn->prepare($scholar_sql);
 if(!empty($params)) {
     $stmt->bind_param($types, ...$params);
@@ -128,141 +121,146 @@ if(!empty($params)) {
 $stmt->execute();
 $result = $stmt->get_result();
 
-// dropdown filters queries
-// get list of all coursess
+// Dropdown filters queries
 $course_sql = "SELECT id, name FROM program";
 $course_stmt = $conn->prepare($course_sql);
 $course_stmt->execute();
 $course_result = $course_stmt->get_result();
 
-// get list of all colleges
 $college_sql = "SELECT id, college_name FROM college";
 $college_stmt = $conn->prepare($college_sql);
 $college_stmt->execute();
 $college_result = $college_stmt->get_result();
 
-// get list of all scholarship programs
 $scholarship_sql = "SELECT id, name FROM scholarship_program";
 $scholarship_stmt = $conn->prepare($scholarship_sql);
 $scholarship_stmt->execute();
 $scholarship_result = $scholarship_stmt->get_result();
 
 if($page > $total_pages && $total_pages > 0) {
-    header("Location: ?pages=" . $total_pages);
-    echo "it worked";
+    header("Location: ?page=" . $total_pages);
     exit();
 }
-    
 ?>
 
-<div class="scholars">
-    <!-- search and filter form -->
-    <form action="<?= $_SERVER['PHP_SELF'] ?>" method="GET">
-        <input type="search" name="search" placeholder="Search" value="<?= !empty($searched) ? $searched : "" ?>"/>
-        <button name="search_btn">Search</button><br>
+<!-- Search and Filter Section -->
+<div class="search-filter">
+    <form action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" method="GET">
+        <!-- Row 1: Search -->
+        <div class="search-row">
+            <input type="search" name="search" placeholder="Search by name or ID..." value="<?= !empty($searched) ? htmlspecialchars($searched) : "" ?>"/>
+            <button type="submit" name="search_btn" class="btn btn-sm btn-primary">Search</button>
+        </div>
 
-        <!-- filter Dropdowns -->
-        <label id="filter">Filter By:</label>
-            <!-- Course Dropdown -->
+        <!-- Row 2: Filters -->
+        <div class="filter-row">
+            <span class="filter-label">Filter by:</span><br>
+            
             <select name="course_filter">
-                <option value="" disabled selected>Course</option>
+                <option value="0" <?= $course_filter == 0 ? 'selected' : '' ?>>All Courses</option>
                 <?php 
-                while($row= $course_result->fetch_assoc()) {
-                    $selected = (isset($_GET['course_filter']) && $_GET['course_filter'] == $row['id']) ? 'selected' : ''; ?>
+                $course_result->data_seek(0);
+                while($row = $course_result->fetch_assoc()) {
+                    $selected = ($course_filter == $row['id']) ? 'selected' : ''; ?>
                     <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= htmlspecialchars($row['name']) ?> </option>
-                <?php }
-                ?>
+                <?php } ?>
             </select>
 
-            <!-- College Dropdown -->
             <select name="college_filter">
-                <option value="" disabled selected>College</option>
+                <option value="0" <?= $college_filter == 0 ? 'selected' : '' ?>>All Colleges</option>
                 <?php 
-                while($row= $college_result->fetch_assoc()) {
-                    $selected = (isset($_GET['college_filter']) && $_GET['college_filter'] == $row['id']) ? 'selected' : ''; ?>
+                $college_result->data_seek(0);
+                while($row = $college_result->fetch_assoc()) {
+                    $selected = ($college_filter == $row['id']) ? 'selected' : ''; ?>
                     <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= htmlspecialchars($row['college_name']) ?> </option>
-                <?php }
-                ?>
+                <?php } ?>
             </select>
 
-            <!-- Scholarship Program Dropdown -->
             <select name="scholarship_filter">
-                <option value="" disabled selected>Scholarship Program</option>
+                <option value="0" <?= $scholarship_filter == 0 ? 'selected' : '' ?>>All Scholarships</option>
                 <?php 
-                while($row= $scholarship_result->fetch_assoc()) {
-                    $selected = (isset($_GET['scholarship_filter']) && $_GET['scholarship_filter'] == $row['id']) ? 'selected' : ''; ?>
+                $scholarship_result->data_seek(0);
+                while($row = $scholarship_result->fetch_assoc()) {
+                    $selected = ($scholarship_filter == $row['id']) ? 'selected' : ''; ?>
                     <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= htmlspecialchars($row['name']) ?> </option>
-                <?php }
-                ?>
+                <?php } ?>
             </select>
 
-            <button name="filter">Apply Filter</button>
-            <a href="<?=  $_SERVER['PHP_SELF'] ?>">Clear</a>
+            <button type="submit" name="filter" class="btn btn-sm btn-info">Apply Filter</button>
+            
+            <?php if($searched != "" || $course_filter != 0 || $college_filter != 0 || $scholarship_filter != 0) : ?>
+                <a href="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" class="clear-link">Clear</a>
+            <?php endif; ?>
+        </div>
     </form>
+</div>
 
-    <!-- show total records in curren page -->
-    <p>Showing <?= $offset + 1 ?> - <?= min($offset + $records_per_page, $total_records) ?> of <?= $total_records ?> users</p>
+<!-- Records Info -->
+<div class="records-info">
+    Showing <?= $offset + 1 ?> - <?= min($offset + $records_per_page, $total_records) ?> of <?= $total_records ?> scholars
+</div>
 
-    <!-- table for scholar information -->
-    <table border="1">
-        <tr>
-            <th>Student ID</th>
-            <th>Name</th>
-            <th>Scholarship Program</th>
-            <th>Program</th>
-            <th>Academic Status</th>
-            <th>Actions</th>
-        </tr>
-<?php 
+<!-- Scholar Table -->
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Scholarship Program</th>
+                <th>Program</th>
+                <th>Academic Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php if($result->num_rows > 0) : ?>
+            <?php while($row = $result->fetch_assoc()) : 
+                $ext_name = ($row['ext_name'] == 'N/A' || empty($row['ext_name'])) ? "" : $row['ext_name'];
+            ?>
+                <tr>
+                    <td><?= htmlspecialchars($row['student_id']) ?></td>
+                    <td><?= htmlspecialchars($row['last_name']) ?>, <?= htmlspecialchars($row['given_name']) ?> <?= htmlspecialchars($row['middle_name']) ?> <?= htmlspecialchars($ext_name) ?></td>
+                    <td><?= htmlspecialchars($row['scholarship_name']) ?></td>
+                    <td><?= htmlspecialchars($row['program_name']) ?></td>
+                    <td><?= htmlspecialchars($row['academic_status']) ?></td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="scholar_profile.php?scholar_id=<?= $row['id'] ?>" class="btn-sm btn-view">View</a>
+                            <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
+                                <input type="hidden" name="scholar_id" value="<?= $row['id'] ?>">
+                                <button type="submit" name="delete_scholar" class="btn-sm btn-delete" onclick="return confirm('Delete this scholar?')">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            <?php endwhile; ?>
+        <?php else : ?>
+            <tr>
+                <td colspan="6" class="no-data">No scholars found.</td>
+            </tr>
+        <?php endif; ?>
+        </tbody>
+    </table>
+</div>
 
-// if scholar info not empty display scholars
-if($result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
-        $ext_name = $row['ext_name'] == 'N/A' ? "" : $row['ext_name'];
-        echo "<tr>";
-        echo "<td>" . htmlspecialchars($row['student_id']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['last_name']) . ", " . htmlspecialchars($row['given_name']) . " " . htmlspecialchars($row['middle_name']) . " " . htmlspecialchars($ext_name) . "</td>";
-        echo "<td>" . htmlspecialchars($row['scholarship_name']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['program_name']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['academic_status']) . "</td>";?>
-        <td>
-            <!-- delete and edit buttons -->
-            <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST">
-                <input type="hidden" name="scholar_id" value="<?=$row['id']?>"/>
-                <a href="scholar_profile.php?scholar_id=<?= $row['id'] ?>">View</a>
-                <button name="delete_scholar" onclick="return confirm('Delete Scholar?')">Delete</button>
-            </form>
-        </td>
-        <?php echo "</tr>";
-    }?>
-</table>
-<?php if($total_pages > 1): ?>
+<!-- Pagination -->
+<?php if($total_pages > 1) : ?>
     <div class="pagination">
-        <!-- previous page -->
-        <?php if ($page > 1): ?>
-            <a href="?page=<?= $page - 1 ?>">Previous</a>
+        <?php if($page > 1) : ?>
+            <a href="?page=<?= $page - 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>">Previous</a>
         <?php endif; ?>
         
-        <!-- number of pages -->
-        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-            <?php if($i == $page): ?>
+        <?php for($i = 1; $i <= $total_pages; $i++) : ?>
+            <?php if($i == $page) : ?>
                 <strong><?= $i ?></strong>
-            <?php else: ?>
-                <a href="?page=<?= $i ?>"><?= $i ?></a>
+            <?php else : ?>
+                <a href="?page=<?= $i ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>"><?= $i ?></a>
             <?php endif; ?>
         <?php endfor; ?>
 
-        <!-- next page -->
-        <?php if($page < $total_pages): ?>
-            <a href="?page=<?= $page + 1?>">Next</a>
+        <?php if($page < $total_pages) : ?>
+            <a href="?page=<?= $page + 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>">Next</a>
         <?php endif; ?>
     </div>
-<?php endif; 
-}
-// if scholar records empty display "no scholars found"
-else {
-    echo "<tr><td colspan='6' >No scholars found.</td></tr>";?>
-    </table>
-<?php } ?>
-
-</div>
+<?php endif; ?>

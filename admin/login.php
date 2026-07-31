@@ -1,22 +1,57 @@
+<?php 
+session_start();
+
+// if login fails alert user
+if(isset($_SESSION['fail'])) {
+    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+    unset($_SESSION['fail']);
+}
+?>
+
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Admin Login</title>
-    </head>
-    <body>
-        <h1>PIT ScholarshipHub</h1>
-        <nav>
-            <ul>
-                <li><a href="../portal.php">Home</a></li>
-            </ul>
-        </nav>
-        <h2>Admin Login</h2>
-        <form method="post" action="../functions/admin/admin_login_process.php">
-            <label for="username">Username:</label><br>
-            <input type="text" id="username" name="username" required><br><br>
-            <label for="password">Password:</label><br>
-            <input type="password" id="password" name="password" required><br><br>
-            <button>Login</button>
-        </form>
-    </body>
+<head>
+    <title>Admin Login - PIT ScholarshipHub</title>
+    <link rel="stylesheet" href="../assets/css/login.css">
+    <link rel="icon" href="../assets/images/PIT LOGO.png">
+</head>
+<body>
+    <div class="container">
+        <!-- header -->
+        <div class="header">
+            <img src="../assets/images/PIT LOGO.png" alt="PIT Logo">
+            <p>Palompon Institute of Technology</p>
+            <h1>PIT ScholarshipHub</h1>
+        </div>
+
+        <!-- login form -->
+        <div class="login-box">
+            <h2> Admin / Coordinator Login</h2>
+            <p class="subtitle">Enter your credentials to access the admin dashboard.</p>
+
+            <form method="post" action="../functions/admin/admin_login_process.php">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit" class="login-btn">Login</button>
+            </form>
+
+            <div class="login-links">
+                <a href="../portal.php">← Back to Portal</a>
+            </div>
+        </div>
+
+        <!-- footer -->
+        <div class="footer">
+            © 2026 PIT ScholarshipHub. All rights reserved.
+        </div>
+    </div>
+</body>
 </html>
