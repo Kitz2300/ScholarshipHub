@@ -24,7 +24,7 @@ if(isset($_POST['update'])) {
     $update_stmt->bind_param('sddsi', $semester, $gwa, $units, $school_year, $record_id);
     
     if($update_stmt->execute()) {
-        $_SESSION['success'] = "Scholar's academic record updated!";
+        $_SESSION['success'] = "Scholar academic record updated!";
         header("Location: ../../admin/academic_performance.php?scholar_id=$scholar_id");
         exit();
     } else {
