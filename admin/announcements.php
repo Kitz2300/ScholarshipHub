@@ -2,15 +2,6 @@
 include __DIR__ . "/../includes/conn.php";
 session_start();
 
-// succes/fail session variables used by the process to send success/fail messages
-if(isset($_SESSION['success'])) {
-    echo "<script>alert('" . $_SESSION['success'] . "')</script>";
-    unset($_SESSION['success']);
-} else if(isset($_SESSION['fail'])) {
-    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-    unset($_SESSION['fail']);
-}
-
 // query all the announcements, active and not active alike
 $announcement_sql = "SELECT
                         announcements.id AS announcement_id,
@@ -59,52 +50,116 @@ if(isset($_POST['delete'])) {
 
 ?>
 
+<!DOCTYPE html>
 <html>
-    <head>
-        <title>Announcements</title>
-    </head>
-    <body>
-        <?php
-        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
-            <!-- if not logged in, redirect user to login page -->
-            <script>alert('You are not logged in')</script>
-            <script>window.location.href='login.php'</script>
-        <?php else : ?>
-        <!-- if logged in, load page -->
-        <h1>Announcements</h1>
+<head>
+    <title>Announcements - PIT ScholarshipHub</title>
+    <link rel="stylesheet" href="../assets/css/announcements.css?v=<?= filemtime('../assets/css/announcements.css') ?>">
+    <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+</head>
+<body>
+    <?php
+    // success/fail session messages
+    if(isset($_SESSION['success'])) {
+        echo "<script>alert('" . htmlspecialchars($_SESSION['success']) . "')</script>";
+        unset($_SESSION['success']);
+    } else if(isset($_SESSION['fail'])) {
+        echo "<script>alert('" . htmlspecialchars($_SESSION['fail']) . "')</script>";
+        unset($_SESSION['fail']);
+    }
 
-        <!-- redirects to pages specified -->
-        <a href="dashboard.php">Back</a><br>
-        <a href="add_announcement.php">Add Announcement</a>
-        <?php 
-        // loop through rows and display values
-        while($row=$announcement_result->fetch_assoc()) :
-            $title = $row['title'];
-            $content = $row['content'];
-            $is_active = $row['is_active'] == 1 ? "Active" : "Not Active";
-            $created_at = $row['created_at'];
+    if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
+        <!-- if not logged in, redirect user to login page -->
+        <script>alert('You are not logged in')</script>
+        <script>window.location.href='login.php'</script>
+    <?php else : ?>
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-left">
+                    <img src="../assets/images/PIT%20LOGO.png" alt="PIT Logo">
+                    <div>
+                        <h1>PIT ScholarshipHub</h1>
+                        <p>Announcements</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <span class="welcome-text">Welcome, Admin!</span>
+                    <form action="../functions/logout.php" method="post" style="display: inline;">
+                        <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
+                    </form>
+                </div>
+            </div>
 
-            // get user info who created the announcement
-            $created_by = isset($row['middle_name']) ? $row['given_name'] . " " . $row['middle_name'] . " " . $row['last_name'] : $row['given_name'] . " " . $row['last_name'] ;
-            $role = $row['role'];?>
+            <!-- Navigation -->
+            <nav class="nav-bar">
+                <ul>
+                    <li><a href="dashboard.php">Dashboard</a></li>
+                    <li><a href="scholar_list.php">Scholars</a></li>
+                    <li><a href="announcements.php" class="active">Announcements</a></li>
+                    <li><a href="scholarship_program.php">Scholarship Programs</a></li>
+                    <li><a href="upload_excel.php">Import Excel</a></li>
+                    <li><a href="export_scholars.php">Export Excel</a></li>
+                </ul>
+            </nav>
 
-            <hr>
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h2>Announcements</h2>
+                    <div class="page-actions">
+                        <a href="add_announcement.php" class="btn btn-success">Add Announcement</a>
+                    </div>
+                </div>
 
-            <!-- display announcement with status, date posted/created, created by user name-->
-            <h3><?= htmlspecialchars($title) ?> - <?= htmlspecialchars($is_active) ?></h3>
-            <p>Created At: <?= htmlspecialchars($created_at) ?></p>
-            <p style="white-space: pre-wrap; word-wrap: break-word;"><?= htmlspecialchars($content, ENT_QUOTES, 'UTF-8') ?></p>
-            <p>Created By: <?= htmlspecialchars($created_by) ?> - <?= htmlspecialchars($role) ?></p>
-            <!-- edit button to edit selected announcement -->
-            <a href="edit_announcement.php?id=<?= $row['announcement_id'] ?>">Edit Announcement</a>
+                <!-- Announcements List -->
+                <div class="announcements-list">
+                    <?php if($announcement_result->num_rows > 0) : ?>
+                        <?php while($row = $announcement_result->fetch_assoc()) : 
+                            $title = $row['title'];
+                            $content = $row['content'];
+                            $is_active = $row['is_active'] == 1 ? "Active" : "Not Active";
+                            $is_active_class = $row['is_active'] == 1 ? "status-active" : "status-inactive";
+                            $created_at = $row['created_at'];
+                            $created_by = isset($row['middle_name']) ? $row['given_name'] . " " . $row['middle_name'] . " " . $row['last_name'] : $row['given_name'] . " " . $row['last_name'];
+                            $role = $row['role'];
+                        ?>
+                            <div class="announcement-card <?= $is_active_class ?>">
+                                <div class="announcement-header">
+                                    <h3><?= htmlspecialchars($title) ?></h3>
+                                    <span class="status-badge <?= $is_active_class ?>"><?= htmlspecialchars($is_active) ?></span>
+                                </div>
+                                <div class="announcement-meta">
+                                    <span class="meta-item">Date Posted: <?= htmlspecialchars($created_at) ?></span>
+                                    <span class="meta-item">Posted By: <?= htmlspecialchars($created_by) ?> (<?= htmlspecialchars($role) ?>)</span>
+                                </div>
+                                <div class="announcement-content">
+                                    <p><?= htmlspecialchars($content, ENT_QUOTES, 'UTF-8') ?></p>
+                                </div>
+                                <div class="announcement-actions">
+                                    <a href="edit_announcement.php?id=<?= $row['announcement_id'] ?>" class="btn-sm btn-edit">Edit</a>
+                                    <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
+                                        <input type="hidden" name="announcement_id" value="<?= $row['announcement_id'] ?>"/>
+                                        <button type="submit" name="delete" class="btn-sm btn-delete" onclick="return confirm('Delete this announcement?')">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        <?php endwhile; ?>
+                    <?php else : ?>
+                        <div class="no-data">
+                            <p>No announcements found.</p>
+                            <a href="add_announcement.php" class="btn btn-success" style="margin-top: 10px;">Create your first announcement</a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
 
-            <!-- delete button -->
-            <form action="<?= $_SERVER['PHP_SELF'] ?>" method="post">
-                <input type="hidden" name="announcement_id" value="<?= $row['announcement_id'] ?>"/>
-                <button name="delete" onclick="return confirm('Delete this announcement?')">Delete Announcement</button>
-            </form>
-        <?php endwhile;
-        
-        endif; ?>
-    </body>
+            <!-- Footer -->
+            <div class="footer">
+                © 2026 PIT ScholarshipHub. All rights reserved.
+            </div>
+        </div>
+    <?php endif; ?>
+</body>
 </html>

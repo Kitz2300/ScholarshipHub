@@ -2,19 +2,17 @@
 include __DIR__ . '/../includes/conn.php';
 session_start();
 
-if(isset($_SESSION['fail'])) {
-    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-    unset($_SESSION['fail']);
-}
-
+// get scholar id
 $scholar_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
+// scholar info query
 $scholar_sql = "SELECT * FROM scholar_info WHERE id = ?";
 $scholar_stmt = $conn->prepare($scholar_sql);
 $scholar_stmt->bind_param("i", $scholar_id);
 $scholar_stmt->execute();
 $scholar_result = $scholar_stmt->get_result();
 
+// initializing variables
 $last_name = "";
 $given_name = "";
 $ext_name = "";
@@ -39,10 +37,11 @@ $mother_last = "";
 $mother_given = "";
 $mother_middle = "";
 
+// insert values to initialized variables
 if($row = $scholar_result->fetch_assoc()) {
     $last_name = $row['last_name'];
     $given_name = $row['given_name'];
-    $ext_name = $row['ext_name'] === "N/A" ? "Not Applicable" : $row['ext_name'];
+    $ext_name = $row['ext_name'] === "N/A" ? "Not Applicable" : $row['ext_name']; // show Not Applicable if N/A
     $middle_name = $row['middle_name'];
     $id_num = $row['student_id'];
     $sex = $row['sex'];
@@ -64,8 +63,9 @@ if($row = $scholar_result->fetch_assoc()) {
     $mother_given = $row['mother_given_name'];
     $mother_middle = $row['mother_middle_name'];
 } else {
-    echo "<script>alert('Scholar not available')</script>";
-    echo "<script>window.location.href='scholar_list.php'</script>";
+    // alert user if there are no results from query
+    $_SESSION['fail'] = "Scholar not available";
+    header("Location: scholar_list.php");
     exit();
 }
 ?>
@@ -78,6 +78,13 @@ if($row = $scholar_result->fetch_assoc()) {
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
 <body>
+    <?php 
+    // update fail message
+    if(isset($_SESSION['fail'])) {
+        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+        unset($_SESSION['fail']);
+    }
+    ?>
     <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href='login.php'</script>
@@ -118,11 +125,11 @@ if($row = $scholar_result->fetch_assoc()) {
                 <div class="page-header">
                     <h2>Edit Scholar</h2>
                     <div class="page-actions">
-                        <a href="scholar_profile.php?id=<?= $scholar_id ?>" class="btn btn-secondary">Back to Profile</a>
+                        <a href="scholar_profile.php?scholar_id=<?= $scholar_id ?>" class="btn btn-secondary">Back to Profile</a>
                     </div>
                 </div>
 
-                <!-- Edit Form -->
+                <!-- Edit Form with it's current values-->
                 <form action="../functions/admin/edit_scholar_process.php" method="POST" class="reusable-form">
                     <input type="hidden" name="scholar_id" value="<?= $scholar_id ?>">
 
@@ -146,8 +153,7 @@ if($row = $scholar_result->fetch_assoc()) {
                             <div class="form-group">
                                 <label for="ext_name">Extension Name</label>
                                 <select name="ext_name" id="ext_name" required>
-                                    <option value="" disabled>Select</option>
-                                    <option value="N/A" <?= ($ext_name == 'Not Applicable' || $ext_name == 'N/A') ? 'selected' : '' ?>>Not Applicable</option>
+                                    <option value="N/A" <?= ($ext_name == 'N/A') ? 'selected' : '' ?>>N/A</option>
                                     <option value="Jr." <?= ($ext_name == 'Jr.') ? 'selected' : '' ?>>Jr.</option>
                                     <option value="Sr." <?= ($ext_name == 'Sr.') ? 'selected' : '' ?>>Sr.</option>
                                     <option value="II" <?= ($ext_name == 'II') ? 'selected' : '' ?>>II</option>
@@ -159,15 +165,15 @@ if($row = $scholar_result->fetch_assoc()) {
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="email">Email Address <span class="required">*</span></label>
-                                <input type="email" name="email" id="email" value="<?= htmlspecialchars($email) ?>" required>
+                                <input type="email" name="email" id="email" value="<?= htmlspecialchars($email) ?>" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" required>
                             </div>
                             <div class="form-group">
                                 <label for="student_id">Student ID <span class="required">*</span></label>
-                                <input type="text" name="student_id" id="student_id" value="<?= htmlspecialchars($id_num) ?>" required>
+                                <input type="text" name="student_id" id="student_id" value="<?= htmlspecialchars($id_num) ?>" placeholder="12-3456-789" pattern="[0-9]{2}-[0-9]{4}-[0-9]{3}" required>
                             </div>
                             <div class="form-group">
                                 <label for="student_contact">Contact Number <span class="required">*</span></label>
-                                <input type="text" name="student_contact" id="student_contact" value="<?= htmlspecialchars($contact_num) ?>" required>
+                                <input type="text" name="student_contact" id="student_contact" value="<?= htmlspecialchars($contact_num) ?>" placeholder="09171234567" pattern="09[0-9]{9}" required>
                             </div>
                         </div>
 
@@ -175,7 +181,6 @@ if($row = $scholar_result->fetch_assoc()) {
                             <div class="form-group">
                                 <label for="sex">Sex <span class="required">*</span></label>
                                 <select name="sex" id="sex" required>
-                                    <option value="" disabled>Select Sex</option>
                                     <option value="Male" <?= ($sex == 0) ? 'selected' : '' ?>>Male</option>
                                     <option value="Female" <?= ($sex == 1) ? 'selected' : '' ?>>Female</option>
                                 </select>
@@ -185,8 +190,8 @@ if($row = $scholar_result->fetch_assoc()) {
                                 <input type="date" name="birth_date" id="birth_date" value="<?= htmlspecialchars($birthdate) ?>" required>
                             </div>
                             <div class="form-group">
-                                <label for="disability">Disability</label>
-                                <input type="text" name="disability" id="disability" placeholder="e.g., Visual impairment, Dyslexia, Mobility impairment" value="<?= $disability ?>" list="disability-list" required/>
+                                <label for="disability">Disability (Optional)</label>
+                                <input type="text" name="disability" id="disability" placeholder="e.g., Visual impairment, Dyslexia, Mobility impairment" value="<?= $disability ?>" list="disability-list"/>
                                 <datalist id="disability-list">
                                     <option value="Not applicable"></option>
                                     <option value="Visual Impairment"></option>
@@ -196,8 +201,8 @@ if($row = $scholar_result->fetch_assoc()) {
                                 </datalist>
                             </div>
                             <div class="form-group">
-                                <label for="ip_group">IP Group</label>
-                                <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa, Maranao, B'laan, Teduray" value="<?= $ip_group ?>" list="ip-group-list" required/>
+                                <label for="ip_group">IP Group (Optional)</label>
+                                <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa, Maranao, B'laan, Teduray" value="<?= $ip_group ?>" list="ip-group-list"/>
                                 <datalist id="ip-group-list">
                                     <option value="Not applicable"></option>
                                     <option value="Ifugao"></option>
@@ -211,12 +216,12 @@ if($row = $scholar_result->fetch_assoc()) {
 
                         <div class="form-row">
                             <div class="form-group full-width">
-                                <label for="address">Permanent Address</label>
+                                <label for="address">Permanent Address <span class="required">*<span></span></label>
                                 <input type="text" name="address" id="address" value="<?= htmlspecialchars($address) ?>">
                             </div>
                             <div class="form-group">
-                                <label for="zipcode">Zipcode</label>
-                                <input type="number" name="zipcode" id="zipcode" value="<?= htmlspecialchars($zipcode) ?>" placeholder="6538">
+                                <label for="zipcode">Zipcode <span class="required">*<span></span></label>
+                                <input type="number" name="zipcode" id="zipcode" placeholder="Brgy, Town/City, Province" value="<?= htmlspecialchars($zipcode) ?>" placeholder="6538" min="0" max="9999" required>
                             </div>
                         </div>
                     </div>
@@ -231,6 +236,7 @@ if($row = $scholar_result->fetch_assoc()) {
                                 <select name="scholarship_program" id="scholarship_program" required>
                                     <option value="" disabled>Select Scholarship Program</option>
                                     <?php 
+                                    // scholarship programs query
                                     $scholarship_program_sql = "SELECT id, name, code FROM scholarship_program";
                                     $stmt = $conn->prepare($scholarship_program_sql);
                                     $stmt->execute();
@@ -247,6 +253,7 @@ if($row = $scholar_result->fetch_assoc()) {
                                 <select name="program" id="program" required>
                                     <option value="" disabled>Select Program</option>
                                     <?php 
+                                    // program's/course query
                                     $program_sql = "SELECT id, name FROM program";
                                     $stmt = $conn->prepare($program_sql);
                                     $stmt->execute();
@@ -323,8 +330,8 @@ if($row = $scholar_result->fetch_assoc()) {
 
                     <!-- Form Actions -->
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-success">Update Scholar</button>
-                        <a href="scholar_profile.php?id=<?= $scholar_id ?>" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" name="update" class="btn btn-success">Update Scholar</button>
+                        <a href="scholar_profile.php?scholar_id=<?= $scholar_id ?>" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
             </div>

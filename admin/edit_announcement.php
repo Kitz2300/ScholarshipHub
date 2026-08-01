@@ -21,45 +21,106 @@ if($row=$result->fetch_assoc()) {
     $status = (int)$row['is_active'];
 }
 
-
 ?>
 
+<!DOCTYPE html>
 <html>
-    <head>
-        <title>Announcements</title>
-    </head>
-    <body>
-        <?php
-        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
-            <!-- if not logged in, redirect user to login page -->
-            <script>alert('You are not logged in')</script>
-            <script>window.location.href='login.php'</script>
-        <?php else : ?>
-        <!-- if logged in, load page -->
-        <h1>Edit Announcement</h1>
-        <a href="announcements.php">Back</a>
+<head>
+    <title>Edit Announcement - PIT ScholarshipHub</title>
+    <link rel="stylesheet" href="../assets/css/form.css?v=<?= filemtime('../assets/css/form.css') ?>">
+    <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+</head>
+<body>
+    <?php
+    if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
+        <!-- if not logged in, redirect user to login page -->
+        <script>alert('You are not logged in')</script>
+        <script>window.location.href='login.php'</script>
+    <?php else : ?>
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-left">
+                    <img src="../assets/images/PIT%20LOGO.png" alt="PIT Logo">
+                    <div>
+                        <h1>PIT ScholarshipHub</h1>
+                        <p>Edit Announcement</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <span class="welcome-text">Welcome, Admin!</span>
+                    <form action="../functions/logout.php" method="post" style="display: inline;">
+                        <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
+                    </form>
+                </div>
+            </div>
 
-        <!-- Edit Announcement Form -->
-        <form action="../functions/edit_announcement_process.php" method="post">
-            <!-- every input has current values that are editable -->
-            <label for="title">Title:</label>
-            <input type="text" name="title" id="title" value="<?= htmlspecialchars($title) ?>" required/><br><br>
-            
-            <label for="content">Content:</label><br>
-            <textarea name="content" id="content" required><?= htmlspecialchars($content) ?></textarea><br><br>
+            <!-- Navigation -->
+            <nav class="nav-bar">
+                <ul>
+                    <li><a href="dashboard.php">Dashboard</a></li>
+                    <li><a href="scholar_list.php">Scholars</a></li>
+                    <li><a href="announcements.php" class="active">Announcements</a></li>
+                    <li><a href="scholarship_program.php">Scholarship Programs</a></li>
+                    <li><a href="upload_excel.php">Import Excel</a></li>
+                    <li><a href="export_scholars.php">Export Excel</a></li>
+                </ul>
+            </nav>
 
-            <label for="status">Status:</label>
-            <select name="status">
-                <option value="1" <?= $status == 1 ? "selected" : "" ?>>Active</option>
-                <option value="0" <?= $status == 0 ? "selected" : "" ?>>Not Active</option>
-            </select><br><br>
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h2>Edit Announcement</h2>
+                    <div class="page-actions">
+                        <a href="announcements.php" class="btn btn-secondary">Back to Announcements</a>
+                    </div>
+                </div>
 
-            <input type="hidden" name="announcement_id" value="<?= htmlspecialchars($announcement_id) ?>"/>
+                <!-- Edit Announcement Form -->
+                <form action="../functions/admin/edit_announcement_process.php" method="POST" class="reusable-form">
+                    <!-- every input has current values that are editable -->
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="title">Title <span class="required">*</span></label>
+                                <input type="text" name="title" id="title" value="<?= htmlspecialchars($title) ?>" required/>
+                            </div>
+                        </div>
 
-            <button>Update Announcement</button>
-        </form>
-        <!-- cancel button redirects user to announcements page -->
-        <button type="button" onclick="window.location.href='announcements.php'">Cancel</button>
-        <?php endif; ?>
-    </body>
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="content">Content <span class="required">*</span></label>
+                                <textarea name="content" id="content" rows="8" required><?= htmlspecialchars($content) ?></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="status">Status <span class="required">*</span></label>
+                                <select name="status" id="status" required>
+                                    <option value="1" <?= $status == 1 ? "selected" : "" ?>>Active</option>
+                                    <option value="0" <?= $status == 0 ? "selected" : "" ?>>Not Active</option>
+                                </select>
+                                <small class="help-text">Active announcements will be displayed on the portal page.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="announcement_id" value="<?= htmlspecialchars($announcement_id) ?>"/>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">Update Announcement</button>
+                        <a href="announcements.php" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                © 2026 PIT ScholarshipHub. All rights reserved.
+            </div>
+        </div>
+    <?php endif; ?>
+</body>
 </html>
