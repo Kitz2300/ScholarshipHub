@@ -2,11 +2,7 @@
 include __DIR__ . '/../includes/conn.php';
 session_start();
 
-if(isset($_SESSION['fail'])) {
-    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-    unset($_SESSION['fail']);
-}
-
+// initialize year variable
 $year = "";
 ?>
 
@@ -18,6 +14,13 @@ $year = "";
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
 <body>
+    <?php 
+    // insert process fail message
+    if(isset($_SESSION['fail'])) {
+        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+        unset($_SESSION['fail']);
+    }
+    ?>
     <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href='login.php'</script>
@@ -70,22 +73,21 @@ $year = "";
                         
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="last_name">Last Name</label>
+                                <label for="last_name">Last Name <span class="required">*</span></label>
                                 <input type="text" name="last_name" id="last_name" placeholder="Enter last name" required>
                             </div>
                             <div class="form-group">
-                                <label for="first_name">First Name</label>
+                                <label for="first_name">First Name <span class="required">*</span></label>
                                 <input type="text" name="first_name" id="first_name" placeholder="Enter first name" required>
                             </div>
                             <div class="form-group">
-                                <label for="middle_name">Middle Name</label>
+                                <label for="middle_name">Middle Name <span class="required">*</span></label>
                                 <input type="text" name="middle_name" id="middle_name" placeholder="Enter middle name" required>
                             </div>
                             <div class="form-group">
-                                <label for="ext_name">Extension Name</label>
-                                <select name="ext_name" id="ext_name" required>
-                                    <option value="" selected disabled>Select</option>
-                                    <option value="N/A">Not Applicable</option>
+                                <label for="ext_name">Extension Name (Optional)</label>
+                                <select name="ext_name" id="ext_name"   >
+                                    <option value="" selected disabled>N/A</option>
                                     <option value="Jr.">Jr.</option>
                                     <option value="Sr.">Sr.</option>
                                     <option value="II">II</option>
@@ -96,22 +98,22 @@ $year = "";
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="email">Email Address</label>
-                                <input type="email" name="email" id="email" placeholder="john.doe@example.com" required>
+                                <label for="email">Email Address <span class="required">*</span></label>
+                                <input type="email" name="email" id="email" placeholder="example@gmail.com" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" required>
                             </div>
                             <div class="form-group">
-                                <label for="student_id">Student ID</label>
-                                <input type="text" name="student_id" id="student_id" placeholder="23-0223-403" required>
+                                <label for="student_id">Student ID <span class="required">*</span></label>
+                                <input type="tel" name="student_id" id="student_id" placeholder="12-3456-789" pattern="[0-9]{2}-[0-9]{4}-[0-9]{3}" required>
                             </div>
                             <div class="form-group">
-                                <label for="student_contact">Contact Number</label>
-                                <input type="text" name="student_contact" id="student_contact" placeholder="09123456789" required>
+                                <label for="student_contact">Contact Number <span class="required">*</span></label>
+                                <input type="text" name="student_contact" id="student_contact" placeholder="09171234567" pattern="09[0-9]{9}" required>
                             </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="sex">Sex</label>
+                                <label for="sex">Sex <span class="required">*</span></label>
                                 <select name="sex" id="sex" required>
                                     <option value="" selected disabled>Select Sex</option>
                                     <option value="Male">Male</option>
@@ -119,26 +121,41 @@ $year = "";
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="birth_date">Birth Date</label>
+                                <label for="birth_date">Birth Date <span class="required">*</span></label>
                                 <input type="date" name="birth_date" id="birth_date" required>
                             </div>
                             <div class="form-group">
-                                <label for="disability">Disability</label>
-                                <input type="text" name="disability" id="disability" placeholder="e.g., Visual impairment, Dyslexia, Mobility impairment" />
+                                <label for="disability">Disability (Optional)</label>
+                                <input type="text" name="disability" id="disability" placeholder="e.g., Visual impairment, Dyslexia, Mobility impairment" list="disability-list" />
+                                <datalist id="disability-list">
+                                    <option value="Not applicable"></option>
+                                    <option value="Visual Impairment"></option>
+                                    <option value="Hearing Impairment"></option>
+                                    <option value="Mobility Impairment"></option>
+                                    <option value="Cognitive Impairment"></option>
+                                </datalist>
                             </div>
                             <div class="form-group">
-                                <label for="ip_group">IP Group</label>
-                                <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa, Maranao, B'laan, Teduray" />
+                                <label for="ip_group">IP Group (Optional)</label>
+                                <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa, Maranao, B'laan, Teduray" id="ip-group-list" />
+                                <datalist id="ip-group-list">
+                                    <option value="Not applicable"></option>
+                                    <option value="Ifugao"></option>
+                                    <option value="Tagbanwa"></option>
+                                    <option value="Maranao"></option>
+                                    <option value="B'laan"></option>
+                                    <option value="Teduray"></option>
+                                </datalist>
                             </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group full-width">
-                                <label for="address">Permanent Address</label>
+                                <label for="address">Permanent Address <span class="required">*<span></label>
                                 <input type="text" name="address" id="address" placeholder="Brgy, Town/City, Province" required>
                             </div>
                             <div class="form-group">
-                                <label for="zipcode">Zipcode</label>
+                                <label for="zipcode">Zipcode <span class="required">*</span></label>
                                 <input type="number" name="zipcode" id="zipcode" placeholder="6538" required>
                             </div>
                         </div>
@@ -150,7 +167,7 @@ $year = "";
                         
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="scholarship_program">Scholarship Program</label>
+                                <label for="scholarship_program">Scholarship Program <span class="required">*</span></label>
                                 <select name="scholarship_program" id="scholarship_program" required>
                                     <option value="" selected disabled>Select Scholarship Program</option>
                                     <?php 
@@ -164,9 +181,9 @@ $year = "";
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="program">Program / Course</label>
+                                <label for="program">Program / Course <span class="required">*</span></label>
                                 <select name="program" id="program" required>
-                                    <option value="" selected disabled>Select Program</option>
+                                    <option selected disabled>Select Program</option>
                                     <?php 
                                     $program_sql = "SELECT id, name FROM program";
                                     $stmt = $conn->prepare($program_sql);
@@ -178,9 +195,9 @@ $year = "";
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="year_lvl">Year Level</label>
+                                <label for="year_lvl">Year Level <span class="required">*</span></label>
                                 <select name="year_lvl" id="year_lvl" required>
-                                    <option value="" selected disabled>Select Year Level</option>
+                                    <option selected disabled>Select Year Level</option>
                                     <?php for($i = 1; $i <= 6; $i++) : 
                                         switch ($i) {
                                             case 1: $year = "1st Year"; break;
@@ -202,30 +219,30 @@ $year = "";
                         
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="father_last">Father's Last Name</label>
+                                <label for="father_last">Father's Last Name <span class="required">*</span></label>
                                 <input type="text" name="father_last" id="father_last" placeholder="Last Name" required>
                             </div>
                             <div class="form-group">
-                                <label for="father_first">Father's First Name</label>
+                                <label for="father_first">Father's First Name <span class="required">*</span></label>
                                 <input type="text" name="father_first" id="father_first" placeholder="First Name" required>
                             </div>
                             <div class="form-group">
-                                <label for="father_middle">Father's Middle Name</label>
+                                <label for="father_middle">Father's Middle Name <span class="required">*</span></label>
                                 <input type="text" name="father_middle" id="father_middle" placeholder="Middle Name" required>
                             </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="mother_last">Mother's Maiden Last Name</label>
+                                <label for="mother_last">Mother's Maiden Last Name <span class="required">*</span></label>
                                 <input type="text" name="mother_last" id="mother_last" placeholder="Last Name" required>
                             </div>
                             <div class="form-group">
-                                <label for="mother_first">Mother's Maiden First Name</label>
+                                <label for="mother_first">Mother's Maiden First Name <span class="required">*</span></label>
                                 <input type="text" name="mother_first" id="mother_first" placeholder="First Name" required>
                             </div>
                             <div class="form-group">
-                                <label for="mother_middle">Mother's Maiden Middle Name</label>
+                                <label for="mother_middle">Mother's Maiden Middle Name <span class="required">*</span></label>
                                 <input type="text" name="mother_middle" id="mother_middle" placeholder="Middle Name" required>
                             </div>
                         </div>
@@ -233,7 +250,7 @@ $year = "";
 
                     <!-- Form Actions -->
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-success">Add Scholar</button>
+                        <button name="add" type="submit" class="btn btn-success">Add Scholar</button>
                         <a href="scholar_list.php" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>

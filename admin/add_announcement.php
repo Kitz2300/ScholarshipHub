@@ -2,40 +2,90 @@
 session_start();
 ?>
 
+<!DOCTYPE html>
 <html>
-    <head>
-        <title>Announcements</title>
-    </head>
-    <body>
-        <?php
-        if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
-            <!-- if not logged in, redirect user to login page -->
-            <script>alert('You are not logged in')</script>
-            <script>window.location.href='login.php'</script>
-        <?php else : ?>
-        <!-- if logged in, load page -->
-        <h1>Add Announcement</h1>
-        <a href="announcements.php">Back</a><br><br>
+<head>
+    <title>Add Announcement - PIT ScholarshipHub</title>
+    <link rel="stylesheet" href="../assets/css/form.css?v=<?= filemtime('../assets/css/form.css') ?>">
+    <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+</head>
+<body>
+    <?php
+    if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
+        <!-- if not logged in, redirect user to login page -->
+        <script>alert('You are not logged in')</script>
+        <script>window.location.href='login.php'</script>
+    <?php else : ?>
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-left">
+                    <img src="../assets/images/PIT%20LOGO.png" alt="PIT Logo">
+                    <div>
+                        <h1>PIT ScholarshipHub</h1>
+                        <p>Add Announcement</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <span class="welcome-text">Welcome, Admin!</span>
+                    <form action="../functions/logout.php" method="post" style="display: inline;">
+                        <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
+                    </form>
+                </div>
+            </div>
 
-        <!-- Add Announcement Form -->
-        <form action="../functions/add_announcement_process.php" method="post">
-            <label for="title">Title:</label>
-            <input type="text" name="title" id="title" required/><br><br>
-            
-            <label for="content">Content:</label><br>
-            <textarea name="content" id="content" style="width: 500px; height: 300px;" required></textarea><br><br>
+            <!-- Navigation -->
+            <nav class="nav-bar">
+                <ul>
+                    <li><a href="dashboard.php">Dashboard</a></li>
+                    <li><a href="scholar_list.php">Scholars</a></li>
+                    <li><a href="announcements.php" class="active">Announcements</a></li>
+                    <li><a href="scholarship_program.php">Scholarship Programs</a></li>
+                    <li><a href="upload_excel.php">Import Excel</a></li>
+                    <li><a href="export_scholars.php">Export Excel</a></li>
+                </ul>
+            </nav>
 
-            <!-- announcement status, this determines whether the announcement should be displayed or not -->
-            <label for="status">Status:</label>
-            <select name="status">
-                <option value="1">Active</option>
-                <option value="0">Not Active</option>
-            </select><br><br>
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h2>Add Announcement</h2>
+                    <div class="page-actions">
+                        <a href="announcements.php" class="btn btn-secondary">Back to Announcements</a>
+                    </div>
+                </div>
 
-            <button>Create Announcement</button>
-        </form>
-        <!-- cancel button returns user to the announcement page -->
-        <button onclick="window.location.href='announcements.php'">Cancel</button>
-        <?php endif; ?>
-    </body>
+                <!-- Add Announcement Form -->
+                <form action="../functions/admin/add_announcement_process.php" method="POST" class="reusable-form">
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="title">Title <span class="required">*</span></label>
+                                <input type="text" name="title" id="title" placeholder="Enter announcement title" required/>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="content">Content <span class="required">*</span></label>
+                                <textarea name="content" id="content" rows="8" placeholder="Enter announcement details" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button name="add" type="submit" class="btn btn-success">Create Announcement</button>
+                        <a href="announcements.php" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                © 2026 PIT ScholarshipHub. All rights reserved.
+            </div>
+        </div>
+    <?php endif; ?>
+</body>
 </html>
