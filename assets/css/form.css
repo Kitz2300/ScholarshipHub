@@ -210,6 +210,36 @@ body::before {
     margin-top: 10px;
 }
 
+/* School Year Range */
+.school-year-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 400px;
+}
+
+.school-year-group select {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background: #fff;
+}
+
+.school-year-group select:focus {
+    border-color: #3fb524;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(63, 181, 36, 0.15);
+}
+
+.school-year-group .dash {
+    font-size: 20px;
+    font-weight: bold;
+    color: #555;
+    padding-top: 2px;
+}
+
 .form-section {
     background: rgba(255, 255, 255, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.4);

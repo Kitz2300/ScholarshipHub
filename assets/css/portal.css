@@ -42,16 +42,16 @@ body::before {
 
 /* --- GLASSMORPHISM BASE STYLES --- */
 .header, .welcome, .role-card, .announcements {
-    background: rgba(255, 255, 255, 0.85); /* Semi-transparent white */
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-/* Header - updated to match the forest green tones in the image */
+/* Header */
 .header {
-    background: rgba(26, 59, 34, 0.85) !important; /* Deep forest green */
+    background: rgba(26, 59, 34, 0.85) !important;
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     color: #fff;
@@ -73,6 +73,11 @@ body::before {
     width: 70px;
     height: 70px;
     margin-bottom: 12px;
+    padding: 5px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.5);
+    background-color: rgba(255, 255, 255, 0.818);
 }
 
 /* Welcome Section */
