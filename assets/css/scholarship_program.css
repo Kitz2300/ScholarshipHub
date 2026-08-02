@@ -270,6 +270,11 @@ body::before {
     transform: translateY(-2px);
 }
 
+.program-card.status-inactive {
+    border-left-color: #e74c3c;
+    opacity: 0.8;
+}
+
 .program-header {
     display: flex;
     justify-content: space-between;
