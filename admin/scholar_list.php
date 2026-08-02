@@ -1,15 +1,6 @@
 <?php 
 include '../includes/conn.php';
 session_start();
-
-// success/fail session messages
-if(isset($_SESSION['success'])) {
-    echo "<script>alert('" . $_SESSION['success'] . "')</script>";
-    unset($_SESSION['success']);
-} else if(isset($_SESSION['fail'])) {
-    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-    unset($_SESSION['fail']);
-}
 ?>
 
 <!DOCTYPE html>
@@ -20,6 +11,16 @@ if(isset($_SESSION['success'])) {
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
 <body>
+    <?php 
+    // success/fail session messages
+    if(isset($_SESSION['success'])) {
+        echo "<script>alert('" . $_SESSION['success'] . "')</script>";
+        unset($_SESSION['success']);
+    } else if(isset($_SESSION['fail'])) {
+        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+        unset($_SESSION['fail']);
+    }
+    ?>
     <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href='login.php'</script>
