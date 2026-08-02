@@ -2,7 +2,7 @@
 include __DIR__ . "/../includes/conn.php";
 session_start();
 
-$scholarships_sql = "SELECT * FROM scholarship_program ORDER BY name ASC";
+$scholarships_sql = "SELECT * FROM scholarship_program ORDER BY is_active DESC, name ASC";
 $scholarships_stmt = $conn->prepare($scholarships_sql);
 $scholarships_stmt->execute();
 $scholarships_result = $scholarships_stmt->get_result();
@@ -94,8 +94,7 @@ if(isset($_POST['delete']) && isset($_POST['scholarship_program_id'])) {
                 <div class="page-header">
                     <h2>Scholarship Programs</h2>
                     <div class="page-actions">
-                        <a href="add_scholarship.php" class="btn btn-success">+ Add Scholarship Program</a>
-                        <a href="dashboard.php" class="btn btn-secondary">Back to Dashboard</a>
+                        <a href="add_scholarship.php" class="btn btn-success">Add Scholarship Program</a>
                     </div>
                 </div>
 
@@ -103,7 +102,7 @@ if(isset($_POST['delete']) && isset($_POST['scholarship_program_id'])) {
                 <?php if($scholarships_result->num_rows > 0) : ?>
                     <div class="programs-grid">
                         <?php while($row = $scholarships_result->fetch_assoc()) : ?>
-                            <div class="program-card">
+                            <div class="program-card <?= $row['is_active'] == 1 ? "status-active" : "status-inactive" ?>">
                                 <div class="program-header">
                                     <h3><?= htmlspecialchars($row['name']) ?></h3>
                                     <span class="program-status <?= $row['is_active'] == 1 ? 'active' : 'inactive' ?>">
