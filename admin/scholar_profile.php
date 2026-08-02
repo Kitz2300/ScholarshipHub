@@ -2,6 +2,20 @@
 include __DIR__ . '/../includes/conn.php';
 session_start();
 
+// Handle proper return URL ---
+$current_referrer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+
+// If we are coming from a valid List page (not the edit page), save it into the session.
+if (!empty($current_referrer) && strpos($current_referrer, 'edit_scholar.php') === false && strpos($current_referrer, 'academic_performance.php') === false) {
+    $_SESSION['redirect_back_url'] = $current_referrer;
+}
+
+// Determine which URL to use for the "Back" button
+$back_url = 'scholar_list.php'; // Default fallback if no session exists
+if (isset($_SESSION['redirect_back_url'])) {
+    $back_url = $_SESSION['redirect_back_url'];
+}
+
 // get scholar id
 $scholar_id = isset($_GET['scholar_id']) ? (int) $_GET['scholar_id'] : 0;
 
@@ -153,7 +167,7 @@ if($row = $scholar_result->fetch_assoc()) {
                 <div class="page-header">
                     <h2>Scholar Profile</h2>
                     <div class="page-actions">
-                        <a href="scholar_list.php" class="btn btn-secondary">Back to List</a>
+                        <a href="<?= htmlspecialchars($back_url) ?>" class="btn btn-secondary">Back to List</a>
                         <a href="edit_scholar.php?id=<?= $scholar_id ?>" class="btn btn-warning">Edit Scholar</a>
                         <a href="academic_performance.php?scholar_id=<?= $scholar_id ?>" class="btn btn-info">Manage GWA & Units</a>
                     </div>
