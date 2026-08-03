@@ -121,9 +121,10 @@ body::before {
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
-.role-card .icon {
-    font-size: 40px;
-    margin-bottom: 10px;
+.role-card img{
+    width: 90px;
+    height: 90px;
+    margin-bottom: 12px;
 }
 
 .role-card .role-name {
