@@ -65,7 +65,7 @@ while($row = $status_result->fetch_assoc()) {
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
 <body>
-    <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
+    <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href='login.php'</script>
     <?php else : ?>
@@ -80,7 +80,7 @@ while($row = $status_result->fetch_assoc()) {
                     </div>
                 </div>
                 <div class="header-right">
-                    <span class="welcome-text">Welcome, Admin!</span>
+                    <span class="welcome-text">Welcome, <?= $_SESSION['role'] == 'admin' ? 'Admin!' : 'Staff!' ?></span>
                     <form action="../functions/logout.php" method="post" style="display: inline;">
                         <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
                     </form>
@@ -111,7 +111,6 @@ while($row = $status_result->fetch_assoc()) {
                 <div class="stats-grid">
                     <!-- Total Scholars -->
                     <div class="stat-card total">
-                        <div class="stat-icon">🎓</div>
                         <div class="stat-info">
                             <h3>Total Scholars</h3>
                             <p class="stat-number"><?= htmlspecialchars($total_scholars) ?></p>
@@ -129,7 +128,6 @@ while($row = $status_result->fetch_assoc()) {
                     }
                     ?>
                     <div class="stat-card active">
-                        <div class="stat-icon">✅</div>
                         <div class="stat-info">
                             <h3>Active Scholars</h3>
                             <p class="stat-number"><?= htmlspecialchars($active_count) ?></p>
@@ -138,7 +136,6 @@ while($row = $status_result->fetch_assoc()) {
 
                     <!-- Scholarship Programs Count -->
                     <div class="stat-card programs">
-                        <div class="stat-icon">📚</div>
                         <div class="stat-info">
                             <h3>Programs</h3>
                             <p class="stat-number"><?= htmlspecialchars(count($scholarship_data)) ?></p>
@@ -147,7 +144,6 @@ while($row = $status_result->fetch_assoc()) {
 
                     <!-- Flagged Scholars (Optional - if you have flagging) -->
                     <div class="stat-card flagged">
-                        <div class="stat-icon">⚠️</div>
                         <div class="stat-info">
                             <h3>Flagged Scholars</h3>
                             <p class="stat-number">0</p>
@@ -179,7 +175,7 @@ while($row = $status_result->fetch_assoc()) {
                 </div>
 
                 <!-- Status Breakdown -->
-                <div class="section-card">
+                <!-- <div class="section-card">
                     <h3>Scholars by Status</h3>
                     <div class="status-grid">
                         <?php if(!empty($status_data)) :?>
@@ -193,7 +189,7 @@ while($row = $status_result->fetch_assoc()) {
                             <span class="program-name">No Scholars</span>
                         <?php endif;?>
                     </div>
-                </div>
+                </div> -->
             </div>
 
             <!-- Footer -->
