@@ -25,7 +25,7 @@ if(isset($_SESSION['fail'])) {
 
         <!-- login form -->
         <div class="login-box">
-            <h2>👥 Staff Login</h2>
+            <h2>Staff Login</h2>
             <p class="subtitle">Enter your credentials to access the staff dashboard.</p>
 
             <?php if(isset($_SESSION['fail'])): ?>
