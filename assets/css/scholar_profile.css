@@ -232,6 +232,38 @@ body::before {
     margin-bottom: 8px;
 }
 
+.status-badge {
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.status-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-flagged {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.value-warning {
+    color: #e74c3c;
+}
+
+.profile-card.full-width {
+    grid-column: 1 / -1;
+}
+
 .info-group {
     display: flex;
     flex-direction: column;
