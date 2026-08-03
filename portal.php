@@ -26,17 +26,17 @@ include __DIR__ . "/includes/conn.php";
             <!-- role cards -->
             <div class="role-cards">
                 <a href="admin/login.php" class="role-card admin">
-                    <div class="icon">👤</div>
+                    <img src="assets/images/admin-icon.png" alt="Admin Icon">
                     <div class="role-name">Admin / Coordinator</div>
                     <div class="role-desc">Manage scholars, imports, exports</div>
                 </a>
                 <a href="staff/login.php" class="role-card staff">
-                    <div class="icon">👥</div>
+                    <img src="assets/images/staff-icon.png" alt="Admin Icon">
                     <div class="role-name">Staff</div>
                     <div class="role-desc">View and edit scholar records</div>
                 </a>
                 <a href="student/login.php" class="role-card student">
-                    <div class="icon">🎓</div>
+                    <img src="assets/images/student-icon.png" alt="Admin Icon">
                     <div class="role-name">Scholar / Student</div>
                     <div class="role-desc">View your scholarship information</div>
                 </a>
@@ -44,7 +44,7 @@ include __DIR__ . "/includes/conn.php";
 
             <!-- announcements -->
             <div class="announcements">
-                <h2>📢 Announcements</h2>
+                <h2>Announcements</h2>
                 
                 <?php 
                 $announcement_sql = "SELECT title, content, CAST(created_at AS DATE) AS created_at_date FROM announcements WHERE is_active = 1 ORDER BY created_at DESC LIMIT 5";
