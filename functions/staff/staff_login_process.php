@@ -20,7 +20,7 @@ if(isset($_POST['username']) && isset($_POST['password'])) {
         // Login successful
         $_SESSION['user_id'] = $row['id'];
         $_SESSION['role'] = 'staff';
-        header("Location: ../../staff/dashboard.php");
+        header("Location: ../../admin/dashboard.php");
         exit();
     } else {
         // Login failed
