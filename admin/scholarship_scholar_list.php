@@ -65,6 +65,7 @@ if($scholarship_name_stmt->execute()) {
 <html>
 <head>
     <title><?= htmlspecialchars($scholarship_name) ?> Scholar List - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/scholarship_scholar_list.css?v=<?= filemtime('../assets/css/scholarship_scholar_list.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>

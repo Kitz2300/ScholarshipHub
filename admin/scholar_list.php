@@ -7,6 +7,7 @@ session_start();
 <html>
 <head>
     <title>Scholar List - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/scholar_list.css">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>

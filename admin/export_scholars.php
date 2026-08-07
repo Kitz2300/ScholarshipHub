@@ -13,6 +13,7 @@ if(isset($_SESSION['fail'])) {
 <html>
 <head>
     <title>Export Scholar Records - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/export_scholars.css?v=<?= filemtime('../assets/css/export_scholars.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>

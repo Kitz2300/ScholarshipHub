@@ -18,6 +18,7 @@ if($scholar_id == 0) {
 <html>
 <head>
     <title>Add Academic Performance - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/form.css?v=<?= filemtime('../assets/css/form.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>

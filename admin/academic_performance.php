@@ -56,6 +56,7 @@ if(isset($_POST['remove']) && isset($_POST['record_id'])) {
 <html>
 <head>
     <title>Academic Performance - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/academic_performance.css?v=<?= filemtime('../assets/css/academic_performance.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>

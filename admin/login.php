@@ -12,6 +12,7 @@ if(isset($_SESSION['fail'])) {
 <html>
 <head>
     <title>Admin Login - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/login.css">
     <link rel="icon" href="../assets/images/PIT LOGO.png">
 </head>
