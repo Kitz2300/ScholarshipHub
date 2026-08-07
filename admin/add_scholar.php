@@ -2,16 +2,48 @@
 include __DIR__ . '/../includes/conn.php';
 session_start();
 
+
 // initialize year variable
 $year = "";
+
+// Get all regions
+$regions_sql = "SELECT id, name FROM psgc WHERE is_reg = 1 ORDER BY name";
+$regions_result = $conn->query($regions_sql);
+
+// Get provinces under a specific region
+$region_id = $_POST['region_id'] ?? 0;
+$provinces_sql = "SELECT id, name FROM psgc WHERE is_prov = 1 AND parent_id = ? ORDER BY name";
+$stmt = $conn->prepare($provinces_sql);
+$stmt->bind_param("i", $region_id);
+$stmt->execute();
+$provinces_result = $stmt->get_result();
+
+// Get cities/municipalities under a specific province
+$province_id = $_POST['province_id'] ?? 0;
+$cities_sql = "SELECT id, name FROM psgc WHERE (is_city = 1 OR is_municipality = 1) AND parent_id = ? ORDER BY name";
+$stmt = $conn->prepare($cities_sql);
+$stmt->bind_param("i", $province_id);
+$stmt->execute();
+$cities_result = $stmt->get_result();
+
+// Get barangays under a specific city/municipality
+$city_id = $_POST['city_id'] ?? 0;
+$barangays_sql = "SELECT id, name FROM psgc WHERE is_bgy = 1 AND parent_id = ? ORDER BY name";
+$stmt = $conn->prepare($barangays_sql);
+$stmt->bind_param("i", $city_id);
+$stmt->execute();
+$barangays_result = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
     <title>Add Scholar - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/form.css">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../assets/js/address.js"></script>
 </head>
 <body>
     <?php 
@@ -85,7 +117,7 @@ $year = "";
                                 <input type="text" name="middle_name" id="middle_name" placeholder="Enter middle name" required>
                             </div>
                             <div class="form-group">
-                                <label for="ext_name">Extension Name (Optional)</label>
+                                <label for="ext_name">Extension Name</label>
                                 <select name="ext_name" id="ext_name"   >
                                     <option value="" selected disabled>N/A</option>
                                     <option value="Jr.">Jr.</option>
@@ -125,7 +157,7 @@ $year = "";
                                 <input type="date" name="birth_date" id="birth_date" required>
                             </div>
                             <div class="form-group">
-                                <label for="disability">Disability (Optional)</label>
+                                <label for="disability">Disability</label>
                                 <input type="text" name="disability" id="disability" placeholder="e.g., Visual impairment, Dyslexia, Mobility impairment" list="disability-list" />
                                 <datalist id="disability-list">
                                     <option value="Not applicable"></option>
@@ -136,7 +168,7 @@ $year = "";
                                 </datalist>
                             </div>
                             <div class="form-group">
-                                <label for="ip_group">IP Group (Optional)</label>
+                                <label for="ip_group">IP Group</label>
                                 <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa, Maranao, B'laan, Teduray" id="ip-group-list" />
                                 <datalist id="ip-group-list">
                                     <option value="Not applicable"></option>
@@ -148,15 +180,93 @@ $year = "";
                                 </datalist>
                             </div>
                         </div>
+                    </div>
 
+                    <div class="form-section">
+                        <h3>Address</h3>
+                        
+                        <!-- Country -->
                         <div class="form-row">
-                            <div class="form-group full-width">
-                                <label for="address">Permanent Address <span class="required">*<span></label>
-                                <input type="text" name="address" id="address" placeholder="Brgy, Town/City, Province" required>
-                            </div>
                             <div class="form-group">
-                                <label for="zipcode">Zipcode <span class="required">*</span></label>
-                                <input type="number" name="zipcode" id="zipcode" placeholder="6538" required>
+                                <label for="country">Country <span class="required">*</span></label>
+                                <select name="country" id="country">
+                                    <option value="Philippines">Philippines</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Other Country Name -->
+                        <div id="other-country-row" style="display: none;">
+                            <div class="form-group">
+                                <label for="other_country">Country Name</label>
+                                <input type="text" name="other_country" id="other_country" placeholder="Enter country name">
+                            </div>
+                        </div>
+
+                        <!-- Philippine Address -->
+                        <div id="philippines-address">
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label for="street">Street / Building / Unit</label>
+                                    <input type="text" name="street" id="street" placeholder="e.g., 123 Main St" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="region">Region</label>
+                                    <select name="region" id="region">
+                                        <option value="">Select Region</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="province">Province</label>
+                                    <select name="province" id="province">
+                                        <option value="">Select Province</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="city">City / Municipality</label>
+                                    <select name="city" id="city">
+                                        <option value="">Select City</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="barangay">Barangay</label>
+                                    <select name="barangay" id="barangay">
+                                        <option value="">Select Barangay</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="zipcode">Zipcode</label>
+                                    <input type="text" name="zipcode" id="zipcode" placeholder="Zipcode">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Other Address -->
+                        <div id="other-address" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label for="other_address1">Address Line 1</label>
+                                    <input type="text" name="other_address1" id="other_address1" placeholder="Street, building">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="other_city">City</label>
+                                    <input type="text" name="other_city" id="other_city" placeholder="City">
+                                </div>
+                                <div class="form-group">
+                                    <label for="other_state">State / Province</label>
+                                    <input type="text" name="other_state" id="other_state" placeholder="State">
+                                </div>
+                                <div class="form-group">
+                                    <label for="other_zip">Zipcode</label>
+                                    <input type="text" name="other_zip" id="other_zip" placeholder="Zipcode">
+                                </div>
                             </div>
                         </div>
                     </div>
