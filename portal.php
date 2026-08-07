@@ -5,6 +5,7 @@ include __DIR__ . "/includes/conn.php";
 <html>
     <head>
         <title>Scholarship Portal</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="assets/css/portal.css">
         <link rel="icon" href="assets/images/PIT LOGO.png">
     </head>
@@ -57,7 +58,7 @@ include __DIR__ . "/includes/conn.php";
                         <div class="announcement-item">
                             <div class="title">
                                 <?= htmlspecialchars($row['title']) ?>
-                                <span class="date">📅 <?= htmlspecialchars($row['created_at_date']) ?></span>
+                                <span class="date">Date Posted:  <?= htmlspecialchars($row['created_at_date']) ?></span>
                             </div>
                             <div class="content"><?= htmlspecialchars($row['content'], ENT_QUOTES, 'UTF-8') ?></div>
                         </div>
