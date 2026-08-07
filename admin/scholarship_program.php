@@ -2,34 +2,48 @@
 include __DIR__ . "/../includes/conn.php";
 session_start();
 
-$scholarships_sql = "SELECT * FROM scholarship_program ORDER BY is_active DESC, name ASC";
+$scholarships_sql = "SELECT * FROM scholarship_program WHERE is_archived = 0 ORDER BY is_active DESC, name ASC";
 $scholarships_stmt = $conn->prepare($scholarships_sql);
 $scholarships_stmt->execute();
 $scholarships_result = $scholarships_stmt->get_result();
 
 // delete scholarship program process
-if(isset($_POST['delete']) && isset($_POST['scholarship_program_id'])) {
+if(isset($_POST['change_status']) && isset($_POST['scholarship_program_id'])) {
     $scholarship_id = (int) $_POST['scholarship_program_id'];
 
     // delete scholar list of the scholarship program
-    $delete_sql = "DELETE FROM scholarship_program WHERE id = ?";
-    $delete_list_sql = "DELETE FROM scholar_info WHERE scholarship_program_id = ?";
+    $change_sql = "UPDATE scholarship_program SET is_active = NOT is_active WHERE id = ?";
 
-    $delete_stmt = $conn->prepare($delete_sql);
-    $delete_list_stmt = $conn->prepare($delete_list_sql);
+    $change_stmt = $conn->prepare($change_sql);
 
-    $delete_stmt->bind_param('i', $scholarship_id);
-    $delete_list_stmt->bind_param('i', $scholarship_id);
+    $change_stmt->bind_param('i', $scholarship_id);
 
-    if($delete_stmt->execute() && $delete_list_stmt->execute()) {
-        $_SESSION['success'] = "Scholarship Program and its scholars deleted successfully";
-        header("Location:" . $_SERVER['PHP_SELF']);
-        exit();
-    } else {
+    if(!($change_stmt->execute())) {
         $_SESSION['fail'] = " Failed to remove scholarship program and its scholar list";
-        header("Location:" . $_SERVER['PHP_SELF']);
-        exit();
     }
+
+    header("Location:" . $_SERVER['PHP_SELF']);
+    exit();
+}
+
+if(isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
+    $scholarship_id = (int) $_POST['scholarship_program_id'];
+    
+    $archive_sql = "UPDATE scholarship_program SET is_archived = NOT is_archived WHERE id = ?";
+    $archive_scholars_sql = "UPDATE scholar_info SET is_archived = NOT is_archived WHERE scholarship_program_id = ?";
+
+    $archive_stmt = $conn->prepare($archive_sql);
+    $archive_scholars_stmt = $conn->prepare($archive_scholars_sql);
+
+    $archive_stmt->bind_param('i', $scholarship_id);
+    $archive_scholars_stmt->bind_param('i', $scholarship_id);
+
+    if(!($archive_stmt->execute()) || !($archive_scholars_stmt->execute())) {
+        $_SESSION['fail'] = "Failed to archive records";
+    }
+    
+    header("Location:" . $_SERVER['PHP_SELF']);
+    exit();
 }
 
 ?>
@@ -38,6 +52,7 @@ if(isset($_POST['delete']) && isset($_POST['scholarship_program_id'])) {
 <html>
 <head>
     <title>Scholarship Programs - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/scholarship_program.css?v=<?= filemtime('../assets/css/scholarship_program.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
@@ -101,7 +116,11 @@ if(isset($_POST['delete']) && isset($_POST['scholarship_program_id'])) {
                 <!-- list of scholarship programs -->
                 <?php if($scholarships_result->num_rows > 0) : ?>
                     <div class="programs-grid">
-                        <?php while($row = $scholarships_result->fetch_assoc()) : ?>
+                        <?php while($row = $scholarships_result->fetch_assoc()) : 
+                            $status_class = $row['is_active'] == 1 ? "status-active" : "status-inactive";
+                            $status_title = $row['is_active'] == 1 ? "Inactive" : "Active";
+
+                            ?>
                             <div class="program-card <?= $row['is_active'] == 1 ? "status-active" : "status-inactive" ?>">
                                 <div class="program-header">
                                     <h3><?= htmlspecialchars($row['name']) ?></h3>
@@ -120,7 +139,8 @@ if(isset($_POST['delete']) && isset($_POST['scholarship_program_id'])) {
                                     <a href="edit_scholarship_program.php?id=<?= $row['id'] ?>" class="btn-sm btn-edit">Edit</a>
                                     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                         <input type="hidden" name="scholarship_program_id" value="<?= $row['id'] ?>"/>
-                                        <button type="submit" name="delete" class="btn-sm btn-delete" onclick="return confirm('Deleting a Scholarship Program also deletes its list of scholars. Proceed?')">Delete</button>
+                                        <button type="submit" name="change_status" class="btn-sm btn-<?= $status_class ?>" onclick="return confirm('Change scholarship program status?')">Change Status to <?= $status_title ?></button>
+                                        <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirm('Archiving Scholarship Programs also archives its list of scholars. Poceed?')">Archive</button>
                                     </form>
                                 </div>
                             </div>
