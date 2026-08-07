@@ -27,18 +27,16 @@ $announcement_stmt->execute();
 $announcement_result = $announcement_stmt->get_result();
 
 // delete announcement function
-if(isset($_POST['delete'])) {
+if(isset($_POST['change_status'])) {
     if(isset($_POST['announcement_id'])) {
         $announcement_id = (int) $_POST['announcement_id'];
-        $delete_sql = "DELETE FROM announcements WHERE id = ?";
-        $delete_stmt = $conn->prepare($delete_sql);
-        $delete_stmt->bind_param("i", $announcement_id);
+        $change_sql = "UPDATE announcements SET is_active = NOT is_active WHERE id = ?";
+        $change_stmt = $conn->prepare($change_sql);
+        $change_stmt->bind_param("i", $announcement_id);
         
         // insert success/fail message to session variables to display success/fail message after reloading page
-        if($delete_stmt->execute()) {
-            $_SESSION['success'] = "Announcement has been deleted";
-        } else {
-            $_SESSION['fail'] = "Failed to delete announcement";
+        if(!($change_stmt->execute())) {
+            $_SESSION['fail'] = "Failed to change announcement status";
         }
 
         // reload page to display success/fail message and refresh announcements displayed
@@ -54,6 +52,7 @@ if(isset($_POST['delete'])) {
 <html>
 <head>
     <title>Announcements - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/announcements.css?v=<?= filemtime('../assets/css/announcements.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
@@ -120,6 +119,7 @@ if(isset($_POST['delete'])) {
                             $title = $row['title'];
                             $content = $row['content'];
                             $is_active = $row['is_active'] == 1 ? "Active" : "Not Active";
+                            $is_active_title = $row['is_active'] == 0 ? "Active" : "Not Active";
                             $is_active_class = $row['is_active'] == 1 ? "status-active" : "status-inactive";
                             $created_at = $row['created_at'];
                             $created_by = isset($row['middle_name']) ? $row['given_name'] . " " . $row['middle_name'] . " " . $row['last_name'] : $row['given_name'] . " " . $row['last_name'];
@@ -141,7 +141,7 @@ if(isset($_POST['delete'])) {
                                     <a href="edit_announcement.php?id=<?= $row['announcement_id'] ?>" class="btn-sm btn-edit">Edit</a>
                                     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                         <input type="hidden" name="announcement_id" value="<?= $row['announcement_id'] ?>"/>
-                                        <button type="submit" name="delete" class="btn-sm btn-delete" onclick="return confirm('Delete this announcement?')">Delete</button>
+                                        <button type="submit" name="change_status" class="btn-sm btn-<?= $is_active_class ?>" onclick="return confirm('Change status of this announcement?')">Change Status to <?= $is_active_title ?></button>
                                     </form>
                                 </div>
                             </div>
