@@ -6,6 +6,7 @@ session_start();
 <html>
 <head>
     <title>Add Scholarship Program - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/form.css?v=<?= filemtime('../assets/css/form.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
@@ -19,8 +20,8 @@ session_start();
     ?>
 
     <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
-        <p>You are not authorized to access this page. Please <a href="login.php">login</a>.</p>
-        <!-- if logged in, load page -->
+        <script>alert('You are not logged in')</script>
+        <script>window.location.href="login.php"</script>
     <?php else : ?>
         <div class="container">
             <!-- Header -->
@@ -95,11 +96,20 @@ session_start();
                             </div>
                         </div>
                         
-                        <!-- Checkbox - Properly left aligned -->
+                        <!-- Scholarship Type Selection -->
                         <div class="form-row">
-                            <div class="form-group full-width" style="display: flex; flex-direction: row; align-items: center; gap: 12px; padding-top: 5px;">
-                                <input type="checkbox" name="is_grant" id="financial_grant" value="1" style="width: 22px; height: 22px; margin: 0; cursor: pointer; accent-color: #3fb524;">
-                                <label for="financial_grant" style="font-weight: normal; margin: 0; cursor: pointer;">This is a Financial Grant</label>
+                            <div class="form-group full-width">
+                                <label for="scholarship_type">Type <span class="required">*</span></label>
+                                <div class="radio-group">
+                                    <div class="radio-option">
+                                        <input type="radio" name="is_grant" id="scholarship_type" value="0" checked>
+                                        <label for="scholarship_type">Scholarship</label>
+                                    </div>
+                                    <div class="radio-option">
+                                        <input type="radio" name="is_grant" id="financial_grant_type" value="1">
+                                        <label for="financial_grant_type">Financial Grant</label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
