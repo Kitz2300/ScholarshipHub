@@ -133,7 +133,7 @@ body::before {
 .nav-bar ul li a {
     color: #444;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 17px;
     padding: 5px 0;
     border-bottom: 2px solid transparent;
     transition: all 0.3s;
@@ -156,7 +156,6 @@ body::before {
     border-radius: 0 0 8px 8px;
 }
 
-/* Page Header */
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -172,7 +171,6 @@ body::before {
     font-size: 22px;
 }
 
-/* Buttons */
 .btn {
     display: inline-block;
     padding: 8px 16px;
@@ -206,6 +204,35 @@ body::before {
 
 .btn-primary { background: #3498db; }
 .btn-primary:hover { background: #2980b9; }
+
+/* ========== RADIO GROUP ========== */
+.radio-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 30px;
+    padding-top: 5px;
+}
+
+.radio-group .radio-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.radio-group input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #3fb524;
+}
+
+.radio-group label {
+    font-weight: normal;
+    margin: 0;
+    cursor: pointer;
+}
 
 /* ========== REUSABLE FORM ========== */
 .reusable-form {

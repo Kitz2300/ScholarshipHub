@@ -142,7 +142,7 @@ body::before {
 .nav-bar ul li a {
     color: #444;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 17px;
     padding: 5px 0;
     border-bottom: 2px solid transparent;
     transition: all 0.3s;
@@ -375,6 +375,10 @@ body::before {
 .error-table-wrapper h4 {
     color: #e74c3c;
     margin-bottom: 10px;
+}
+
+.error-table-wrapper th {
+    background: #e74c3c;
 }
 
 /* ========== EXTRA COLUMNS ========== */
