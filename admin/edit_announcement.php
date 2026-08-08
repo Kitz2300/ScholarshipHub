@@ -65,6 +65,7 @@ if($row=$result->fetch_assoc()) {
                     <li><a href="scholarship_program.php">Scholarship Programs</a></li>
                     <li><a href="upload_excel.php">Import Excel</a></li>
                     <li><a href="export_scholars.php">Export Excel</a></li>
+                    <li><a href="archive.php">Archives</a></li>
                 </ul>
             </nav>
 
@@ -96,7 +97,7 @@ if($row=$result->fetch_assoc()) {
                             </div>
                         </div>
 
-                        <div class="form-row">
+                        <!-- <div class="form-row">
                             <div class="form-group">
                                 <label for="status">Status <span class="required">*</span></label>
                                 <select name="status" id="status" required>
@@ -105,7 +106,7 @@ if($row=$result->fetch_assoc()) {
                                 </select>
                                 <small class="help-text">Active announcements will be displayed on the portal page.</small>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
 
                     <input type="hidden" name="announcement_id" value="<?= htmlspecialchars($announcement_id) ?>"/>
