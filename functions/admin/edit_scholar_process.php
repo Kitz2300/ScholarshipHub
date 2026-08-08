@@ -5,7 +5,13 @@ session_start();
 if(isset($_POST['update'])) {
 
     // store every input names in an array
-    $required_fields = ['last_name', 'first_name', 'middle_name', 'ext_name', 'email', 'student_id', 'student_contact', 'sex', 'birth_date', 'address', 'zipcode', 'scholarship_program', 'program', 'academic_status', 'father_last', 'father_first', 'father_middle', 'mother_last', 'mother_first', 'mother_middle'];
+    $required_fields = ['last_name', 'first_name', 'middle_name', 'ext_name', 
+                        'email', 'student_id', 'student_contact', 
+                        'sex', 'birth_date', 
+                        'street', 'country', 'region', 'province', 'city', 'barangay', 'zipcode',
+                        'scholarship_program', 'program', 'academic_status', 
+                        'father_last', 'father_first', 'father_middle', 
+                        'mother_last', 'mother_first', 'mother_middle'];
     
     $missing_fields = [];
     
@@ -24,20 +30,62 @@ if(isset($_POST['update'])) {
         header("Location: ../../admin/edit_scholar.php?id=$id_num"); 
         exit();
     }
-    
+
+    // Get country
+    $country = trim($_POST['country']);
+    if($country === 'Other' && !empty($_POST['other_country'])) {
+        $country = trim($_POST['other_country']);
+    }
+
+    // Get PSGC IDs
+    $region_id = (int) ($_POST['region'] ?? 0);
+    $province_id = (int) ($_POST['province'] ?? 0);
+    $city_id = (int) ($_POST['city'] ?? 0);
+    $barangay_id = (int) ($_POST['barangay'] ?? 0);
+
+    // Get street
+    $street = trim($_POST['street'] ?? '');
+
+    // Get zipcode (optional - can be from PSGC or manual)
+    $zipcode = trim($_POST['zipcode'] ?? '');
+
     // student information
     // required fields
     $last_name = trim($_POST['last_name']);
     $first_name = trim($_POST['first_name']);
     $middle_name = trim($_POST['middle_name']);
-    $student_id = trim ($_POST['student_id']);
+
+    // student id regex validation
+    $student_id = trim($_POST['student_id']);
+    $id_pattern = "/^[0-9]{2}-[0-9]{4}-[0-9]{3}$/";
+    if(!preg_match($id_pattern, $student_id)) {
+        $_SESSION['fail'] = "Student ID does not match format";
+        header("Location: ../../admin/add_scholar.php");
+        exit();
+    }
+
     $sex = $_POST['sex'] == 'Male' ? 0 : 1; // 0 for male, 1 for female
     $birth_date = $_POST['birth_date'];
-    $address = trim($_POST['address']);
     $zipcode = $_POST['zipcode'];
     $year_lvl = $_POST['year_lvl'];
+    
+    // student contact regex validation
     $student_contact = trim($_POST['student_contact']);
+    $contact_pattern = "/^09[0-9]{9}$/";
+    if(!preg_match($contact_pattern, $student_contact)) {
+        $_SESSION['fail'] = "Contact number does not match format";
+        header("Location: ../../admin/add_scholar.php");
+    }
+    
+    // email regex validation
     $email = trim($_POST['email']);
+    $email_pattern = "/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/";
+    if(!preg_match($email_pattern, $email)) {
+        $_SESSION['fail'] = "Email does not match format";
+        header("Location: ../../admin/add_scholar.php");
+        exit();
+    }
+    
     $program_id = $_POST['program'];
     $scholarship_program_id = $_POST['scholarship_program'];
     $academic_status = $_POST['academic_status'];
@@ -60,6 +108,41 @@ if(isset($_POST['update'])) {
     $mother_first_name = trim($_POST['mother_first']);
     $mother_middle_name = trim($_POST['mother_middle']);
     
+    // Fetch location names for the full address
+    $location_names = [];
+
+    if($region_id > 0) {
+        $sql = "SELECT name FROM psgc WHERE id = $region_id";
+        $result = $conn->query($sql);
+        $location_names['region'] = $result->fetch_assoc()['name'] ?? '';
+    }
+    if($province_id > 0) {
+        $sql = "SELECT name FROM psgc WHERE id = $province_id";
+        $result = $conn->query($sql);
+        $location_names['province'] = $result->fetch_assoc()['name'] ?? '';
+    }
+    if($city_id > 0) {
+        $sql = "SELECT name FROM psgc WHERE id = $city_id";
+        $result = $conn->query($sql);
+        $location_names['city'] = $result->fetch_assoc()['name'] ?? '';
+    }
+    if($barangay_id > 0) {
+        $sql = "SELECT name FROM psgc WHERE id = $barangay_id";
+        $result = $conn->query($sql);
+        $location_names['barangay'] = $result->fetch_assoc()['name'] ?? '';
+    }
+
+    // Build full permanent address
+    $address_parts = [];
+    if(!empty($street)) $address_parts[] = $street;
+    if(!empty($location_names['barangay'])) $address_parts[] = $location_names['barangay'];
+    if(!empty($location_names['city'])) $address_parts[] = $location_names['city'];
+    if(!empty($location_names['province'])) $address_parts[] = $location_names['province'];
+    if(!empty($location_names['region'])) $address_parts[] = $location_names['region'];
+    if(!empty($country)) $address_parts[] = $country;
+
+    $permanent_address = implode(', ', $address_parts);
+
     $scholar_sql = "UPDATE scholar_info SET 
                     student_id = ?, 
                     last_name = ?, 
@@ -79,6 +162,12 @@ if(isset($_POST['update'])) {
                     mother_given_name = ?, 
                     mother_middle_name = ?, 
                     permanent_address = ?,
+                    street = ?, 
+                    barangay_id = ?, 
+                    city_id = ?, 
+                    province_id = ?, 
+                    region_id = ?, 
+                    country = ?,
                     zipcode = ?, 
                     disability = ?, 
                     contact_num = ?, 
@@ -89,7 +178,7 @@ if(isset($_POST['update'])) {
                     WHERE id = ?";
     
     $scholar_stmt = $conn->prepare($scholar_sql);
-    $scholar_stmt->bind_param("sssssisiiissssssssissssssi", 
+    $scholar_stmt->bind_param("sssssisiiisssssssssiiiissssssssi", 
                     $student_id, 
                     $last_name, 
                     $first_name, 
@@ -107,7 +196,13 @@ if(isset($_POST['update'])) {
                     $mother_last_name, 
                     $mother_first_name, 
                     $mother_middle_name, 
-                    $address,
+                    $permanent_address,
+                    $street,
+                    $barangay_id,
+                    $city_id,
+                    $province_id,
+                    $region_id, 
+                    $country,
                     $zipcode,
                     $disability, 
                     $student_contact, 
