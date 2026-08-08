@@ -84,6 +84,7 @@ $barangays_result = $stmt->get_result();
                     <li><a href="scholarship_program.php">Scholarship Programs</a></li>
                     <li><a href="upload_excel.php">Import Excel</a></li>
                     <li><a href="export_scholars.php">Export Excel</a></li>
+                    <li><a href="archive.php">Archives</a></li>
                 </ul>
             </nav>
 
@@ -199,7 +200,7 @@ $barangays_result = $stmt->get_result();
                         <!-- Other Country Name -->
                         <div id="other-country-row" style="display: none;">
                             <div class="form-group">
-                                <label for="other_country">Country Name</label>
+                                <label for="other_country">Country Name <span class="required">*</span></label>
                                 <input type="text" name="other_country" id="other_country" placeholder="Enter country name">
                             </div>
                         </div>
@@ -208,19 +209,19 @@ $barangays_result = $stmt->get_result();
                         <div id="philippines-address">
                             <div class="form-row">
                                 <div class="form-group full-width">
-                                    <label for="street">Street / Building / Unit</label>
+                                    <label for="street">Street / Building / Unit <span class="required">*</span></label>
                                     <input type="text" name="street" id="street" placeholder="e.g., 123 Main St" required>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="region">Region</label>
+                                    <label for="region">Region <span class="required">*</span></label>
                                     <select name="region" id="region">
                                         <option value="">Select Region</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="province">Province</label>
+                                    <label for="province">Province <span class="required">*</span></label>
                                     <select name="province" id="province">
                                         <option value="">Select Province</option>
                                     </select>
@@ -228,19 +229,19 @@ $barangays_result = $stmt->get_result();
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="city">City / Municipality</label>
+                                    <label for="city">City / Municipality <span class="required">*</span></label>
                                     <select name="city" id="city">
                                         <option value="">Select City</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="barangay">Barangay</label>
+                                    <label for="barangay">Barangay <span class="required">*</span></label>
                                     <select name="barangay" id="barangay">
                                         <option value="">Select Barangay</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="zipcode">Zipcode</label>
+                                    <label for="zipcode">Zipcode <span class="required">*</span></label>
                                     <input type="text" name="zipcode" id="zipcode" placeholder="Zipcode">
                                 </div>
                             </div>
@@ -250,21 +251,21 @@ $barangays_result = $stmt->get_result();
                         <div id="other-address" style="display: none;">
                             <div class="form-row">
                                 <div class="form-group full-width">
-                                    <label for="other_address1">Address Line 1</label>
+                                    <label for="other_address1">Address Line 1 <span class="required">*</span></label>
                                     <input type="text" name="other_address1" id="other_address1" placeholder="Street, building">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="other_city">City</label>
+                                    <label for="other_city">City <span class="required">*</span></label>
                                     <input type="text" name="other_city" id="other_city" placeholder="City">
                                 </div>
                                 <div class="form-group">
-                                    <label for="other_state">State / Province</label>
+                                    <label for="other_state">State / Province <span class="required">*</span></label>
                                     <input type="text" name="other_state" id="other_state" placeholder="State">
                                 </div>
                                 <div class="form-group">
-                                    <label for="other_zip">Zipcode</label>
+                                    <label for="other_zip">Zipcode <span class="required">*</span></label>
                                     <input type="text" name="other_zip" id="other_zip" placeholder="Zipcode">
                                 </div>
                             </div>
