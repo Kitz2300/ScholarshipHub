@@ -42,6 +42,7 @@ if($scholarship_result->num_rows > 0) {
 <html>
 <head>
     <title>Edit Scholarship Program - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/form.css?v=<?= filemtime('../assets/css/form.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
@@ -86,6 +87,7 @@ if($scholarship_result->num_rows > 0) {
                     <li><a href="scholarship_program.php" class="active">Scholarship Programs</a></li>
                     <li><a href="upload_excel.php">Import Excel</a></li>
                     <li><a href="export_scholars.php">Export Excel</a></li>
+                    <li><a href="archive.php">Archives</a></li>
                 </ul>
             </nav>
 
@@ -130,9 +132,6 @@ if($scholarship_result->num_rows > 0) {
                                 <input type="number" name="gwa_req" id="gwa_req" step="0.01" min="0.0" max="4.0" placeholder="e.g., 2.5 or leave blank" value="<?= htmlspecialchars($gwa_req) ?>"/>
                                 <small class="help-text">Leave blank if no GWA requirement.</small>
                             </div>
-                        </div>
-
-                        <div class="form-row">
                             <div class="form-group">
                                 <label for="is_active">Status <span class="required">*</span></label>
                                 <select name="is_active" id="is_active" required>
@@ -140,10 +139,21 @@ if($scholarship_result->num_rows > 0) {
                                     <option value="0" <?= $is_active == 0 ? "selected" : "" ?>>Inactive</option>
                                 </select>
                             </div>
-                            <div class="form-group" style="justify-content: flex-end; padding-top: 25px;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <input type="checkbox" name="is_grant" id="financial_grant" value="1" <?= $is_grant == 1 ? "checked" : "" ?> style="width: 20px; height: 20px; margin: 0; cursor: pointer; accent-color: #2ecc71;">
-                                    <label for="financial_grant" style="font-weight: normal; margin: 0; cursor: pointer; font-size: 14px;">Financial Grant</label>
+                        </div>
+
+                        <!-- Scholarship Type Selection -->
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="scholarship_type">Type <span class="required">*</span></label>
+                                <div class="radio-group">
+                                    <div class="radio-option">
+                                        <input type="radio" name="is_grant" id="scholarship_type" value="0" <?= $is_grant == 0 ? "checked" : "" ?>>
+                                        <label for="scholarship_type">Scholarship</label>
+                                    </div>
+                                    <div class="radio-option">
+                                        <input type="radio" name="is_grant" id="financial_grant_type" value="1" <?= $is_grant == 1 ? "checked" : "" ?>>
+                                        <label for="financial_grant_type">Financial Grant</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
