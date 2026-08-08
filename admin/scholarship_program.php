@@ -100,6 +100,7 @@ if(isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
                     <li><a href="scholarship_program.php" class="active">Scholarship Programs</a></li>
                     <li><a href="upload_excel.php">Import Excel</a></li>
                     <li><a href="export_scholars.php">Export Excel</a></li>
+                    <li><a href="archive.php">Archives</a></li>
                 </ul>
             </nav>
 
