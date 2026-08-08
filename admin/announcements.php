@@ -46,6 +46,24 @@ if(isset($_POST['change_status'])) {
     }
 }
 
+if(isset($_POST['delete'])) {
+    if(isset($_POST['announcement_id'])) {
+        $announcement_id = (int) $_POST['announcement_id'];
+        $delete_sql = "DELETE FROM announcements WHERE id = ?";
+        $delete_stmt = $conn->prepare($delete_sql);
+        $delete_stmt->bind_param('i', $announcement_id);
+        
+        if($delete_stmt->execute()) {
+            $_SESSION['success'] = "Announcement deleted";
+        } else {
+            $_SESSION['fail'] = "Announcement failed to delete";
+        }
+
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -99,6 +117,7 @@ if(isset($_POST['change_status'])) {
                     <li><a href="scholarship_program.php">Scholarship Programs</a></li>
                     <li><a href="upload_excel.php">Import Excel</a></li>
                     <li><a href="export_scholars.php">Export Excel</a></li>
+                    <li><a href="archive.php">Archives</a></li>
                 </ul>
             </nav>
 
@@ -142,6 +161,11 @@ if(isset($_POST['change_status'])) {
                                     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                         <input type="hidden" name="announcement_id" value="<?= $row['announcement_id'] ?>"/>
                                         <button type="submit" name="change_status" class="btn-sm btn-<?= $is_active_class ?>" onclick="return confirm('Change status of this announcement?')">Change Status to <?= $is_active_title ?></button>
+                                    </form>
+                                    <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
+                                        <input type="hidden" name="announcement_id" value="<?= $row['announcement_id'] ?>"/>
+                                        <button type="submit" name="delete" class="btn-sm btn-delete" onclick="return confirm('Delete announcement?')">Delete</button>
+                                        <!-- <button type="submit" name="delete" class="btn-sm btn-delete" onclick="return confirm('Delete announcement?')"><img class="delete-ico" src="../assets/images/trash.png"></button> -->
                                     </form>
                                 </div>
                             </div>
