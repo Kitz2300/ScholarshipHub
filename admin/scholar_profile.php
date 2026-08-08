@@ -19,6 +19,23 @@ if (isset($_SESSION['redirect_back_url'])) {
 // get scholar id
 $scholar_id = isset($_GET['scholar_id']) ? (int) $_GET['scholar_id'] : 0;
 
+// Fetch scholar notes
+$notes_sql = "SELECT notes FROM scholar_notes WHERE scholar_id = ?";
+$notes_stmt = $conn->prepare($notes_sql);
+$notes_stmt->bind_param("i", $scholar_id);
+$notes_stmt->execute();
+$notes_result = $notes_stmt->get_result();
+
+$scholar_notes = [];
+while($note_row = $notes_result->fetch_assoc()) {
+    $note_content = json_decode($note_row['notes'], true);
+    // If JSON decode fails, treat it as plain text
+    if(!is_array($note_content)) {
+        $note_content = ['Note' => $note_row['notes']];
+    }
+    $scholar_notes[] = $note_content;
+}
+
 // scholar info query
 $scholar_sql = "SELECT scholar_info.*, 
                 scholarship_program.name AS scholarship_program_name,  
@@ -106,12 +123,15 @@ if($row = $scholar_result->fetch_assoc()) {
     header("Location: scholar_list.php");
     exit();
 }
+
+
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
     <title>Scholar Profile - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/scholar_profile.css?v=<?= filemtime('../assets/css/scholar_profile.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
@@ -158,6 +178,7 @@ if($row = $scholar_result->fetch_assoc()) {
                     <li><a href="scholarship_program.php">Scholarship Programs</a></li>
                     <li><a href="upload_excel.php">Import Excel</a></li>
                     <li><a href="export_scholars.php">Export Excel</a></li>
+                    <li><a href="archive.php">Archives</a></li>
                 </ul>
             </nav>
 
@@ -250,6 +271,30 @@ if($row = $scholar_result->fetch_assoc()) {
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Scholar Notes Section -->
+                    <div class="profile-card">
+                        <h3>Notes</h3>
+                        <?php if(!empty($scholar_notes)) : ?>
+                            <?php foreach($scholar_notes as $note) : ?>
+                                <div class="note-item">
+                                    <div class="note-content">
+                                        <?php if(is_array($note)) : ?>
+                                            <ul>
+                                                <?php foreach($note as $key => $value) : ?>
+                                                    <li><strong><?= htmlspecialchars($key) ?>:</strong> <?= htmlspecialchars($value) ?></li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        <?php else : ?>
+                                            <p><?= htmlspecialchars($note) ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else : ?>
+                            <p class="no-data">No additional notes found for this scholar.</p>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Academic Information -->
