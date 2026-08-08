@@ -93,16 +93,23 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
             ];
         }
     }
+    
+    // set true if process is successful
+    $import_processed = true;  
 
-    // check if max columns is greater than mapped columns
-    if($max_columns > $mapped_columns) {
-        $extra_cols = true;
-        $num_extra_cols = $max_columns - $mapped_columns;
+    // check if there are valid rows
+    if(!empty($valid_rows)) {
+        // check if max columns is greater than mapped columns
+        if($max_columns > $mapped_columns) {
+            $extra_cols = true;
+            $num_extra_cols = $max_columns - $mapped_columns;
+            }
+        // get sample row
+        $sample_row = $valid_rows[0];
+    } else {
+        $sample_row = [];
     }
 
-    // set true if process is successful, and get a sample row
-    $import_processed = true;  
-    $sample_row = !empty($valid_rows) ? $valid_rows[0] : [];
 }
 
 ?>
@@ -111,6 +118,7 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
 <html>
 <head>
     <title>Import Excel - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/upload_excel.css?v=<?= filemtime('../assets/css/upload_excel.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
@@ -149,6 +157,7 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
                     <li><a href="scholarship_program.php">Scholarship Programs</a></li>
                     <li><a href="upload_excel.php" class="active">Import Excel</a></li>
                     <li><a href="export_scholars.php">Export Excel</a></li>
+                    <li><a href="archive.php">Archives</a></li>
                 </ul>
             </nav>
 
@@ -173,7 +182,7 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
                             </div>
                             <div class="form-group">
                                 <label for="headers">How many rows as headers? <span class="required">*</span></label>
-                                <input type="number" name="headers" id="headers" min="0" value="2" required/>
+                                <input type="number" name="headers" id="headers" min="0" value="4" required/>
                             </div>
                             <div class="form-group">
                                 <label for="scholarship">Scholarship Program <span class="required">*</span></label>
@@ -198,7 +207,7 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
 
                 <!-- instructions for file requirement -->
                 <div class="instructions-section">
-                    <h4>📋 Instructions</h4>
+                    <h4>Instructions</h4>
                     <ul>
                         <li>Use the template provided by the scholarship office.</li>
                         <li>Required Columns: Student ID, Last Name, Given Name, Sex, Birthdate, Program, Year Level</li>
@@ -211,7 +220,7 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
                     <?php if(!empty($errors_by_row) || !empty($valid_rows)): ?>
                         <!-- import summary -->
                         <div class="summary-section">
-                            <h3>📊 Import Summary</h3>
+                            <h3>Import Summary</h3>
                             <div class="summary-stats">
                                 <div class="stat-item success">
                                     <span class="stat-label">Valid Rows</span>
@@ -226,7 +235,7 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
                             <?php if(!empty($errors_by_row)): ?>
                                 <!-- display row errors -->
                                 <div class="error-table-wrapper">
-                                    <h4>❌ Error Details</h4>
+                                    <h4>Error Details</h4>
                                     <table>
                                         <thead>
                                             <tr>
@@ -258,7 +267,7 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
                                     <!-- if there are extra columns. allow user to name each column -->
                                     <?php if($extra_cols) : ?>
                                         <div class="extra-columns-section">
-                                            <h4>📎 Extra Columns Detected</h4>
+                                            <h4>Extra Columns Detected!</h4>
                                             <p class="help-text">Please provide a name for each extra column.</p>
                                             <table>
                                                 <thead>
@@ -303,7 +312,7 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
 
                 <!-- Import History -->
                 <div class="history-section">
-                    <h3>📜 Import History</h3>
+                    <h3>Import History</h3>
                     <?php 
                     $history_sql = "SELECT imported_at, filename, scholarship_users.role FROM import_history LEFT JOIN scholarship_users ON import_history.user_id = scholarship_users.id ORDER BY imported_at DESC";
                     $history_stmt = $conn->prepare($history_sql);
