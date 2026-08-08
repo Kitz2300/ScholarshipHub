@@ -15,7 +15,7 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 
 // initialize required columns
-$required_cols = ['student_id', 'last_name', 'given_name', 'ext_name', 'middle_name', 'program_name', 'scholarship_program_name', 'year_level'];
+// $required_cols = ['student_id', 'last_name', 'given_name', 'ext_name', 'middle_name', 'program_name', 'scholarship_program_name', 'year_level'];
 
 // get scholarship_program, program filters and filename
 $scholarship_program = !empty($_POST['scholar_program']) ? $_POST['scholar_program'] : '';
@@ -40,7 +40,7 @@ foreach($selected_cols as $cols) {
 }
 
 // merge required columns and selected columns by user
-$export_cols = array_merge($required_cols, $expanded_cols);
+$export_cols = $expanded_cols;
 $export_cols = array_unique($export_cols);
 
 // column mapping
