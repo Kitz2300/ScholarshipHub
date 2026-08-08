@@ -139,7 +139,7 @@ body::before {
 .nav-bar ul li a {
     color: #444;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 17px;
     padding: 5px 0;
     border-bottom: 2px solid transparent;
     transition: all 0.3s;
@@ -215,7 +215,7 @@ body::before {
     padding: 4px 12px;
     border: none;
     border-radius: 3px;
-    font-size: 12px;
+    font-size: 15px;
     cursor: pointer;
     text-decoration: none;
     color: #fff;
@@ -233,12 +233,22 @@ body::before {
     background: #e67e22;
 }
 
-.btn-delete {
+.btn-status-active {
     background: #e74c3c;
 }
-.btn-delete:hover {
+.btn-status-active:hover {
     background: #c0392b;
 }
+
+.btn-status-inactive {
+    background: #2ecc71;
+}
+.btn-status-inactive:hover {
+    background: #27ae60;
+}
+
+.btn-delete { background: #ad2f21; }
+.btn-delete:hover { background: #811e13; }
 
 /* ========== ANNOUNCEMENTS LIST ========== */
 .announcements-list {
