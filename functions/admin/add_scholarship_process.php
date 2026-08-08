@@ -9,7 +9,7 @@ if(isset($_POST['add'])) {
     $description = $_POST['desc'] ?? "";
     $gwa_req = $_POST['gwa_req'] ?? 0.00;
     $pay_amount = $_POST['pay_amount'] ?? 0.00;
-    $financial_grant = isset($_POST['is_grant']) ? 1 : 0;
+    $financial_grant = isset($_POST['is_grant']) ? $_POST['is_grant'] : 0;
 
     // validate empty required fields
     if(!empty($name) && !empty($code) && !empty($description)) {
