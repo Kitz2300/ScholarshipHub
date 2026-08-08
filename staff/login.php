@@ -1,16 +1,9 @@
-<?php 
-session_start();
-
-// if login fails alert user
-if(isset($_SESSION['fail'])) {
-    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-    unset($_SESSION['fail']);
-}
-?>
+<?php session_start(); ?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>Staff Login - PIT ScholarshipHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/login.css">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
@@ -28,10 +21,13 @@ if(isset($_SESSION['fail'])) {
             <h2>Staff Login</h2>
             <p class="subtitle">Enter your credentials to access the staff dashboard.</p>
 
-            <?php if(isset($_SESSION['fail'])): ?>
-                <div class="error-msg"><?= htmlspecialchars($_SESSION['fail']) ?></div>
-                <?php unset($_SESSION['fail']); ?>
-            <?php endif; ?>
+            <?php 
+            // if login fails alert user
+            if(isset($_SESSION['fail'])) {
+                echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+                unset($_SESSION['fail']);
+            }
+            ?>
 
             <form method="post" action="../functions/staff/staff_login_process.php">
                 <div class="form-group">
