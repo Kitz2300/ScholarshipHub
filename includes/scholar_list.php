@@ -26,6 +26,7 @@ $searched = isset($_GET['search']) ? trim($_GET['search']) : "";
 $course_filter = isset($_GET['course_filter']) ? (int)$_GET['course_filter'] : 0;
 $college_filter = isset($_GET['college_filter']) ? (int)$_GET['college_filter'] : 0;
 $scholarship_filter = isset($_GET['scholarship_filter']) ? (int)$_GET['scholarship_filter'] : 0;
+$academic_status = isset($_GET['academic_status']) ? $_GET['academic_status'] : "";
 
 $where_condition = [];
 $params = [];
@@ -71,18 +72,24 @@ if(isset($_GET['filter'])) {
         $params[] = $scholarship_filter;
         $types .= "i";
     }
+
+    if($academic_status != "") {
+        $where_condition[] = "academic_status = ?";
+        $params[] = $academic_status;
+        $types .= "s";
+    }
 }
 
-$where_sql = !empty($where_condition) ? "WHERE " . implode(" AND ", $where_condition) : "";
+$where_sql = !empty($where_condition) ? " AND " . implode(" AND ", $where_condition) : "";
 
 // Count total records
 $count_sql = "SELECT 
-              COUNT(*) AS total 
+              COUNT(*) AS total
               FROM scholar_info
               INNER JOIN scholarship_program ON scholar_info.scholarship_program_id = scholarship_program.id 
               INNER JOIN program ON scholar_info.program_id = program.id
               INNER JOIN college ON program.college_id = college.id
-              $where_sql 
+              WHERE scholar_info.is_archived = 0 AND scholarship_program.is_archived = 0 AND scholarship_program.is_active = 1 $where_sql 
               ";
 
 $count_stmt = $conn->prepare($count_sql);
@@ -108,7 +115,7 @@ $scholar_sql = "SELECT scholar_info.id, student_id,
                 INNER JOIN scholarship_program ON scholar_info.scholarship_program_id = scholarship_program.id 
                 INNER JOIN program ON scholar_info.program_id = program.id
                 INNER JOIN college ON program.college_id = college.id
-                $where_sql
+                WHERE scholar_info.is_archived = 0 AND scholarship_program.is_archived = 0 AND scholarship_program.is_active = 1 $where_sql
                 ORDER BY scholar_info.id DESC
                 LIMIT ?
                 OFFSET ?
@@ -132,7 +139,7 @@ $college_stmt = $conn->prepare($college_sql);
 $college_stmt->execute();
 $college_result = $college_stmt->get_result();
 
-$scholarship_sql = "SELECT id, name FROM scholarship_program";
+$scholarship_sql = "SELECT id, name FROM scholarship_program WHERE is_archived = 0";
 $scholarship_stmt = $conn->prepare($scholarship_sql);
 $scholarship_stmt->execute();
 $scholarship_result = $scholarship_stmt->get_result();
@@ -186,9 +193,18 @@ if($page > $total_pages && $total_pages > 0) {
                 <?php } ?>
             </select>
 
+            <select name="academic_status">
+                <option value="" <?= $academic_status == "" ? "selected" : "" ?>>All Scholars</option>
+                <option value="Active" <?= $academic_status == "Active" ? "selected" : "" ?>>Active</option>
+                <option value="Transferred" <?= $academic_status == "Transferred" ? "selected" : "" ?>>Transferred</option>
+                <option value="Graduated" <?= $academic_status == "Graduated" ? "selected" : "" ?>>Graduated</option>
+                <option value="Dropped" <?= $academic_status == "Dropped" ? "selected" : "" ?>>Dropped</option>
+                <option value="Inactive" <?= $academic_status == "Inactive" ? "selected" : "" ?>>Inactive</option>
+            </select>
+
             <button type="submit" name="filter" class="btn btn-sm btn-info">Apply Filter</button>
             
-            <?php if($searched != "" || $course_filter != 0 || $college_filter != 0 || $scholarship_filter != 0) : ?>
+            <?php if($searched != "" || $course_filter != 0 || $college_filter != 0 || $scholarship_filter != 0 || $academic_status != "") : ?>
                 <a href="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" class="clear-link">Clear</a>
             <?php endif; ?>
         </div>
