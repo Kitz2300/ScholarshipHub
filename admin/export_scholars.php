@@ -1,12 +1,6 @@
 <?php 
 include __DIR__ . "/../includes/conn.php";
 session_start();
-
-// show error message if any
-if(isset($_SESSION['fail'])) {
-    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-    unset($_SESSION['fail']);
-}
 ?>
 
 <!DOCTYPE html>
@@ -19,6 +13,13 @@ if(isset($_SESSION['fail'])) {
 </head>
 <body>
     <!-- check if logged in or not -->
+    <?php 
+    // show error message if any
+    if(isset($_SESSION['fail'])) {
+        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+        unset($_SESSION['fail']);
+    }
+    ?>
     <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== "admin") : ?>
         <script>alert('You are not logged in')</script>
         <?php $_SESSION = []; ?>
@@ -52,6 +53,7 @@ if(isset($_SESSION['fail'])) {
                     <li><a href="scholarship_program.php">Scholarship Programs</a></li>
                     <li><a href="upload_excel.php">Import Excel</a></li>
                     <li><a href="export_scholars.php" class="active">Export Excel</a></li>
+                    <li><a href="archive.php">Archives</a></li>
                 </ul>
             </nav>
 
@@ -77,7 +79,13 @@ if(isset($_SESSION['fail'])) {
                                 <select name="scholar_program" id="scholar_program" required>
                                     <option value="all">All Scholarship Programs</option>
                                     <?php 
-                                    $scholarship_program_sql = "SELECT name, code FROM scholarship_program WHERE is_active = 1";
+                                    $scholarship_program_sql = "SELECT name, code 
+                                                                FROM scholarship_program
+                                                                WHERE EXISTS (
+                                                                    SELECT 1 FROM scholar_info 
+                                                                    WHERE scholar_info.scholarship_program_id = scholarship_program.id AND scholar_info.is_archived = 0 AND scholarship_program.is_archived = 0
+                                                                )
+                                                                ORDER BY name ASC";
                                     $scholarship_program_stmt = $conn->prepare($scholarship_program_sql);
                                     $scholarship_program_stmt->execute();
                                     $scholarship_program_result = $scholarship_program_stmt->get_result();
@@ -109,41 +117,41 @@ if(isset($_SESSION['fail'])) {
                         <h3>Step 2: Select Columns to Include</h3>
 
                         <!-- checkbox required fields which shows checked and user cannot uncheck -->
-                        <p><strong>Required Fields (always included):</strong></p>
+                        <!-- <p><strong>Required Fields (always included):</strong></p> -->
                         <div class="checkbox-group">
-                            <input type="checkbox" id="student_id" checked disabled/>
+                            <input type="checkbox" id="student_id" name="columns[]" value="student_id" checked/>
                             <label for="student_id">Student ID</label>
                         </div>
                         <div class="checkbox-group">
-                            <input type="checkbox" id="last_name" checked disabled/>
+                            <input type="checkbox" id="last_name" name="columns[]" value="last_name" checked/>
                             <label for="last_name">Last Name</label>
                         </div>
                         <div class="checkbox-group">
-                            <input type="checkbox" id="given_name" checked disabled/>
+                            <input type="checkbox" id="given_name" name="columns[]" value="given_name" checked/>
                             <label for="given_name">Given Name</label>
                         </div>
                         <div class="checkbox-group">
-                            <input type="checkbox" id="ext_name" checked disabled/>
+                            <input type="checkbox" id="ext_name" name="columns[]" value="ext_name" checked/>
                             <label for="ext_name">Extended Name</label>
                         </div>
                         <div class="checkbox-group">
-                            <input type="checkbox" id="middle_name" checked disabled/>
+                            <input type="checkbox" id="middle_name" name="columnsd[]" value="middle_name" checked/>
                             <label for="middle_name">Middle Name</label>
                         </div>
                         <div class="checkbox-group">
-                            <input type="checkbox" id="program_name" checked disabled/>
+                            <input type="checkbox" id="program_name" name="columns[]" value="program_name" checked/>
                             <label for="program_name">Program Name</label>
                         </div>
                         <div class="checkbox-group">
-                            <input type="checkbox" id="scholarship" checked disabled/>
+                            <input type="checkbox" id="scholarship" name="columns[]" value="scholarship_prgram_name" checked/>
                             <label for="scholarship">Scholarship Program</label>
                         </div>
                         <div class="checkbox-group">
-                            <input type="checkbox" id="year_level" checked disabled/>
+                            <input type="checkbox" id="year_level" name="columns[]" value="year_level" checked/>
                             <label for="year_level">Year Level</label>
                         </div>
 
-                        <p style="margin-top: 15px;"><strong>Optional Fields:</strong></p>
+                        <!-- <p style="margin-top: 15px;"><strong>Optional Fields:</strong></p> -->
                         <!-- checkbox for optional fields -->
                         <div class="checkbox-group">
                             <input type="checkbox" id="father_name" name="columns[]" value="father_name" checked/>
