@@ -140,7 +140,7 @@ body::before {
 .nav-bar ul li a {
     color: #444;
     text-decoration: none;
-    font-size: 17px;
+    font-size: 19px;
     padding: 5px 0;
     border-bottom: 2px solid transparent;
     transition: all 0.3s;
@@ -154,6 +154,58 @@ body::before {
     color: #1e4628;
     border-bottom-color: #1e4628;
     font-weight: bold;
+}
+
+/* ========== DROPDOWN ========== */
+.nav-bar ul li {
+    position: relative;
+}
+
+.nav-bar ul li .dropdown-toggle {
+    cursor: pointer;
+}
+
+.nav-bar ul li .dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #338043;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    padding: 8px 0;
+    z-index: 999;
+}
+
+.arrow-down {
+    display: inline;
+    font-size: 15px;
+    vertical-align: top;
+}
+
+.nav-bar ul li .dropdown-menu li {
+    display: block;
+    padding: 0;
+}
+
+.nav-bar ul li .dropdown-menu li a {
+    display: block;
+    padding: 8px 16px;
+    color: #ffffff;
+    text-decoration: none;
+    border-bottom: none;
+    font-size: 16px;
+}
+
+.nav-bar ul li .dropdown-menu li a:hover {
+    background: #f0f4f8;
+    color: #1e4628;
+}
+
+.nav-bar ul li:hover .dropdown-menu {
+    display: block;
 }
 
 /* ========== PAGE CONTENT ========== */
@@ -306,7 +358,7 @@ body::before {
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 17px;
 }
 
 table thead th {
@@ -348,22 +400,23 @@ table tbody tr:nth-child(even):hover {
 
 .action-buttons .btn-sm {
     padding: 4px 10px;
-    font-size: 12px;
+    font-size: 15px;
     display: inline-block;
     text-decoration: none;
     border: none;
     border-radius: 3px;
     cursor: pointer;
+    color: #fff;
 }
 
-.action-buttons .btn-view { background: #3498db; color: #fff; }
+.action-buttons .btn-view { background: #3498db;}
 .action-buttons .btn-view:hover { background: #2980b9; }
 
-.action-buttons .btn-edit { background: #f39c12; color: #fff; }
+.action-buttons .btn-edit { background: #f39c12;}
 .action-buttons .btn-edit:hover { background: #e67e22; }
 
-.action-buttons .btn-delete { background: #e74c3c; color: #fff; border: none; }
-.action-buttons .btn-delete:hover { background: #c0392b; }
+.action-buttons .btn-archive { background: rgb(77, 120, 201)}
+.action-buttons .btn-archive:hover { background: rgb(52, 84, 144)}
 
 /* ========== PAGINATION ========== */
 .pagination {

@@ -1,14 +1,19 @@
 <?php
 require_once __DIR__ . '/../includes/conn.php';
 
-// Delete scholar process
-if(isset($_POST['delete_scholar'])) {
+// Archive scholar process
+if(isset($_POST['archive'])) {
     if(!empty($_POST['scholar_id'])) {
         $scholar_id = $_POST['scholar_id'];
-        $delete_sql = "DELETE FROM scholar_info WHERE id = ?";
-        $delete_stmt = $conn->prepare($delete_sql);
-        $delete_stmt->bind_param("i", $scholar_id);
-        $delete_stmt->execute();
+        $archive_sql = "UPDATE scholar_info SET is_archived = 0 WHERE id = ?";
+        $archive_stmt = $conn->prepare($archive_sql);
+        $archive_stmt->bind_param("i", $scholar_id);
+
+        if($archive_stmt->execute()) {
+            $_SESSION['success'] = "Scholar archived!";
+        } else {
+            $_SESSION['fail'] = "Failed to archive scholar.";
+        }
 
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -245,7 +250,7 @@ if($page > $total_pages && $total_pages > 0) {
                             <a href="scholar_profile.php?scholar_id=<?= $row['id'] ?>" class="btn-sm btn-view">View</a>
                             <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                 <input type="hidden" name="scholar_id" value="<?= $row['id'] ?>">
-                                <button type="submit" name="delete_scholar" class="btn-sm btn-delete" onclick="return confirm('Delete this scholar?')">Delete</button>
+                                <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirm('Delete this scholar?')">Archive</button>
                             </form>
                         </div>
                     </td>
