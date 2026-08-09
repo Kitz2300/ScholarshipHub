@@ -142,7 +142,7 @@ body::before {
 .nav-bar ul li a {
     color: #444;
     text-decoration: none;
-    font-size: 17px;
+    font-size: 19px;
     padding: 5px 0;
     border-bottom: 2px solid transparent;
     transition: all 0.3s;
@@ -156,6 +156,58 @@ body::before {
     color: #1e4628;
     border-bottom-color: #1e4628;
     font-weight: bold;
+}
+
+/* ========== DROPDOWN ========== */
+.nav-bar ul li {
+    position: relative;
+}
+
+.nav-bar ul li .dropdown-toggle {
+    cursor: pointer;
+}
+
+.nav-bar ul li .dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #338043;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    padding: 8px 0;
+    z-index: 999;
+}
+
+.arrow-down {
+    display: inline;
+    font-size: 15px;
+    vertical-align: top;
+}
+
+.nav-bar ul li .dropdown-menu li {
+    display: block;
+    padding: 0;
+}
+
+.nav-bar ul li .dropdown-menu li a {
+    display: block;
+    padding: 8px 16px;
+    color: #ffffff;
+    text-decoration: none;
+    border-bottom: none;
+    font-size: 16px;
+}
+
+.nav-bar ul li .dropdown-menu li a:hover {
+    background: #f0f4f8;
+    color: #1e4628;
+}
+
+.nav-bar ul li:hover .dropdown-menu {
+    display: block;
 }
 
 /* ========== PAGE CONTENT ========== */

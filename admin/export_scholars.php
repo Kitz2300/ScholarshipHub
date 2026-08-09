@@ -47,13 +47,33 @@ session_start();
             <!-- Navigation -->
             <nav class="nav-bar">
                 <ul>
+                    <!-- Dashboard -->
                     <li><a href="dashboard.php">Dashboard</a></li>
-                    <li><a href="scholar_list.php">Scholars</a></li>
+
+                    <!-- Records Dropdown -->
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle">Records <div class="arrow-down">▼</div></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="scholar_list.php">Scholars</a></li>
+                            <li><a href="scholarship_program.php">Scholarship Programs</a></li>
+                            <li><a href="archive.php">Archives</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- Import/Export Dropdown -->
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle active">Import / Export <div class="arrow-down">▼</div></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="upload_excel.php">Import Excel</a></li>
+                            <li><a href="export_scholars.php" class="active">Export Excel</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
-                    <li><a href="scholarship_program.php">Scholarship Programs</a></li>
-                    <li><a href="upload_excel.php">Import Excel</a></li>
-                    <li><a href="export_scholars.php" class="active">Export Excel</a></li>
-                    <li><a href="archive.php">Archives</a></li>
+
+                    <!-- Program / College Management -->
+                    <li><a href="program_management.php">Program/College Management</a></li>
                 </ul>
             </nav>
 
