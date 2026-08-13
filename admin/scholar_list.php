@@ -1,6 +1,13 @@
 <?php 
 include '../includes/conn.php';
+// include '../includes/check_permission.php';
 session_start();
+
+// if(!(hasPermission('view'))) {
+//     $_SESSION['fail'] = "You do not have permission to access this page";
+//     header("Location: " . $_SERVER['HTTP_REFERER']);
+//     exit();
+// }
 ?>
 
 <!DOCTYPE html>
@@ -22,9 +29,9 @@ session_start();
         unset($_SESSION['fail']);
     }
     ?>
-    <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
+    <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <script>alert('You are not logged in')</script>
-        <script>window.location.href='login.php'</script>
+        <script>window.location.href='../portal.php'</script>
     <?php else : ?>
         <div class="container">
             <!-- Header -->
@@ -61,19 +68,24 @@ session_start();
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
+                    <!-- <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li>
+                    </li> -->
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program/College Management</a></li>
+                    <li><a href="program_management.php">Program & College Management</a></li>
+
+                    <!-- Account Management -->
+                    <?php if($_SESSION['role'] == "admin") : ?>
+                        <li><a href="account_management.php">Account Management</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -83,9 +95,9 @@ session_start();
                 <div class="page-header">
                     <h2>Scholar List</h2>
                     <div class="page-actions">
-                        <a href="add_scholar.php" class="btn btn-primary">Add New Scholar</a>
-                        <a href="upload_excel.php" class="btn btn-success">Import Excel</a>
-                        <a href="export_scholars.php" class="btn btn-info">Export Excel</a>
+                        <a href="add_scholar.php" class="btn btn-success">Add New Scholar</a>
+                        <!-- <a href="upload_excel.php" class="btn btn-success">Import Excel</a>
+                        <a href="export_scholars.php" class="btn btn-info">Export Excel</a> -->
                     </div>
                 </div>
 

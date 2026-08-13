@@ -1,11 +1,15 @@
 <?php
-require_once __DIR__ . '/../includes/conn.php';
+require_once __DIR__ . '/conn.php';
+include __DIR__ . '/school_year_helper.php';
+
+$selected_year = getSelectedSchoolYear();
+$available_years = getAvailableSchoolYears($conn);
 
 // Archive scholar process
 if(isset($_POST['archive'])) {
     if(!empty($_POST['scholar_id'])) {
         $scholar_id = $_POST['scholar_id'];
-        $archive_sql = "UPDATE scholar_info SET is_archived = 0 WHERE id = ?";
+        $archive_sql = "UPDATE scholar_info SET is_archived = 1 WHERE id = ?";
         $archive_stmt = $conn->prepare($archive_sql);
         $archive_stmt->bind_param("i", $scholar_id);
 
@@ -32,6 +36,11 @@ $course_filter = isset($_GET['course_filter']) ? (int)$_GET['course_filter'] : 0
 $college_filter = isset($_GET['college_filter']) ? (int)$_GET['college_filter'] : 0;
 $scholarship_filter = isset($_GET['scholarship_filter']) ? (int)$_GET['scholarship_filter'] : 0;
 $academic_status = isset($_GET['academic_status']) ? $_GET['academic_status'] : "";
+$school_year_filter = isset($_GET['school_year_filter']) ? $_GET['school_year_filter'] : null;
+
+if($school_year_filter === null && !empty($available_years)) {
+    $school_year_filter = $available_years[0];
+}
 
 $where_condition = [];
 $params = [];
@@ -83,6 +92,12 @@ if(isset($_GET['filter'])) {
         $params[] = $academic_status;
         $types .= "s";
     }
+    
+    if($school_year_filter != null) {
+            $where_condition[] = "scholar_info.school_year = ?";
+            $params[] = $school_year_filter;
+            $types .= "s";
+    } 
 }
 
 $where_sql = !empty($where_condition) ? " AND " . implode(" AND ", $where_condition) : "";
@@ -94,11 +109,14 @@ $count_sql = "SELECT
               INNER JOIN scholarship_program ON scholar_info.scholarship_program_id = scholarship_program.id 
               INNER JOIN program ON scholar_info.program_id = program.id
               INNER JOIN college ON program.college_id = college.id
-              WHERE scholar_info.is_archived = 0 AND scholarship_program.is_archived = 0 AND scholarship_program.is_active = 1 $where_sql 
+              WHERE scholar_info.is_archived = 0 
+                AND scholarship_program.is_archived = 0 
+                AND scholarship_program.is_active = 1 
+                $where_sql 
               ";
 
 $count_stmt = $conn->prepare($count_sql);
-if (!empty($params)) $count_stmt->bind_param($types, ...$params);
+if(!empty($where_sql)) $count_stmt->bind_param( $types, ...$params);
 $count_stmt->execute();
 $total_records = $count_stmt->get_result()->fetch_assoc()['total'];
 $total_pages = ceil($total_records / $records_per_page);
@@ -120,18 +138,20 @@ $scholar_sql = "SELECT scholar_info.id, student_id,
                 INNER JOIN scholarship_program ON scholar_info.scholarship_program_id = scholarship_program.id 
                 INNER JOIN program ON scholar_info.program_id = program.id
                 INNER JOIN college ON program.college_id = college.id
-                WHERE scholar_info.is_archived = 0 AND scholarship_program.is_archived = 0 AND scholarship_program.is_active = 1 $where_sql
+                WHERE scholar_info.is_archived = 0 
+                    AND scholarship_program.is_archived = 0 
+                    AND scholarship_program.is_active = 1  
+                    $where_sql
                 ORDER BY scholar_info.id DESC
                 LIMIT ?
                 OFFSET ?
                 ";
 
-$stmt = $conn->prepare($scholar_sql);
-if(!empty($params)) {
-    $stmt->bind_param($types, ...$params);
-}
-$stmt->execute();
-$result = $stmt->get_result();
+$scholar_stmt = $conn->prepare($scholar_sql);
+if(!empty($params)) $scholar_stmt->bind_param($types, ...$params);
+
+$scholar_stmt->execute();
+$result = $scholar_stmt->get_result();
 
 // Dropdown filters queries
 $course_sql = "SELECT id, name FROM program";
@@ -156,17 +176,19 @@ if($page > $total_pages && $total_pages > 0) {
 ?>
 
 <!-- Search and Filter Section -->
+<script src="../assets/js/toggle_filter.js"></script>
 <div class="search-filter">
     <form action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" method="GET">
         <!-- Row 1: Search -->
         <div class="search-row">
             <input type="search" name="search" placeholder="Search by name or ID..." value="<?= !empty($searched) ? htmlspecialchars($searched) : "" ?>"/>
             <button type="submit" name="search_btn" class="btn btn-sm btn-primary">Search</button>
+            <button type="button" class="btn btn-sm btn-info toggle-filters">Filters ▼</button>
         </div>
 
         <!-- Row 2: Filters -->
-        <div class="filter-row">
-            <span class="filter-label">Filter by:</span><br>
+        <div class="filter-row<?= ( $course_filter != 0 || $college_filter != 0 || $scholarship_filter != 0 || $academic_status != "") ? ' open' : '' ?>" id="filter-row">
+            <!-- <span class="filter-label">Filter by:</span><br> -->
             
             <select name="course_filter">
                 <option value="0" <?= $course_filter == 0 ? 'selected' : '' ?>>All Courses</option>
@@ -205,6 +227,15 @@ if($page > $total_pages && $total_pages > 0) {
                 <option value="Graduated" <?= $academic_status == "Graduated" ? "selected" : "" ?>>Graduated</option>
                 <option value="Dropped" <?= $academic_status == "Dropped" ? "selected" : "" ?>>Dropped</option>
                 <option value="Inactive" <?= $academic_status == "Inactive" ? "selected" : "" ?>>Inactive</option>
+            </select>
+
+            <select name="school_year_filter">
+                <!-- <option value="" <?= $school_year_filter == "" ? "selected" : "" ?>>All School Years</option> -->
+                <?php foreach($available_years as $year) : ?>
+                    <option value="<?= $year ?>" <?= $school_year_filter == $year ? "selected" : "" ?>>
+                        <?= $year ?>
+                    </option>
+                <?php endforeach; ?>
             </select>
 
             <button type="submit" name="filter" class="btn btn-sm btn-info">Apply Filter</button>
@@ -250,7 +281,7 @@ if($page > $total_pages && $total_pages > 0) {
                             <a href="scholar_profile.php?scholar_id=<?= $row['id'] ?>" class="btn-sm btn-view">View</a>
                             <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                 <input type="hidden" name="scholar_id" value="<?= $row['id'] ?>">
-                                <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirm('Delete this scholar?')">Archive</button>
+                                <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirm('Archive scholar?')">Archive</button>
                             </form>
                         </div>
                     </td>
@@ -269,19 +300,19 @@ if($page > $total_pages && $total_pages > 0) {
 <?php if($total_pages > 1) : ?>
     <div class="pagination">
         <?php if($page > 1) : ?>
-            <a href="?page=<?= $page - 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>">Previous</a>
+            <a href="?page=<?= $page - 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>&school_year_filter=<?= urlencode($school_year_filter) ?>">Previous</a>
         <?php endif; ?>
         
         <?php for($i = 1; $i <= $total_pages; $i++) : ?>
             <?php if($i == $page) : ?>
                 <strong><?= $i ?></strong>
             <?php else : ?>
-                <a href="?page=<?= $i ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>"><?= $i ?></a>
+                <a href="?page=<?= $page - 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>&school_year_filter=<?= urlencode($school_year_filter) ?>"> $i </a>
             <?php endif; ?>
         <?php endfor; ?>
 
         <?php if($page < $total_pages) : ?>
-            <a href="?page=<?= $page + 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>">Next</a>
+            <a href="?page=<?= $page - 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>&school_year_filter=<?= urlencode($school_year_filter) ?>">next</a>
         <?php endif; ?>
     </div>
 <?php endif; ?>
