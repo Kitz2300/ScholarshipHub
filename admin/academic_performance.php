@@ -110,20 +110,25 @@ if(isset($_POST['remove']) && isset($_POST['record_id'])) {
                         </ul>
                     </li>
 
-                    <!-- Import/Export Dropdown -->
+                    <!-- Import/Export Dropdown
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li>
+                    </li> -->
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program/College Management</a></li>
+                    <li><a href="program_management.php">Program & College Management</a></li>
+
+                    <!-- Account Management -->
+                    <?php if($_SESSION['role'] == "admin") : ?>
+                        <li><a href="account_management.php">Account Management</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -140,8 +145,8 @@ if(isset($_POST['remove']) && isset($_POST['record_id'])) {
 
                 <!-- Actions -->
                 <div class="action-bar">
-                    <a href="scholar_profile.php?scholar_id=<?= $scholar_id ?>" class="btn btn-secondary">← Back to Profile</a>
-                    <a href="add_academic_performance.php?scholar_id=<?= $scholar_id ?>" class="btn btn-success">+ Add Record</a>
+                    <a href="scholar_profile.php?scholar_id=<?= $scholar_id ?>" class="btn btn-secondary">Back to Profile</a>
+                    <a href="add_academic_performance.php?scholar_id=<?= $scholar_id ?>" class="btn btn-success">Add Record</a>
                 </div>
 
                 <!-- Academic Records Table -->
