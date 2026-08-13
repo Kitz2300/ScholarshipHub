@@ -2,9 +2,29 @@
 include '../includes/conn.php';
 session_start();
 
+include __DIR__ . "/../includes/school_year_helper.php";
+
+if(isset($_POST['set_school_year'])) {
+    setSelectedSchoolYear($_POST['school_year']);
+    header("Location: dashboard.php");
+    exit();
+}
+
+$selected_year = getSelectedSchoolYear();
+$available_years = getAvailableSchoolYears($conn);
+
+// If the selected year has no data, pick the first available year
+if (!empty($available_years) && !in_array($selected_year, $available_years)) {
+    $selected_year = $available_years[0];
+    setSelectedSchoolYear($selected_year);
+    header("Location: dashboard.php");
+    exit();
+}
+
 // sql query for total count of scholars
-$scholars_sql = "SELECT id, COUNT(*) AS scholar_count FROM scholar_info WHERE scholar_info.is_archived = 0";
+$scholars_sql = "SELECT id, COUNT(*) AS scholar_count FROM scholar_info WHERE scholar_info.is_archived = 0 AND school_year = ?";
 $scholars_stmt = $conn->prepare($scholars_sql);
+$scholars_stmt->bind_param('s', $selected_year);
 $scholars_stmt->execute();
 $scholars_result = $scholars_stmt->get_result();
 
@@ -18,31 +38,41 @@ $scholarship_sql = "SELECT
                         scholarship_program
                     LEFT JOIN
                         scholar_info ON scholar_info.scholarship_program_id = scholarship_program.id
+                        AND scholar_info.is_archived = 0
+                        AND scholar_info.school_year = ?
                     WHERE
-                        (scholarship_program.is_archived = 0 AND scholarship_program.is_active = 1) OR scholar_info.is_archived = 0
+                        scholarship_program.is_archived = 0 
+                        AND scholarship_program.is_active = 1 
+                        AND scholarship_program.school_year = ?
                     GROUP BY
                         scholarship_program.id, scholarship_program.name
-                    -- HAVING
-                    --     COUNT(scholar_info.id) > 0  removes scholarships with no scholars
+                    ORDER BY
+                        scholar_count DESC
                     ";
 $scholarship_stmt = $conn->prepare($scholarship_sql);
+$scholarship_stmt->bind_param('ss', $selected_year, $selected_year);
 $scholarship_stmt->execute();
 $scholarship_result = $scholarship_stmt->get_result();
 
 // sql query for total count of scholars per status (active, inactive, dropped, graduated)
-$status_sql = "
-    SELECT statuses.academic_status, COALESCE(COUNT(scholar_info.id), 0) AS status_count
-    FROM (
-        SELECT 'Active' AS academic_status
-        UNION SELECT 'Graduated'
-        UNION SELECT 'Dropped'
-        UNION SELECT 'Transferred'
-        UNION SELECT 'Inactive'
-    ) AS statuses
-    LEFT JOIN scholar_info ON scholar_info.academic_status = statuses.academic_status
-    GROUP BY statuses.academic_status
+$status_sql = " SELECT 
+                    statuses.academic_status, 
+                    COALESCE(COUNT(scholar_info.id), 0) AS status_count
+                FROM (
+                    SELECT 'Active' AS academic_status
+                    UNION SELECT 'Graduated'
+                    UNION SELECT 'Dropped'
+                    UNION SELECT 'Transferred'
+                    -- UNION SELECT 'Inactive'
+                ) AS statuses
+                LEFT JOIN 
+                    scholar_info ON scholar_info.academic_status = statuses.academic_status
+                    AND scholar_info.school_year = ? AND scholar_info.is_archived = 0
+                GROUP BY 
+                    statuses.academic_status
 ";
 $status_stmt = $conn->prepare($status_sql);
+$status_stmt->bind_param('s', $selected_year);
 $status_stmt->execute();
 $status_result = $status_stmt->get_result();
 
@@ -75,6 +105,13 @@ while($row = $status_result->fetch_assoc()) {
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
 <body>
+    <?php 
+    // fail session messages
+    if(isset($_SESSION['fail'])) {
+        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+        unset($_SESSION['fail']);
+    }
+    ?>
     <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href='login.php'</script>
@@ -114,19 +151,24 @@ while($row = $status_result->fetch_assoc()) {
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
+                    <!-- <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li>
+                    </li> -->
                     
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program/College Management</a></li>
+                    <li><a href="program_management.php">Program & College Management</a></li>
+
+                    <!-- Account Management -->
+                    <?php if($_SESSION['role'] == "admin") : ?>
+                        <li><a href="account_management.php">Account Management</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -134,14 +176,33 @@ while($row = $status_result->fetch_assoc()) {
             <div class="dashboard-content">
                 <!-- Welcome Section -->
                 <div class="welcome-card">
-                    <h2>Dashboard Overview</h2>
-                    <p>Here's a summary of your scholarship records.</p>
+                    <div class="welcome-text">
+                        <h2>Dashboard Overview</h2>
+                        <p>Here's a summary of your scholarship records.</p>
+                    </div>
+
+                    <!-- School Year Selector -->
+                    <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" class="school-year-selector">
+                        <label for="school_year"><strong>School Year:</strong></label>
+                        <select name="school_year" id="school_year">
+                            <?php if(!empty($available_years)) : ?>
+                                <?php foreach($available_years as $year) : ?>
+                                    <option value="<?= $year ?>" <?= $year == $selected_year ? 'selected' : '' ?>>
+                                        <?= $year ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php else : ?>
+                                <option value="">No School Year</option>
+                            <?php endif; ?>
+                        </select>
+                        <button type="submit" name="set_school_year" class="btn btn-sm btn-primary">Apply</button>
+                    </form>
                 </div>
 
                 <!-- Stats Cards -->
                 <div class="stats-grid">
                     <!-- Total Scholars -->
-                    <a href="scholar_list.php">
+                    <a href="scholar_list.php?search=&course_filter=0&college_filter=0&scholarship_filter=0&academic_status=&school_year_filter=<?= $selected_year ?>&filter=">
                         <div class="stat-card total">
                             <div class="stat-info">
                                 <h3>Total Scholars</h3> 
@@ -151,7 +212,7 @@ while($row = $status_result->fetch_assoc()) {
                     </a>
 
                     <!-- Active Scholars -->
-                    <?php 
+                    <?php   
                     $active_count = 0;
                     foreach($status_data as $status) {
                         if(strtolower($status['academic_status']) === 'active') {
@@ -160,7 +221,7 @@ while($row = $status_result->fetch_assoc()) {
                         }
                     }
                     ?>
-                    <a href="scholar_list.php?search=&course_filter=0&college_filter=0&scholarship_filter=0&academic_status=Active&filter=">
+                    <a href="scholar_list.php?search=&course_filter=0&college_filter=0&scholarship_filter=0&academic_status=Active&school_year_filter=<?= $selected_year ?>&filter=">
                         <div class="stat-card active">
                             <div class="stat-info">
                                 <h3>Active Scholars</h3>
@@ -246,10 +307,12 @@ while($row = $status_result->fetch_assoc()) {
                     <div class="status-grid">
                         <?php if(!empty($status_data)) :?>
                             <?php foreach($status_data as $status) : ?>
-                                <div class="status-item">
-                                    <span class="status-label"><?= htmlspecialchars($status['academic_status']) ?></span>
-                                    <span class="status-count"><?= htmlspecialchars($status['status_count']) ?></span>
-                                </div>
+                                <a href="scholar_list.php?search=&course_filter=0&college_filter=0&scholarship_filter=0&academic_status=<?= $status['academic_status'] ?>&school_year_filter=<?= $selected_year ?>&filter=">
+                                    <div class="status-item">
+                                        <span class="status-label"><?= htmlspecialchars($status['academic_status']) ?></span>
+                                        <span class="status-count"><?= htmlspecialchars($status['status_count']) ?></span>
+                                    </div>
+                                </a>
                             <?php endforeach; ?>
                         <?php else : ?>
                             <span class="program-name">No Scholars</span>
