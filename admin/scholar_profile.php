@@ -64,6 +64,7 @@ $program = "";
 $year_lvl = "";
 $college = "";
 $academic_status = "";
+$school_year = "";
 $address = "";
 $zipcode = "";
 $disability = "";
@@ -91,6 +92,7 @@ if($row = $scholar_result->fetch_assoc()) {
     $year = $row['year_level'] ?? 0;
     $college = $row['college_name'];
     $academic_status = $row['academic_status'];
+    $school_year = $row['school_year'];
     $address = $row['permanent_address'];
     $zipcode = $row['zipcode'];
     $disability = empty($row['disability']) ? "Not Applicable" : $row['disability']; // display Not Applicable if empty
@@ -134,6 +136,7 @@ if($row = $scholar_result->fetch_assoc()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/scholar_profile.css?v=<?= filemtime('../assets/css/scholar_profile.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <script src="../assets/js/scholar_notes.js"></script>
 </head>
 <body>
     <?php 
@@ -186,19 +189,24 @@ if($row = $scholar_result->fetch_assoc()) {
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
+                    <!-- <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li>
+                    </li> -->
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program/College Management</a></li>
+                    <li><a href="program_management.php">Program & College Management</a></li>
+
+                    <!-- Account Management -->
+                    <?php if($_SESSION['role'] == "admin") : ?>
+                        <li><a href="account_management.php">Account Management</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -294,27 +302,32 @@ if($row = $scholar_result->fetch_assoc()) {
                     </div>
 
                     <!-- Scholar Notes Section -->
-                    <div class="profile-card">
-                        <h3>Notes</h3>
-                        <?php if(!empty($scholar_notes)) : ?>
-                            <?php foreach($scholar_notes as $note) : ?>
-                                <div class="note-item">
-                                    <div class="note-content">
-                                        <?php if(is_array($note)) : ?>
-                                            <ul>
-                                                <?php foreach($note as $key => $value) : ?>
-                                                    <li><strong><?= htmlspecialchars($key) ?>:</strong> <?= htmlspecialchars($value) ?></li>
-                                                <?php endforeach; ?>
-                                            </ul>
-                                        <?php else : ?>
-                                            <p><?= htmlspecialchars($note) ?></p>
-                                        <?php endif; ?>
+                    <div class="profile-card notes-card">
+                        <div class="card-header">
+                            <h3>Notes</h3>
+                            <button class="btn btn-sm btn-primary open-modal-btn">Add Notes</button>
+                        </div>
+                        <div class="card-body">
+                            <?php if(!empty($scholar_notes)) : ?>
+                                <?php foreach($scholar_notes as $note) : ?>
+                                    <div class="note-item">
+                                        <div class="note-content">
+                                            <?php if(is_array($note)) : ?>
+                                                <ul>
+                                                    <?php foreach($note as $key => $value) : ?>
+                                                        <li><strong><?= htmlspecialchars($key) ?>:</strong> <?= htmlspecialchars($value) ?></li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            <?php else : ?>
+                                                <p><?= htmlspecialchars($note) ?></p>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else : ?>
-                            <p class="no-data">No additional notes found for this scholar.</p>
-                        <?php endif; ?>
+                                <?php endforeach; ?>
+                            <?php else : ?>
+                                <p class="no-data">No additional notes found for this scholar.</p>
+                            <?php endif; ?>
+                        </div>
                     </div>
 
                     <!-- Academic Information -->
@@ -336,6 +349,10 @@ if($row = $scholar_result->fetch_assoc()) {
                             <div class="info-row">
                                 <span class="info-label">Year Level</span>
                                 <span class="info-value"><?= htmlspecialchars($year_lvl) ?></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">School Year</span>
+                                <span class="info-value"><?= htmlspecialchars($school_year) ?></span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Academic Status</span>
@@ -360,7 +377,7 @@ if($row = $scholar_result->fetch_assoc()) {
                                                 <th>GWA</th>
                                                 <th>Units</th>
                                                 <th>Year Level</th>
-                                                <th>School Year</th>
+                                                <!-- <th>School Year</th> -->
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -370,7 +387,7 @@ if($row = $scholar_result->fetch_assoc()) {
                                                     <td><?= htmlspecialchars($row['gwa']) ?></td>
                                                     <td><?= htmlspecialchars($row['units']) ?></td>
                                                     <td><?= htmlspecialchars($row['year_level']) ?></td>
-                                                    <td><?= htmlspecialchars($row['school_year']) ?></td>
+                                                    <!-- <td><?= htmlspecialchars($row['school_year']) ?></td> -->
                                                 </tr>
                                             <?php endwhile; ?>
                                         </tbody>
@@ -384,11 +401,41 @@ if($row = $scholar_result->fetch_assoc()) {
                 </div>
             </div>
 
+
             <!-- Footer -->
             <div class="footer">
                 © 2026 PIT ScholarshipHub. All rights reserved.
             </div>
         </div>
+
+        <!-- Modal for Adding Notes -->
+            <div id="noteModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Add New Note</h3>
+                        <span class="modal-close">&times;</span>
+                    </div>
+                    <form id="addNoteForm" action="../functions/admin/add_notes_process.php" method="POST">
+                        <!-- Hidden scholar_id -->
+                        <input type="hidden" name="scholar_id" value="<?= $scholar_id ?>">
+                        
+                        <div class="form-group">
+                            <label for="note_title">Title</label>
+                            <input type="text" id="note_title" name="title" placeholder="e.g., Remarks, Old ID, etc." required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="note_content">Content</label>
+                            <textarea id="note_content" name="content" rows="4" placeholder="Enter note content here..." required></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add Note</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
     <?php endif; ?>
 </body>
 </html>
