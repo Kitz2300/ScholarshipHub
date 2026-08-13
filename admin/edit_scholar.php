@@ -142,19 +142,24 @@ if($row = $scholar_result->fetch_assoc()) {
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
+                    <!-- <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li>
+                    </li> -->
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program/College Management</a></li>
+                    <li><a href="program_management.php">Program & College Management</a></li>
+                    
+                    <!-- Account Management -->
+                    <?php if($_SESSION['role'] == "admin") : ?>
+                        <li><a href="account_management.php">Account Management</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -345,7 +350,7 @@ if($row = $scholar_result->fetch_assoc()) {
 
                     <!-- Scholarship Information -->
                     <div class="form-section">
-                        <h3>Scholarship Information</h3>
+                        <h3>Scholarship & Academic Information</h3>
 
                         <div class="form-row">
                             <div class="form-group">
@@ -416,30 +421,30 @@ if($row = $scholar_result->fetch_assoc()) {
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="father_last">Father's Last Name</label>
+                                <label for="father_last">Father's Last Name <span class="required">*</span></label>
                                 <input type="text" name="father_last" id="father_last" value="<?= htmlspecialchars($father_last) ?>">
                             </div>
                             <div class="form-group">
-                                <label for="father_first">Father's First Name</label>
+                                <label for="father_first">Father's First Name <span class="required">*</span></label>
                                 <input type="text" name="father_first" id="father_first" value="<?= htmlspecialchars($father_given) ?>">
                             </div>
                             <div class="form-group">
-                                <label for="father_middle">Father's Middle Name</label>
+                                <label for="father_middle">Father's Middle Name <span class="required">*</span></label>
                                 <input type="text" name="father_middle" id="father_middle" value="<?= htmlspecialchars($father_middle) ?>">
                             </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="mother_last">Mother's Maiden Last Name</label>
+                                <label for="mother_last">Mother's Maiden Last Name <span class="required">*</span></label>
                                 <input type="text" name="mother_last" id="mother_last" value="<?= htmlspecialchars($mother_last) ?>">
                             </div>
                             <div class="form-group">
-                                <label for="mother_first">Mother's Maiden First Name</label>
+                                <label for="mother_first">Mother's Maiden First Name <span class="required">*</span></label>
                                 <input type="text" name="mother_first" id="mother_first" value="<?= htmlspecialchars($mother_given) ?>">
                             </div>
                             <div class="form-group">
-                                <label for="mother_middle">Mother's Maiden Middle Name</label>
+                                <label for="mother_middle">Mother's Maiden Middle Name <span class="required">*</span></label>
                                 <input type="text" name="mother_middle" id="mother_middle" value="<?= htmlspecialchars($mother_middle) ?>">
                             </div>
                         </div>
