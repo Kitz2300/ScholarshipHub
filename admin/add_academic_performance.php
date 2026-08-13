@@ -63,20 +63,25 @@ if($scholar_id == 0) {
                         </ul>
                     </li>
 
-                    <!-- Import/Export Dropdown -->
+                    <!-- Import/Export Dropdown
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li>
+                    </li> -->
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program/College Management</a></li>
+                    <li><a href="program_management.php">Program & College Management</a></li>
+
+                    <!-- Account Management -->
+                    <?php if($_SESSION['role'] == "admin") : ?>
+                        <li><a href="account_management.php">Account Management</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -115,7 +120,7 @@ if($scholar_id == 0) {
                             </div>
                         </div>
 
-                        <div class="form-row">
+                        <!-- <div class="form-row">
                             <div class="form-group full-width">
                                 <label for="start_year">School Year <span class="required">*</span></label>
                                 <div class="school-year-group">
@@ -133,7 +138,7 @@ if($scholar_id == 0) {
                                 </div>
                                 <small style="color: #999; font-size: 12px; margin-top: 4px;">Select the start and end year of the academic year.</small>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
 
                     <input type="hidden" name="scholar_id" value="<?= $scholar_id ?>"/>
