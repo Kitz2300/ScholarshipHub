@@ -21,8 +21,6 @@ if($scholar_id == 0) {
 $semester = "";
 $gwa = 0.00;
 $units = 0.00;
-$start_year = "";
-$end_year = "";
 
 // scholar's academic performance query
 $academic_sql = "SELECT * FROM academic_performance WHERE id = ?";
@@ -37,10 +35,6 @@ if($academic_result->num_rows > 0) {
         $semester = $row['semester'];
         $gwa = $row['gwa'];
         $units = $row['units'];
-        // break school year into 2 parts [start_year, end_year]
-        $school_year = explode(" - ", $row['school_year']);
-        $start_year = $school_year[0];
-        $end_year = $school_year[1];
     }
 } else {
     $_SESSION['fail'] = "Scholar does not exist!";
@@ -100,19 +94,24 @@ if($academic_result->num_rows > 0) {
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
+                    <!-- <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li>
+                    </li> -->
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program/College Management</a></li>
+                    <li><a href="program_management.php">Program & College Management</a></li>
+
+                    <!-- Account Management -->
+                    <?php if($_SESSION['role'] == "admin") : ?>
+                        <li><a href="account_management.php">Account Management</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -152,7 +151,7 @@ if($academic_result->num_rows > 0) {
                             </div>
                         </div>
 
-                        <div class="form-row">
+                        <!-- <div class="form-row">
                             <div class="form-group full-width">
                                 <label for="start_year">School Year <span class="required">*</span></label>
                                 <div class="school-year-group">
@@ -170,7 +169,7 @@ if($academic_result->num_rows > 0) {
                                 </div>
                                 <small style="color: #999; font-size: 12px; margin-top: 4px;">Select the start and end year of the academic year.</small>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
 
                     <input type="hidden" name="scholar_id" value="<?= $scholar_id ?>"/>
