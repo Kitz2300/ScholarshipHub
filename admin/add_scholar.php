@@ -92,19 +92,24 @@ $barangays_result = $stmt->get_result();
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
+                    <!-- <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li>
+                    </li> -->
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program/College Management</a></li>
+                    <li><a href="program_management.php">Program & College Management</a></li>
+
+                    <!-- Account Management -->
+                    <?php if($_SESSION['role'] == "admin") : ?>
+                        <li><a href="account_management.php">Account Management</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -152,7 +157,7 @@ $barangays_result = $stmt->get_result();
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="email">Email Address <span class="required">*</span></label>
-                                <input type="email" name="email" id="email" placeholder="example@gmail.com" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" required>
+                                <input type="email" name="email" id="email" placeholder="example@gmail.com" pattern="[^\s@]+@[^\s@]+\.[^\s@]+" required>
                             </div>
                             <div class="form-group">
                                 <label for="student_id">Student ID <span class="required">*</span></label>
@@ -378,6 +383,10 @@ $barangays_result = $stmt->get_result();
                             </div>
                         </div>
                     </div>
+
+                    <!-- <div class="form-section">
+                        <h3>Scholar Notes</h3>
+                    </div> -->
 
                     <!-- Form Actions -->
                     <div class="form-actions">
