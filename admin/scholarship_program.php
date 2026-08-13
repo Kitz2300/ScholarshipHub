@@ -1,9 +1,28 @@
 <?php
 include __DIR__ . "/../includes/conn.php";
+include __DIR__ . "/../includes/school_year_helper.php";
 session_start();
 
-$scholarships_sql = "SELECT * FROM scholarship_program WHERE is_archived = 0 ORDER BY is_active DESC, name ASC";
+if(isset($_POST['set_school_year'])) {
+    setSelectedSchoolYear($_POST['school_year']);
+    header("Location: scholarship_program.php");
+    exit();
+}
+
+$selected_year = getSelectedSchoolYear();
+$available_years = getScholarshipSchoolYears($conn);
+
+// If the selected year has no data, pick the first available year
+if (!empty($available_years) && !in_array($selected_year, $available_years)) {
+    $selected_year = $available_years[0];
+    setSelectedSchoolYear($selected_year);
+    header("Location: scholarship_program.php");
+    exit();
+}
+
+$scholarships_sql = "SELECT * FROM scholarship_program WHERE is_archived = 0 AND school_year = ? ORDER BY is_active DESC, name ASC";
 $scholarships_stmt = $conn->prepare($scholarships_sql);
+$scholarships_stmt->bind_param('s', $selected_year);
 $scholarships_stmt->execute();
 $scholarships_result = $scholarships_stmt->get_result();
 
@@ -108,19 +127,24 @@ if(isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
+                    <!-- <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li>
+                    </li> -->
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program/College Management</a></li>
+                    <li><a href="program_management.php">Program & College Management</a></li>
+
+                    <!-- Account Management -->
+                    <?php if($_SESSION['role'] == "admin") : ?>
+                        <li><a href="account_management.php">Account Management</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -129,7 +153,25 @@ if(isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
                 <!-- Page Header -->
                 <div class="page-header">
                     <h2>Scholarship Programs</h2>
-                    <div class="page-actions">
+                    <!-- School Year Selector -->
+                    <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" class="school-year-selector">
+                        <label for="school_year"><strong>School Year:</strong></label>
+                        <select name="school_year" id="school_year">
+                            <?php if(!empty($available_years)) : ?>
+                                <?php foreach($available_years as $year) : ?>
+                                    <option value="<?= $year ?>" <?= $year == $selected_year ? 'selected' : '' ?>>
+                                        <?= $year ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php else : ?>
+                                <option value="">No School Year</option>
+                            <?php endif; ?>
+                        </select>
+                        <button type="submit" name="set_school_year" class="btn btn-sm btn-primary">Apply</button>
+                    </form>
+                </div>
+                <div class="action-row">
+                    <div class="action-row-right">
                         <a href="add_scholarship.php" class="btn btn-success">Add Scholarship Program</a>
                     </div>
                 </div>
@@ -160,7 +202,7 @@ if(isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
                                     <a href="edit_scholarship_program.php?id=<?= $row['id'] ?>" class="btn-sm btn-edit">Edit</a>
                                     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                         <input type="hidden" name="scholarship_program_id" value="<?= $row['id'] ?>"/>
-                                        <button type="submit" name="change_status" class="btn-sm btn-<?= $status_class ?>" onclick="return confirm('Change scholarship program status?')">Change Status to <?= $status_title ?></button>
+                                        <button type="submit" name="change_status" class="btn-sm btn-<?= $status_class ?>">Change Status to <?= $status_title ?></button>
                                         <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirm('Archiving Scholarship Programs also archives its list of scholars. Poceed?')">Archive</button>
                                     </form>
                                 </div>
