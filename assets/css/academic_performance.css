@@ -258,6 +258,7 @@ body::before {
     gap: 12px;
     flex-wrap: wrap;
     margin-bottom: 20px;
+    justify-content: flex-end;
 }
 
 /* Buttons */
