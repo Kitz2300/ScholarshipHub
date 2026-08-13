@@ -53,9 +53,7 @@ if(isset($_POST['delete'])) {
         $delete_stmt = $conn->prepare($delete_sql);
         $delete_stmt->bind_param('i', $announcement_id);
         
-        if($delete_stmt->execute()) {
-            $_SESSION['success'] = "Announcement deleted";
-        } else {
+        if(!($delete_stmt->execute())) { 
             $_SESSION['fail'] = "Announcement failed to delete";
         }
 
@@ -125,19 +123,24 @@ if(isset($_POST['delete'])) {
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
+                    <!-- <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li>
+                    </li> -->
 
                     <!-- Announcements -->
                     <li><a href="announcements.php" class="active">Announcements</a></li>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program/College Management</a></li>
+                    <li><a href="program_management.php">Program & College Management</a></li>
+
+                    <!-- Account Management -->
+                    <?php if($_SESSION['role'] == "admin") : ?>
+                        <li><a href="account_management.php">Account Management</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -180,7 +183,7 @@ if(isset($_POST['delete'])) {
                                     <a href="edit_announcement.php?id=<?= $row['announcement_id'] ?>" class="btn-sm btn-edit">Edit</a>
                                     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                         <input type="hidden" name="announcement_id" value="<?= $row['announcement_id'] ?>"/>
-                                        <button type="submit" name="change_status" class="btn-sm btn-<?= $is_active_class ?>" onclick="return confirm('Change status of this announcement?')">Change Status to <?= $is_active_title ?></button>
+                                        <button type="submit" name="change_status" class="btn-sm btn-<?= $is_active_class ?>">Change Status to <?= $is_active_title ?></button>
                                     </form>
                                     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                         <input type="hidden" name="announcement_id" value="<?= $row['announcement_id'] ?>"/>
