@@ -8,6 +8,8 @@ $scholarship_id = (int) ($_GET['id'] ?? 0);
 // initialize variables
 $name = "";
 $code = "";
+$start_year = "";
+$end_year = "";
 $description = "";
 $gwa_req = 0.00;
 $pay = 0.00;
@@ -24,6 +26,9 @@ if($scholarship_result->num_rows > 0) {
     if($row = $scholarship_result->fetch_assoc()) {
         $name = $row['name'];
         $code = $row['code'];
+        $school_year = explode(" - ", $row['school_year']);
+        $start_year = $school_year[0];
+        $end_year = $school_year[1];
         $description = $row['description'];
         $gwa_req = $row['min_gwa_req'];
         $pay = $row['pay_amount'];
@@ -95,19 +100,24 @@ if($scholarship_result->num_rows > 0) {
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
+                    <!-- <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li>
+                    </li> -->
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program/College Management</a></li>
+                    <li><a href="program_management.php">Program & College Management</a></li>
+
+                    <!-- Account Management -->
+                    <?php if($_SESSION['role'] == "admin") : ?>
+                        <li><a href="account_management.php">Account Management</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -133,6 +143,22 @@ if($scholarship_result->num_rows > 0) {
                                 <label for="code">Scholarship Code <span class="required">*</span></label>
                                 <input type="text" name="code" id="code" value="<?= htmlspecialchars($code) ?>" required/>
                             </div>
+                            <div class="form-group">
+                                <label for="start_year">School Year <span class="required">*</span></label>
+                                <div class="school-year-group">
+                                    <select name="start_year" id="start_year" required>
+                                        <?php for($y = date('Y') - 5; $y <= date('Y'); $y++) : ?>
+                                            <option value="<?= $y ?>" <?= $start_year == $y ? "selected" : "" ?>><?= $y ?></option>
+                                        <?php endfor; ?>
+                                    </select>
+                                    <span class="dash">–</span>
+                                    <select name="end_year" id="end_year" required>
+                                        <?php for($y = date('Y'); $y <= date('Y') + 5; $y++) : ?>
+                                            <option value="<?= $y ?>" <?= $end_year == $y ? "selected" : "" ?>><?= $y ?></option>
+                                        <?php endfor; ?>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="form-row">
@@ -152,13 +178,13 @@ if($scholarship_result->num_rows > 0) {
                                 <input type="number" name="gwa_req" id="gwa_req" step="0.01" min="0.0" max="4.0" placeholder="e.g., 2.5 or leave blank" value="<?= htmlspecialchars($gwa_req) ?>"/>
                                 <small class="help-text">Leave blank if no GWA requirement.</small>
                             </div>
-                            <div class="form-group">
+                            <!-- <div class="form-group">
                                 <label for="is_active">Status <span class="required">*</span></label>
                                 <select name="is_active" id="is_active" required>
                                     <option value="1" <?= $is_active == 1 ? "selected" : "" ?>>Active</option>
                                     <option value="0" <?= $is_active == 0 ? "selected" : "" ?>>Inactive</option>
                                 </select>
-                            </div>
+                            </div> -->
                         </div>
 
                         <!-- Scholarship Type Selection -->
