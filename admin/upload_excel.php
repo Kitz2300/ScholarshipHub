@@ -19,9 +19,9 @@ $extra_cols = false;
 $num_extra_cols = 0;
 
 // check if file is uploadeds
-if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
+if(isset($_FILES['excel_file'])) {
     $excel_file = $_FILES['excel_file'];
-    $skip_rows = (int) $_POST['headers'];
+    $skip_rows = 4;
     $file_name = $excel_file['name'];
     $scholarship_program_id = (int) $_POST['scholarship_program'];
 
@@ -177,7 +177,12 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
                     <li><a href="announcements.php">Announcements</a></li>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program/College Management</a></li>
+                    <li><a href="program_management.php">Program & College Management</a></li>
+
+                    <!-- Account Management -->
+                    <?php if($_SESSION['role'] == "admin") : ?>
+                        <li><a href="account_management.php">Account Management</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -200,10 +205,10 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
                                 <label for="upload">Import Excel File <span class="required">*</span></label>
                                 <input type="file" name="excel_file" accept=".xls, .xlsx" id="upload" required/>
                             </div>
-                            <div class="form-group">
+                            <!-- <div class="form-group">
                                 <label for="headers">How many rows as headers? <span class="required">*</span></label>
                                 <input type="number" name="headers" id="headers" min="0" value="4" required/>
-                            </div>
+                            </div> -->
                             <div class="form-group">
                                 <label for="scholarship">Scholarship Program <span class="required">*</span></label>
                                 <select name="scholarship_program" required>
@@ -229,7 +234,10 @@ if(isset($_FILES['excel_file']) && isset($_POST['headers'])) {
                 <div class="instructions-section">
                     <h4>Instructions</h4>
                     <ul>
-                        <li>Use the template provided by the scholarship office.</li>
+                        <li>Use the template provided by the scholarship office.
+                            <a href="../assets/TEMPLATE.xlsx" download>Download Template</a>
+
+                        </li>
                         <li>Required Columns: Student ID, Last Name, Given Name, Sex, Birthdate, Program, Year Level</li>
                         <li>Make sure the file format is <strong>.xlsx</strong> or <strong>.xls</strong>.</li>
                         <li>If you have extra columns, you will be prompted to name them.</li>
