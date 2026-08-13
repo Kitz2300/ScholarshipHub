@@ -58,19 +58,24 @@ session_start();
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
+                    <!-- <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li>
+                    </li> -->
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program/College Management</a></li>
+                    <li><a href="program_management.php">Program & College Management</a></li>
+
+                    <!-- Account Management -->
+                    <?php if($_SESSION['role'] == "admin") : ?>
+                        <li><a href="account_management.php">Account Management</a></li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -95,6 +100,22 @@ session_start();
                             <div class="form-group">
                                 <label for="code">Scholarship Code <span class="required">*</span></label>
                                 <input type="text" name="code" id="code" placeholder="e.g., DOST" required/>
+                            </div>
+                            <div class="form-group">
+                                <label for="start_year">School Year <span class="required">*</span></label>
+                                <div class="school-year-group">
+                                    <select name="start_year" id="start_year" required>
+                                        <?php for($y = date('Y') - 5; $y <= date('Y'); $y++) : ?>
+                                            <option value="<?= $y ?>"><?= $y ?></option>
+                                        <?php endfor; ?>
+                                    </select>
+                                    <span class="dash">–</span>
+                                    <select name="end_year" id="end_year" required>
+                                        <?php for($y = date('Y'); $y <= date('Y') + 5; $y++) : ?>
+                                            <option value="<?= $y ?>"><?= $y ?></option>
+                                        <?php endfor; ?>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
