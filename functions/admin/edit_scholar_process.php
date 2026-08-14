@@ -9,7 +9,7 @@ if(isset($_POST['update'])) {
                         'email', 'student_id', 'student_contact', 
                         'sex', 'birth_date', 
                         'street', 'country', 'region', 'province', 'city', 'barangay', 'zipcode',
-                        'scholarship_program', 'program', 'academic_status', 
+                        'scholarship_program', 'program', 'academic_status',
                         'father_last', 'father_first', 'father_middle', 
                         'mother_last', 'mother_first', 'mother_middle'];
     
@@ -89,6 +89,14 @@ if(isset($_POST['update'])) {
     $program_id = $_POST['program'];
     $scholarship_program_id = $_POST['scholarship_program'];
     $academic_status = $_POST['academic_status'];
+
+    $school_year_sql = "SELECT school_year FROM scholarship_program WHERE id = ?";
+    $school_year_stmt = $conn->prepare($school_year_sql);
+    $school_year_stmt->bind_param('i', $scholarship_program_id);
+    $school_year_stmt->execute();
+    $school_year_result = $school_year_stmt->get_result();
+    $school_year = "";
+    if($row=$school_year_result->fetch_assoc()) $school_year = $row['school_year'];
     
     // optional fields
     $ext_name = $_POST['ext_name'] ?? "N/A"; // if empty store N/A
@@ -174,11 +182,12 @@ if(isset($_POST['update'])) {
                     email = ?,
                     ip_group = ?,
                     username = ?,
-                    password = ?
+                    password = ?,
+                    school_year = ?
                     WHERE id = ?";
     
     $scholar_stmt = $conn->prepare($scholar_sql);
-    $scholar_stmt->bind_param("sssssisiiisssssssssiiiissssssssi", 
+    $scholar_stmt->bind_param("sssssisiiisssssssssiiiisssssssssi", 
                     $student_id, 
                     $last_name, 
                     $first_name, 
@@ -209,7 +218,8 @@ if(isset($_POST['update'])) {
                     $email, 
                     $ip_group,
                     $student_id,
-                    $hashed_pass, 
+                    $hashed_pass,
+                    $school_year,
                     $id_num);
     if($scholar_stmt->execute()) {
         // success
