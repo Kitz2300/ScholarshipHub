@@ -13,7 +13,8 @@ $end_year = "";
 $description = "";
 $gwa_req = 0.00;
 $pay = 0.00;
-$is_grant = 0;
+$sc_type = "";
+// $is_grant = 0;
 $is_active = 0;
 
 $scholarship_sql = "SELECT * FROM scholarship_program WHERE id = ?";
@@ -32,7 +33,8 @@ if($scholarship_result->num_rows > 0) {
         $description = $row['description'];
         $gwa_req = $row['min_gwa_req'];
         $pay = $row['pay_amount'];
-        $is_grant = $row['financial_grant'];
+        $sc_type = $row['scholarship_type'];
+        // $is_grant = $row['financial_grant'];
         $is_active = $row['is_active'];
     }
 } else {
@@ -50,6 +52,7 @@ if($scholarship_result->num_rows > 0) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/form.css?v=<?= filemtime('../assets/css/form.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <script src="../assets/js/school_year.js"></script>
 </head>
 <body>
     <?php 
@@ -152,11 +155,8 @@ if($scholarship_result->num_rows > 0) {
                                         <?php endfor; ?>
                                     </select>
                                     <span class="dash">–</span>
-                                    <select name="end_year" id="end_year" required>
-                                        <?php for($y = date('Y'); $y <= date('Y') + 5; $y++) : ?>
-                                            <option value="<?= $y ?>" <?= $end_year == $y ? "selected" : "" ?>><?= $y ?></option>
-                                        <?php endfor; ?>
-                                    </select>
+                                    <input type="text" id="end_year_display" value="" readonly class="end-year-display">
+                                    <input type="hidden" name="end_year" id="end_year_hidden" value="">
                                 </div>
                             </div>
                         </div>
@@ -190,17 +190,41 @@ if($scholarship_result->num_rows > 0) {
                         <!-- Scholarship Type Selection -->
                         <div class="form-row">
                             <div class="form-group full-width">
-                                <label for="scholarship_type">Type <span class="required">*</span></label>
+                                <!-- <label for="scholarship_type">Type <span class="required">*</span></label>
                                 <div class="radio-group">
                                     <div class="radio-option">
-                                        <input type="radio" name="is_grant" id="scholarship_type" value="0" <?= $is_grant == 0 ? "checked" : "" ?>>
+                                        <input type="radio" name="is_grant" id="scholarship_type" value="0" <temp?=// $is_grant == 0 ? "checked" : "" ?>>
                                         <label for="scholarship_type">Scholarship</label>
                                     </div>
                                     <div class="radio-option">
-                                        <input type="radio" name="is_grant" id="financial_grant_type" value="1" <?= $is_grant == 1 ? "checked" : "" ?>>
+                                        <input type="radio" name="is_grant" id="financial_grant_type" value="1" <temp?=// $is_grant == 1 ? "checked" : "" ?>>
                                         <label for="financial_grant_type">Financial Grant</label>
                                     </div>
-                                </div>
+                                </div> -->
+
+                                <label for="type">Type <span class="required">*</span></label>
+                                <select name="sc_type" required>
+                                    <option value="Not Specified" <?= $sc_type == "Not Specified" ? "selected" : "" ?>>Not Specified</option>
+                                    <optgroup label="By Qualifications">
+                                        <option value="Merit-Based" <?= $sc_type == "Merit-Based" ? "selected" : "" ?>>Merit-Based</option>
+                                        <option value="Need-Based" <?= $sc_type == "Need-Based" ? "selected" : "" ?>>Need-Based</option>
+                                        <option value="Career-specific" <?= $sc_type == "Career-specific" ? "selected" : "" ?>>Career-specific</option>
+                                        <option value="Athletic" <?= $sc_type == "Athletic" ? "selected" : "" ?>>Athletic</option>
+                                        <option value="Identity or Group-Based" <?= $sc_type == "Identity or Group-Based" ? "selected" : "" ?>>Identity or Group-Based</option>
+                                    </optgroup>
+                                    <optgroup label="By Funding Source">
+                                        <option value="Government Scholarship" <?= $sc_type == "Government Scholarship" ? "selected" : "" ?>>Government Scholarship</option>
+                                        <option value="Private / Corporate Scholarship" <?= $sc_type == "Private / Corporate Scholarship" ? "selected" : "" ?>>Private / Corporate Scholarship</option>
+                                        <option value="Institutional / University Grant" <?= $sc_type == "Institutional / University Grant" ? "selected" : "" ?>>Institutional / University Grant</option>
+                                        <option value="International Scholarship" <?= $sc_type == "International Scholarship" ? "selected" : "" ?>>International Scholarship</option>
+                                    </optgroup>
+                                    <optgroup label="Other">
+                                        <option value="Academic Excellence Grant" <?= $sc_type == "Academic Excellence Grant" ? "selected" : "" ?>>Academic Excellence Grant</option>
+                                        <option value="Leadership / Community Services" <?= $sc_type == "Leadership / Community Services" ? "selected" : "" ?>>Leadership / Community Service</option>
+                                        <option value="Research Scholarship" <?= $sc_type == "Research Scholarship" ? "selected" : "" ?>>Research Scholarship</option>
+                                        <option value="External Partner Scholarship" <?= $sc_type == "External Partner Scholarship" ? "selected" : "" ?>>External Partner Scholarship</option>
+                                    </optgroup>
+                                </select>
                             </div>
                         </div>
                     </div>

@@ -9,6 +9,7 @@ session_start();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/form.css?v=<?= filemtime('../assets/css/form.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <script src="../assets/js/school_year.js"></script>
 </head>
 <body>
     <?php 
@@ -110,11 +111,8 @@ session_start();
                                         <?php endfor; ?>
                                     </select>
                                     <span class="dash">–</span>
-                                    <select name="end_year" id="end_year" required>
-                                        <?php for($y = date('Y'); $y <= date('Y') + 5; $y++) : ?>
-                                            <option value="<?= $y ?>"><?= $y ?></option>
-                                        <?php endfor; ?>
-                                    </select>
+                                    <input type="text" id="end_year_display" value="" readonly class="end-year-display">
+                                    <input type="hidden" name="end_year" id="end_year_hidden" value="">
                                 </div>
                             </div>
                         </div>
@@ -141,7 +139,7 @@ session_start();
                         <!-- Scholarship Type Selection -->
                         <div class="form-row">
                             <div class="form-group full-width">
-                                <label for="scholarship_type">Type <span class="required">*</span></label>
+                                <!-- <label for="scholarship_type">Type <span class="required">*</span></label>
                                 <div class="radio-group">
                                     <div class="radio-option">
                                         <input type="radio" name="is_grant" id="scholarship_type" value="0" checked>
@@ -151,7 +149,31 @@ session_start();
                                         <input type="radio" name="is_grant" id="financial_grant_type" value="1">
                                         <label for="financial_grant_type">Financial Grant</label>
                                     </div>
-                                </div>
+                                </div> -->
+                                
+                                <label for="type">Type <span class="required">*</span></label>
+                                <select name="sc_type" required>
+                                    <option value="Not Specified">Not Specified</option>
+                                    <optgroup label="By Qualifications">
+                                        <option value="Merit-Based">Merit-Based</option>
+                                        <option value="Need-Based">Need-Based</option>
+                                        <option value="Career-specific">Career-specific</option>
+                                        <option value="Athletic">Athletic</option>
+                                        <option value="Identity or Group-Based">Identity or Group-Based</option>
+                                    </optgroup>
+                                    <optgroup label="By Funding Source">
+                                        <option value="Government Scholarship">Government Scholarship</option>
+                                        <option value="Private / Corporate Scholarship">Private / Corporate Scholarship</option>
+                                        <option value="Institutional / University Grant">Institutional / University Grant</option>
+                                        <option value="International Scholarship">International Scholarship</option>
+                                    </optgroup>
+                                    <optgroup label="Other">
+                                        <option value="Academic Excellence Grant">Academic Excellence Grant</option>
+                                        <option value="Leadership / Community Services">Leadership / Community Service</option>
+                                        <option value="Research Scholarship">Research Scholarship</option>
+                                        <option value="External Partner Scholarship">External Partner Scholarship</option>
+                                    </optgroup>
+                                </select>
                             </div>
                         </div>
                     </div>
