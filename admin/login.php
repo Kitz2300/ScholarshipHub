@@ -6,6 +6,11 @@ if(isset($_SESSION['fail'])) {
     echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
     unset($_SESSION['fail']);
 }
+
+if(isset($_SESSION['user_id']) && $_SESSION['role'] == "admin") {
+    header("Location: dashboard.php");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
