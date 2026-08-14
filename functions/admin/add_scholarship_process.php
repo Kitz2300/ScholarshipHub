@@ -10,13 +10,14 @@ if(isset($_POST['add'])) {
     $description = $_POST['desc'] ?? "";
     $gwa_req = $_POST['gwa_req'] ?? 0.00;
     $pay_amount = $_POST['pay_amount'] ?? 0.00;
-    $financial_grant = isset($_POST['is_grant']) ? $_POST['is_grant'] : 0;
-
+    $sc_type = $_POST['sc_type'];
+    // $financial_grant = isset($_POST['is_grant']) ? $_POST['is_grant'] : 0;
+    
     // validate empty required fields
     if(!empty($name) && !empty($code) && !empty($description)) {
-        $sql = "INSERT INTO scholarship_program(name, code, school_year, description, min_gwa_req, pay_amount, financial_grant, is_active) VALUES( ?, ?, ?, ?, ?, ?, ?, 1)";
+        $sql = "INSERT INTO scholarship_program(name, code, school_year, description, min_gwa_req, pay_amount, scholarship_type, is_active) VALUES( ?, ?, ?, ?, ?, ?, ?, 1)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssddi", $name, $code, $school_year, $description, $gwa_req, $pay_amount, $financial_grant);
+        $stmt->bind_param("ssssdds", $name, $code, $school_year, $description, $gwa_req, $pay_amount, $sc_type);
 
         // condition if query is successfull or not
         if($stmt->execute()) {
