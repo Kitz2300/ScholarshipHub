@@ -305,25 +305,32 @@ if($row = $scholar_result->fetch_assoc()) {
                     <div class="profile-card notes-card">
                         <div class="card-header">
                             <h3>Notes</h3>
-                            <button class="btn btn-sm btn-primary open-modal-btn">Add Notes</button>
+                            <button class="btn btn-sm btn-primary open-modal-btn">+ Add Notes</button>
                         </div>
                         <div class="card-body">
                             <?php if(!empty($scholar_notes)) : ?>
-                                <?php foreach($scholar_notes as $note) : ?>
+                                <?php 
+                                // Flatten: each note array is one row; we iterate all key-value pairs
+                                foreach($scholar_notes as $note_array) : 
+                                    foreach($note_array as $key => $value) : 
+                                ?>
                                     <div class="note-item">
                                         <div class="note-content">
-                                            <?php if(is_array($note)) : ?>
-                                                <ul>
-                                                    <?php foreach($note as $key => $value) : ?>
-                                                        <li><strong><?= htmlspecialchars($key) ?>:</strong> <?= htmlspecialchars($value) ?></li>
-                                                    <?php endforeach; ?>
-                                                </ul>
-                                            <?php else : ?>
-                                                <p><?= htmlspecialchars($note) ?></p>
-                                            <?php endif; ?>
+                                            <strong><?= htmlspecialchars($key) ?>:</strong> <?= htmlspecialchars($value) ?>
+                                        </div>
+                                        <div class="note-actions">
+                                            <form action="../functions/admin/delete_note_process.php" method="POST" 
+                                                onsubmit="return confirm('Delete the note \'<?= htmlspecialchars($key) ?>\'?')">
+                                                <input type="hidden" name="scholar_id" value="<?= $scholar_id ?>">
+                                                <input type="hidden" name="note_title" value="<?= htmlspecialchars($key) ?>">
+                                                <button type="submit" class="btn-sm btn-danger">Delete</button>
+                                            </form>
                                         </div>
                                     </div>
-                                <?php endforeach; ?>
+                                <?php 
+                                    endforeach;
+                                endforeach; 
+                                ?>
                             <?php else : ?>
                                 <p class="no-data">No additional notes found for this scholar.</p>
                             <?php endif; ?>
