@@ -19,8 +19,8 @@ if(isset($_POST['add'])) {
     
         // success message with audit insert, also fail message
         if($add_stmt->execute()) {
-            $_SESSION['success'] = "Announcement Created";
-    
+            // $_SESSION['success'] = "Announcement Created";
+
             $audit_sql = "INSERT INTO audit_trail(user_id, action) VALUES(?, ?)";
             $audit_stmt = $conn->prepare($audit_sql);
             $action = "Added a new announcement: " . $title;
