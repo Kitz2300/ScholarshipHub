@@ -306,6 +306,9 @@ body::before {
     border-radius: 4px;
     font-size: 14px;
     background: #fff;
+    width: 80px;
+    min-width: 80px;
+    max-width: 80px;    
 }
 
 .school-year-group select:focus {
@@ -319,6 +322,20 @@ body::before {
     font-weight: bold;
     color: #555;
     padding-top: 2px;
+}
+
+.end-year-display {
+    background: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 8px;
+    width: 80px;
+    min-width: 80px;
+    max-width: 80px;
+    cursor: default;
+    text-align: center;
+    flex-shrink: 0;
 }
 
 .form-section {
