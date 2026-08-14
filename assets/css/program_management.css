@@ -170,7 +170,7 @@ body::before {
     position: absolute;
     top: 100%;
     left: 0;
-    background: rgba(255, 255, 255, 0.95);
+    background: #338043;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     min-width: 200px;
@@ -195,15 +195,15 @@ body::before {
 .nav-bar ul li .dropdown-menu li a {
     display: block;
     padding: 8px 16px;
-    color: #444;
+    color: #ffff;
     text-decoration: none;
     border-bottom: none;
-    font-size: 14px;
+    font-size: 16px;
     transition: all 0.2s;
 }
 
 .nav-bar ul li .dropdown-menu li a:hover {
-    background: rgba(26, 59, 34, 0.08);
+    background: #f0f4f8;
     color: #1e4628;
 }
 
