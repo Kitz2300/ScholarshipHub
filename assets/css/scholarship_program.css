@@ -218,27 +218,82 @@ body::before {
     flex: 1;
 }
 
+/* ========== ACTION ROW ========== */
+.action-row {
+    display: flex;
+    justify-content: flex-end; 
+    margin-bottom: 20px;       
+    padding: 0 2px;            
+}
+
+.action-row .btn {
+    padding: 8px 20px;
+    font-size: 14px;
+}
+
 /* Page Header */
 .page-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
     flex-wrap: wrap;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
     border-bottom: 2px solid rgba(0,0,0,0.08);
 }
 
 .page-header h2 {
     color: #1e4628;
     font-size: 22px;
+    margin: 0px;
 }
 
-.page-actions {
+/* School Year Selector */
+.school-year-selector {
     display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.school-year-selector label {
+    font-weight: bold;
+    font-size: 15px;
+    color: #333;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.school-year-selector select {
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 15px;
+    background: #fff;
+    cursor: pointer;
+    min-width: 120px;
+}
+
+.school-year-selector select:focus {
+    border-color: #3fb524;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(63, 181, 36, 0.15);
+}
+
+.school-year-selector .btn-sm {
+    padding: 5px 12px;
+    font-size: 15px;
+}
+
+/* .page-actions {
+    display: flex;
+    align-items: center;
     gap: 10px;
     flex-wrap: wrap;
-}
+} */
 
 /* Buttons */
 .btn {
@@ -256,6 +311,8 @@ body::before {
 .btn:hover {
     transform: translateY(-2px);
 }
+
+.btn-primary { background: rgb(173, 174, 173); }
 
 .btn-secondary { background: #95a5a6; }
 .btn-secondary:hover { background: #7f8c8d; }
@@ -338,24 +395,31 @@ body::before {
 }
 
 .program-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: start;
     margin-bottom: 10px;
 }
 
 .program-header h3 {
-    color: #1e4628;
+    margin: 0;
     font-size: 18px;
+    color: #1e4628;
+    word-wrap: break-word;      /* wraps long words */
+    overflow-wrap: break-word;  /* modern */
+    hyphens: auto;
 }
 
 .program-status {
+    grid-column: 2;
+    align-self: start;
     padding: 3px 10px;
     border-radius: 20px;
     font-size: 11px;
     font-weight: bold;
     text-transform: uppercase;
+    white-space: nowrap;        /* keeps badge text on one line */
 }
 
 .program-status.active {
@@ -435,14 +499,25 @@ body::before {
     
     .page-header {
         flex-direction: column;
+        align-items: stretch;
         gap: 10px;
+        /* text-align: center; */
+    }
+
+    .page-header h2 {
         text-align: center;
     }
     
-    .page-actions {
+    /* .page-actions {
         justify-content: center;
-    }
+    } */
     
+    .school-year-selector {
+        justify-content: center;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
     .programs-grid {
         grid-template-columns: 1fr;
     }
@@ -451,6 +526,15 @@ body::before {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
+    }
+
+    .action-row {
+        justify-content: center;
+    }
+
+    .action-row .btn {
+        width: 100%;
+        text-align: center;
     }
 }
 
