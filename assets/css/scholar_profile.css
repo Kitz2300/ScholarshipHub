@@ -261,6 +261,8 @@ body::before {
     flex-wrap: wrap;
 }
 
+
+
 /* Buttons */
 .btn {
     display: inline-block;
@@ -286,6 +288,30 @@ body::before {
 
 .btn-info { background: #1abc9c; }
 .btn-info:hover { background: #16a085; }
+
+/* ========== BUTTON SIZES & PRIMARY ========== */
+.btn-sm {
+    padding: 5px 12px;
+    font-size: 13px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    color: #fff;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.btn-sm:hover {
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: #2a6b37;
+    color: #fff;
+}
+.btn-primary:hover {
+    background: #1e4628;
+}
 
 /* ========== PROFILE GRID ========== */
 .profile-grid {
@@ -502,4 +528,211 @@ body::before {
     .profile-card {
         padding: 15px;
     }
+}
+
+/* ============================================================
+   NEW: NOTES CARD HEADER (inline title + button)
+   ============================================================ */
+
+.notes-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #2a6b37;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.notes-card .card-header h3 {
+    margin: 0;
+    border-bottom: none; /* remove the underline if you want, or keep */
+    padding-bottom: 0;
+}
+
+/* ===== Note Item with Delete Button ===== */
+.note-item {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 6px;
+    padding: 12px 15px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.note-item:last-child {
+    margin-bottom: 0;
+}
+
+.note-content {
+    font-size: 13px;
+    color: #333;
+    flex: 1;
+}
+
+.note-actions {
+    flex-shrink: 0;
+}
+
+.note-actions form {
+    display: inline;
+}
+
+/* Danger button for delete */
+.btn-danger {
+    background: #e74c3c;
+    color: #fff;
+}
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.open-modal-btn {
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   MODAL OVERLAY
+   ============================================================ */
+
+.modal {
+    display: none;               /* hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s;
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    padding: 25px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    position: relative;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #1e4628;
+}
+
+.modal-close {
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: #333;
+}
+
+/* ============================================================
+   FORM INSIDE MODAL
+   ============================================================ */
+
+#addNoteForm .form-group {
+    margin-bottom: 18px;
+}
+
+#addNoteForm label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+#addNoteForm input[type="text"],
+#addNoteForm textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+#addNoteForm input[type="text"]:focus,
+#addNoteForm textarea:focus {
+    border-color: #2a6b37;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(42,107,55,0.15);
+}
+
+#addNoteForm textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.form-actions .btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.form-actions .btn:hover {
+    transform: translateY(-2px);
+}
+
+.form-actions .btn-secondary {
+    background: #95a5a6;
+    color: #fff;
+}
+.form-actions .btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+.form-actions .btn-primary {
+    background: #2a6b37;
+    color: #fff;
+}
+.form-actions .btn-primary:hover {
+    background: #1e4628;
 }
