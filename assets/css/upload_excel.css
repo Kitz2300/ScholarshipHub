@@ -352,13 +352,14 @@ body::before {
 
 .instructions-section h4 {
     color: #155724;
+    font-size: 20px;
     margin-bottom: 8px;
 }
 
 .instructions-section ul {
     padding-left: 20px;
     color: #155724;
-    font-size: 13px;
+    font-size: 17px;
 }
 
 .instructions-section ul li {
