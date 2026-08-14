@@ -85,6 +85,14 @@ if(isset($_POST['add'])) {
 
     $program_id = $_POST['program'];
     $scholarship_program_id = $_POST['scholarship_program'];
+
+    $school_year_sql = "SELECT school_year FROM scholarship_program WHERE id = ?";
+    $school_year_stmt = $conn->prepare($school_year_sql);
+    $school_year_stmt->bind_param('i', $scholarship_program_id);
+    $school_year_stmt->execute();
+    $school_year_result = $school_year_stmt->get_result();
+    $school_year = "";
+    if($row=$school_year_result->fetch_assoc()) $school_year = $row['school_year'];
     
     // optional fields
     $ext_name = $_POST['ext_name'] ?? "N/A"; // if empty store N/A
@@ -150,13 +158,13 @@ if(isset($_POST['add'])) {
     street, barangay_id, city_id, province_id, region_id, 
     country, zipcode, permanent_address, 
     disability, contact_num, email, ip_group, 
-    username, password
-    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    username, password, school_year
+    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $scholar_stmt = $conn->prepare($scholar_sql);
     $scholar_stmt = $conn->prepare($scholar_sql);
     $scholar_stmt->bind_param(
-        "sssssisiiisssssssiiiisssssssss",
+        "sssssisiiisssssssiiiissssssssss",
         $student_id,       // 1
         $last_name,        // 2
         $first_name,       // 3
@@ -186,7 +194,8 @@ if(isset($_POST['add'])) {
         $email,            // 27
         $ip_group,         // 28
         $student_id,       // 29 (username)
-        $hashed_pass       // 30 (password)
+        $hashed_pass,
+        $school_year       // 30 (password)
     );
     
     // success / fail message
