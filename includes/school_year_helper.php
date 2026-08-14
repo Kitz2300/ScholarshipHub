@@ -25,7 +25,7 @@ function getAvailableSchoolYears($conn) {
 }
 
 function getScholarshipSchoolYears($conn) {
-    $sql = "SELECT DISTINCT school_year FROM scholarship_program WHERE school_year IS NOT NULL ORDER BY school_year DESC";
+    $sql = "SELECT DISTINCT school_year FROM scholarship_program WHERE school_year IS NOT NULL AND is_archived = 0 ORDER BY school_year DESC";
     $result = $conn->query($sql);
     $years = [];
     while($row = $result->fetch_assoc()) {
