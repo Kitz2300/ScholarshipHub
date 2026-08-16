@@ -155,13 +155,13 @@ $archived_count = $archived_count_result->fetch_assoc();
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <!-- <li class="dropdown">
+                    <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li> -->
+                    </li>
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
@@ -188,44 +188,46 @@ $archived_count = $archived_count_result->fetch_assoc();
 
             <!-- Archived Scholars -->
             <div class="section-card">
-                <h3>Archived Scholars</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Student ID</th>
-                            <th>Name</th>
-                            <th>Status</th>
-                            <th>Scholarship Program</th>
-                            <th class="actions-col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if($archived_scholars_result->num_rows > 0) : ?>
-                            <?php while($row = $archived_scholars_result->fetch_assoc()) : ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($row['student_id']) ?></td>
-                                    <td><?= htmlspecialchars($row['last_name']) ?>, <?= htmlspecialchars($row['given_name']) ?></td>
-                                    <td><?= htmlspecialchars($row['academic_status']) ?></td>
-                                    <td><?= htmlspecialchars($row['SPname']) ?></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
-                                                <input type="hidden" name="scholar_id" value="<?= $row['id'] ?>">
-                                                <button type="submit" name="restore_scholar" class="btn-sm btn-restore" onclick="return confirm('Restore this scholar?')">Restore</button>
-                                            </form>
-                                            <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
-                                                <input type="hidden" name="scholar_id" value="<?= $row['id'] ?>">
-                                                <button type="submit" name="delete_scholar_permanent" class="btn-sm btn-delete" onclick="return confirm('Permanently delete this scholar? This cannot be undone!')">Delete</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else : ?>
-                            <tr><td colspan="4" class="no-data">No archived scholars.</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                <div class="table-wrapper">
+                    <h3>Archived Scholars</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Scholarship Program</th>
+                                <th class="actions-col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if($archived_scholars_result->num_rows > 0) : ?>
+                                <?php while($row = $archived_scholars_result->fetch_assoc()) : ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($row['student_id']) ?></td>
+                                        <td><?= htmlspecialchars($row['last_name']) ?>, <?= htmlspecialchars($row['given_name']) ?></td>
+                                        <td><?= htmlspecialchars($row['academic_status']) ?></td>
+                                        <td><?= htmlspecialchars($row['SPname']) ?></td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
+                                                    <input type="hidden" name="scholar_id" value="<?= $row['id'] ?>">
+                                                    <button type="submit" name="restore_scholar" class="btn-sm btn-restore" onclick="return confirm('Restore this scholar?')">Restore</button>
+                                                </form>
+                                                <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
+                                                    <input type="hidden" name="scholar_id" value="<?= $row['id'] ?>">
+                                                    <button type="submit" name="delete_scholar_permanent" class="btn-sm btn-delete" onclick="return confirm('Permanently delete this scholar? This cannot be undone!')">Delete</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else : ?>
+                                <tr><td colspan="5" class="no-data">No archived scholars.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Archived Programs -->

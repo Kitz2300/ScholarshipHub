@@ -104,13 +104,13 @@ $programs_result = $conn->query($programs_sql);
                 </li>
 
                 <!-- Import/Export Dropdown -->
-                <!-- <li class="dropdown">
+                <li class="dropdown">
                     <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                     <ul class="dropdown-menu">
                         <li><a href="upload_excel.php">Import Excel</a></li>
                         <li><a href="export_scholars.php">Export Excel</a></li>
                     </ul>
-                </li> -->
+                </li>
 
                 <!-- Announcements -->
                 <li><a href="announcements.php">Announcements</a></li>
@@ -138,38 +138,40 @@ $programs_result = $conn->query($programs_sql);
                 </div>
 
                 <!-- College Table -->
-                <table>
-                    <thead>
-                        <tr>
-                            <th>College Name</th>
-                            <th>Code</th>
-                            <th class="actions-col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if($colleges_result->num_rows > 0) : ?>
-                            <?php while($college = $colleges_result->fetch_assoc()) : ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($college['college_name']) ?></td>
-                                    <td><?= htmlspecialchars($college['college_code']) ?></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <!-- Edit Button (opens modal) -->
-                                            <button class="btn-sm btn-edit" onclick="openEditCollege(<?= $college['id'] ?>, '<?= htmlspecialchars($college['college_name']) ?>', '<?= htmlspecialchars($college['college_code']) ?>')">Edit</button>
-                                            <!-- Delete Form -->
-                                            <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
-                                                <input type="hidden" name="college_id" value="<?= $college['id'] ?>">
-                                                <button type="submit" name="delete_college" class="btn-sm btn-delete" onclick="return confirm('Delete this college?')">Delete</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else : ?>
-                            <tr><td colspan="3" class="no-data">No colleges found.</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>College Name</th>
+                                <th>Code</th>
+                                <th class="actions-col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if($colleges_result->num_rows > 0) : ?>
+                                <?php while($college = $colleges_result->fetch_assoc()) : ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($college['college_name']) ?></td>
+                                        <td><?= htmlspecialchars($college['college_code']) ?></td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <!-- Edit Button (opens modal) -->
+                                                <button class="btn-sm btn-edit" onclick="openEditCollege(<?= $college['id'] ?>, '<?= htmlspecialchars($college['college_name']) ?>', '<?= htmlspecialchars($college['college_code']) ?>')">Edit</button>
+                                                <!-- Delete Form -->
+                                                <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
+                                                    <input type="hidden" name="college_id" value="<?= $college['id'] ?>">
+                                                    <button type="submit" name="delete_college" class="btn-sm btn-delete" onclick="return confirm('Delete this college?')">Delete</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else : ?>
+                                <tr><td colspan="3" class="no-data">No colleges found.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- ========== PROGRAM MANAGEMENT ========== -->
@@ -180,40 +182,42 @@ $programs_result = $conn->query($programs_sql);
                 </div>
 
                 <!-- Program Table -->
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Program Name</th>
-                            <th>College</th>
-                            <th>College Code</th>
-                            <th class="actions-col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if($programs_result->num_rows > 0) : ?>
-                            <?php while($program = $programs_result->fetch_assoc()) : ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($program['program_name']) ?></td>
-                                    <td><?= htmlspecialchars($program['college_name'] ?? 'N/A') ?></td>
-                                    <td><?= htmlspecialchars($program['college_code'] ?? 'N/A') ?></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <!-- Edit Button (opens modal) -->
-                                            <button class="btn-sm btn-edit" onclick="openEditProgram(<?= $program['program_id'] ?>, '<?= htmlspecialchars($program['program_name']) ?>', <?= $program['college_id'] ?? 0 ?>)">Edit</button>
-                                            <!-- Delete Form -->
-                                            <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
-                                                <input type="hidden" name="program_id" value="<?= $program['program_id'] ?>">
-                                                <button type="submit" name="delete_program" class="btn-sm btn-delete" onclick="return confirm('Delete this program?')">Delete</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else : ?>
-                            <tr><td colspan="4" class="no-data">No programs found.</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Program Name</th>
+                                <th>College</th>
+                                <th>College Code</th>
+                                <th class="actions-col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if($programs_result->num_rows > 0) : ?>
+                                <?php while($program = $programs_result->fetch_assoc()) : ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($program['program_name']) ?></td>
+                                        <td><?= htmlspecialchars($program['college_name'] ?? 'N/A') ?></td>
+                                        <td><?= htmlspecialchars($program['college_code'] ?? 'N/A') ?></td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <!-- Edit Button (opens modal) -->
+                                                <button class="btn-sm btn-edit" onclick="openEditProgram(<?= $program['program_id'] ?>, '<?= htmlspecialchars($program['program_name']) ?>', <?= $program['college_id'] ?? 0 ?>)">Edit</button>
+                                                <!-- Delete Form -->
+                                                <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
+                                                    <input type="hidden" name="program_id" value="<?= $program['program_id'] ?>">
+                                                    <button type="submit" name="delete_program" class="btn-sm btn-delete" onclick="return confirm('Delete this program?')">Delete</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else : ?>
+                                <tr><td colspan="4" class="no-data">No programs found.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 

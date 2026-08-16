@@ -256,6 +256,26 @@ body::before {
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
+.table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 400px; /* Adjust as needed */
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.table-wrapper thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 16px;
+}
+
 .section-card h3 {
     color: #1e4628;
     font-size: 17px;
