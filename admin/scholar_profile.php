@@ -189,13 +189,13 @@ if($row = $scholar_result->fetch_assoc()) {
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <!-- <li class="dropdown">
+                    <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li> -->
+                    </li>
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
@@ -218,7 +218,7 @@ if($row = $scholar_result->fetch_assoc()) {
                     <div class="page-actions">
                         <a href="<?= htmlspecialchars($back_url) ?>" class="btn btn-secondary">Back to List</a>
                         <a href="edit_scholar.php?id=<?= $scholar_id ?>" class="btn btn-warning">Edit Scholar</a>
-                        <a href="academic_performance.php?scholar_id=<?= $scholar_id ?>" class="btn btn-info">Manage GWA & Units</a>
+                        <!-- <a href="academic_performance.php?scholar_id=<?= $scholar_id ?>" class="btn btn-info">Manage GWA & Units</a> -->
                     </div>
                 </div>
 
@@ -282,19 +282,19 @@ if($row = $scholar_result->fetch_assoc()) {
                     <div class="profile-card">
                         <h3>Family Background</h3>
                         <div class="family-section">
-                            <h4>Father</h4>
+                            <!-- <h4>Father</h4> -->
                             <div class="info-group">
                                 <div class="info-row">
-                                    <span class="info-label">Name</span>
+                                    <span class="info-label">Father's Name</span>
                                     <span class="info-value"><?= htmlspecialchars($father_last) ?>, <?= htmlspecialchars($father_given) ?> <?= htmlspecialchars($father_middle) ?></span>
                                 </div>
                             </div>
                         </div>
                         <div class="family-section">
-                            <h4>Mother</h4>
+                            <!-- <h4>Mother's Maiden Name</h4> -->
                             <div class="info-group">
                                 <div class="info-row">
-                                    <span class="info-label">Name</span>
+                                    <span class="info-label">Mother's Maiden Name</span>
                                     <span class="info-value"><?= htmlspecialchars($mother_last) ?>, <?= htmlspecialchars($mother_given) ?> <?= htmlspecialchars($mother_middle) ?></span>
                                 </div>
                             </div>
@@ -366,17 +366,25 @@ if($row = $scholar_result->fetch_assoc()) {
                                 <span class="info-value"><?= htmlspecialchars($academic_status) ?></span>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <div class="card-header">
+                            <h3>Academic Performance</h3>
+                            <a href="academic_performance.php?scholar_id=<?= $scholar_id ?>" class="btn btn-sm btn-info">Manage GWA & Units</a>
+                        </div>
+                        <!-- <div class="card-body"> -->
                         <div class="info-group">
-                            <h4>Academic Performance</h4>
                             <?php 
-                            $academic_performance_sql = "SELECT * FROM academic_performance WHERE scholar_id = ? ORDER BY school_year DESC, semester DESC";
+                            $academic_performance_sql = "SELECT * FROM academic_performance WHERE scholar_id = ? ORDER BY school_year DESC, semester DESC LIMIT 1";
                             $academic_performance_stmt = $conn->prepare($academic_performance_sql);
                             $academic_performance_stmt->bind_param('i', $scholar_id);
                             $academic_performance_stmt->execute();
                             $academic_performance_result = $academic_performance_stmt->get_result();
                             
-                            if($academic_performance_result->num_rows > 0) : ?>
-                                <div class="academic-table-wrapper">
+                            if($academic_performance_result->num_rows > 0) : 
+                                $row = $academic_performance_result->fetch_assoc(); ?>
+                                <!-- <div class="academic-table-wrapper">
                                     <table>
                                         <thead>
                                             <tr>
@@ -384,21 +392,30 @@ if($row = $scholar_result->fetch_assoc()) {
                                                 <th>GWA</th>
                                                 <th>Units</th>
                                                 <th>Year Level</th>
-                                                <!-- <th>School Year</th> -->
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php while($row = $academic_performance_result->fetch_assoc()) : ?>
-                                                <tr>
-                                                    <td><?= htmlspecialchars($row['semester']) ?></td>
-                                                    <td><?= htmlspecialchars($row['gwa']) ?></td>
-                                                    <td><?= htmlspecialchars($row['units']) ?></td>
-                                                    <td><?= htmlspecialchars($row['year_level']) ?></td>
-                                                    <!-- <td><?= htmlspecialchars($row['school_year']) ?></td> -->
-                                                </tr>
-                                            <?php endwhile; ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($row['semester']) ?></td>
+                                                <td><?= htmlspecialchars($row['gwa']) ?></td>
+                                                <td><?= htmlspecialchars($row['units']) ?></td>
+                                                <td><?= htmlspecialchars($row['year_level']) ?></td>
+                                            </tr>
                                         </tbody>
                                     </table>
+                                </div> -->
+                                <div class="info-row">
+                                    <span class="info-label">Semester</span>
+                                    <span class="info-value"><?= htmlspecialchars($row['semester']) ?></span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">GWA</span>
+                                    <span class="info-value"><?= htmlspecialchars($row['gwa']) ?></span>
+                                </div>
+                                
+                                <div class="info-row">
+                                    <span class="info-label">Units</span>
+                                    <span class="info-value"><?= htmlspecialchars($row['units']) ?></span>
                                 </div>
                             <?php else: ?>
                                 <p class="no-data">No academic records found.</p>
