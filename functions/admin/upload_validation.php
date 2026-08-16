@@ -159,7 +159,7 @@ function validatePermanentAddress($value) {
         return $errors;
     }
 
-    if (!preg_match('/^[A-Za-z\s\.\,\']+$/', $value)) {
+    if (!preg_match('/^[0-9A-Za-z\s\.\,\']+$/', $value)) {
         $errors[] = "Permanent Address contains invalid characters. Use only letters, spaces, ., '";
     }
     return $errors; 
