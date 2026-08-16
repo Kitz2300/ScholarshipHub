@@ -168,13 +168,13 @@ if(isset($_SESSION['success'])) {
                         <li><a href="archive.php">Archives</a></li>
                     </ul>
                 </li>
-                <!-- <li class="dropdown">
+                <li class="dropdown">
                     <a href="#" class="dropdown-toggle">Import / Export <img src="../assets/images/arrow-down-s-line.svg" alt="▼"></a>
                     <ul class="dropdown-menu">
                         <li><a href="upload_excel.php">Import Excel</a></li>
                         <li><a href="export_scholars.php">Export Excel</a></li>
                     </ul>
-                </li> -->
+                </li>
                 <li><a href="announcements.php">Announcements</a></li>
                 <li><a href="program_management.php">Program & College Management</a></li>
 

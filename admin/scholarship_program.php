@@ -127,13 +127,13 @@ if(isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <!-- <li class="dropdown">
+                    <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li> -->
+                    </li>
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
@@ -196,6 +196,9 @@ if(isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
                                 </div>
                                 <div class="program-code">
                                     <strong>Code:</strong> <?= htmlspecialchars($row['code']) ?>
+                                </div>
+                                <div class="program-code">
+                                    <strong>Type:</strong> <?= htmlspecialchars($row['scholarship_type']) ?>
                                 </div>
                                 <div class="program-actions">
                                     <a href="scholarship_scholar_list.php?id=<?= $row['id'] ?>" class="btn-sm btn-view">View Scholars</a>

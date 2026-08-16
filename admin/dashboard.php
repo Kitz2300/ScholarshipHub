@@ -151,13 +151,13 @@ while($row = $status_result->fetch_assoc()) {
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <!-- <li class="dropdown">
+                    <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li> -->
+                    </li>
                     
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
@@ -257,6 +257,8 @@ while($row = $status_result->fetch_assoc()) {
                         <?php if(!empty($scholarship_data)) : ?>
                             <?php foreach($scholarship_data as $program) : 
                                 $percentage = ($total_scholars > 0) ? round(($program['scholar_count'] / $total_scholars) * 100) : 0;
+                                // Ensure a minimum width so the label always fits
+                                $bar_width = max($percentage, 8); // even 1% becomes at least 8%
                             ?>
                                 <div class="program-item">
                                     <div class="program-name" title="<?= htmlspecialchars($program['program_name']) ?>">
@@ -264,16 +266,9 @@ while($row = $status_result->fetch_assoc()) {
                                     </div>
                                     <div class="program-bar-wrapper">
                                         <div class="program-bar">
-                                            <?php if($percentage > 0) : ?>
-                                            <div class="program-bar-fill" style="width: <?= $percentage ?>%;">
-                                                <?php if($percentage > 15) : ?>
-                                                    <span class="program-bar-label"><?= $percentage ?>%</span>
-                                                <?php endif; ?>
+                                            <div class="program-bar-fill" style="width: <?= $bar_width ?>%;">
+                                                <span class="program-bar-label"><?= $percentage ?>%</span>
                                             </div>
-                                            <?php if($percentage <= 15) : ?>
-                                                <span class="program-bar-label-outside"><?= $percentage ?>%</span>
-                                            <?php endif; ?>
-                                            <?php endif; ?>
                                         </div>
                                     </div>
                                     <div class="program-count"><?= htmlspecialchars($program['scholar_count']) ?></div>

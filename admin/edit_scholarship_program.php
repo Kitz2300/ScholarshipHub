@@ -103,13 +103,13 @@ if($scholarship_result->num_rows > 0) {
                     </li>
 
                     <!-- Import/Export Dropdown -->
-                    <!-- <li class="dropdown">
+                    <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li> -->
+                    </li>
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>

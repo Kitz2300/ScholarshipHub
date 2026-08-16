@@ -110,14 +110,14 @@ if(isset($_POST['remove']) && isset($_POST['record_id'])) {
                         </ul>
                     </li>
 
-                    <!-- Import/Export Dropdown
+                    <!-- Import/Export Dropdown -->
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php">Export Excel</a></li>
                         </ul>
-                    </li> -->
+                    </li>
 
                     <!-- Announcements -->
                     <li><a href="announcements.php">Announcements</a></li>
