@@ -263,6 +263,9 @@ body::before {
 .btn-success { background: #2ecc71; }
 .btn-success:hover { background: #27ae60; }
 
+.btn-cancel { background: #e74c3c; }
+.btn-cancel:hover { background: #c0392b; }
+
 /* ========== FORM SECTIONS ========== */
 .export-form {
     margin-top: 10px;
@@ -453,4 +456,62 @@ body::before {
     .form-section {
         padding: 15px;
     }
+}
+
+/* Preview table */
+#preview-section .table-wrapper {
+    overflow-x: auto;
+    max-height: 400px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+#preview-table th {
+    background: #1e4628;
+    color: #fff;
+    padding: 8px 12px;
+    cursor: grab;
+    user-select: none;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+#preview-table th:active {
+    cursor: grabbing;
+}
+#preview-table td {
+    padding: 6px 12px;
+    border-bottom: 1px solid #eee;
+}
+#preview-table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 6px 12px;
+}
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+.checkbox-group label {
+    font-weight: normal;
+    margin: 0;
+}
+.checkbox-group.full-width {
+    grid-column: 1 / -1;
+    margin-top: 10px;
 }

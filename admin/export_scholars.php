@@ -10,11 +10,11 @@ session_start();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/export_scholars.css?v=<?= filemtime('../assets/css/export_scholars.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <!-- SortableJS for drag & drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
 </head>
 <body>
-    <!-- check if logged in or not -->
     <?php 
-    // show error message if any
     if(isset($_SESSION['fail'])) {
         echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
         unset($_SESSION['fail']);
@@ -24,7 +24,6 @@ session_start();
         <script>alert('You are not logged in')</script>
         <?php $_SESSION = []; ?>
         <script>window.location.href='login.php'</script>
-        <!-- if logged in, load page -->
     <?php else: ?>
         <div class="container">
             <!-- Header -->
@@ -47,10 +46,7 @@ session_start();
             <!-- Navigation -->
             <nav class="nav-bar">
                 <ul>
-                    <!-- Dashboard -->
                     <li><a href="dashboard.php">Dashboard</a></li>
-
-                    <!-- Records Dropdown -->
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle">Records <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
@@ -59,23 +55,15 @@ session_start();
                             <li><a href="archive.php">Archives</a></li>
                         </ul>
                     </li>
-
-                    <!-- Import/Export Dropdown -->
-                    <!-- <li class="dropdown">
+                    <li class="dropdown">
                         <a href="#" class="dropdown-toggle active">Import / Export <div class="arrow-down">▼</div></a>
                         <ul class="dropdown-menu">
                             <li><a href="upload_excel.php">Import Excel</a></li>
                             <li><a href="export_scholars.php" class="active">Export Excel</a></li>
                         </ul>
-                    </li> -->
-
-                    <!-- Announcements -->
+                    </li>
                     <li><a href="announcements.php">Announcements</a></li>
-
-                    <!-- Program / College Management -->
                     <li><a href="program_management.php">Program & College Management</a></li>
-
-                    <!-- Account Management -->
                     <?php if($_SESSION['role'] == "admin") : ?>
                         <li><a href="account_management.php">Account Management</a></li>
                     <?php endif; ?>
@@ -84,7 +72,6 @@ session_start();
 
             <!-- Page Content -->
             <div class="page-content">
-                <!-- Page Header -->
                 <div class="page-header">
                     <h2>Export Scholar Records</h2>
                     <div class="page-actions">
@@ -93,43 +80,40 @@ session_start();
                 </div>
 
                 <!-- Export Form -->
-                <form action="../functions/admin/export_scholars_process.php" method="POST" class="export-form">
-                    <!-- Filters Section -->
+                <form id="exportForm" action="../functions/admin/export_scholars_process.php" method="POST">
+                    <!-- Step 1: Filters -->
                     <div class="form-section">
                         <h3>Step 1: Select Filters</h3>
-                        <!-- filters and column selection options for exporting the file -->
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="scholar_program">Scholarship Program</label>
-                                <select name="scholar_program" id="scholar_program" required>
+                                <select name="scholar_program" id="scholar_program">
                                     <option value="all">All Scholarship Programs</option>
                                     <?php 
-                                    $scholarship_program_sql = "SELECT name, code 
-                                                                FROM scholarship_program
-                                                                WHERE EXISTS (
-                                                                    SELECT 1 FROM scholar_info 
-                                                                    WHERE scholar_info.scholarship_program_id = scholarship_program.id AND scholar_info.is_archived = 0 AND scholarship_program.is_archived = 0
-                                                                )
-                                                                ORDER BY name ASC";
-                                    $scholarship_program_stmt = $conn->prepare($scholarship_program_sql);
-                                    $scholarship_program_stmt->execute();
-                                    $scholarship_program_result = $scholarship_program_stmt->get_result();
-                                    while($row = $scholarship_program_result->fetch_assoc()) : ?>
+                                    $sp_sql = "SELECT name, code FROM scholarship_program
+                                               WHERE EXISTS (SELECT 1 FROM scholar_info 
+                                                             WHERE scholar_info.scholarship_program_id = scholarship_program.id 
+                                                             AND scholar_info.is_archived = 0 
+                                                             AND scholarship_program.is_archived = 0)
+                                               ORDER BY name ASC";
+                                    $sp_stmt = $conn->prepare($sp_sql);
+                                    $sp_stmt->execute();
+                                    $sp_result = $sp_stmt->get_result();
+                                    while($row = $sp_result->fetch_assoc()) : ?>
                                         <option value="<?= $row['name'] ?>"><?= htmlspecialchars($row['name']) ?> (<?= htmlspecialchars($row['code']) ?>)</option>
                                     <?php endwhile; ?>
                                 </select>
                             </div>
-
                             <div class="form-group">
                                 <label for="program">Program / Course</label>
-                                <select name="program" id="program" required>
+                                <select name="program" id="program">
                                     <option value="all">All Programs</option>
                                     <?php 
-                                    $program_sql = "SELECT name FROM program";
-                                    $program_stmt = $conn->prepare($program_sql);
-                                    $program_stmt->execute();
-                                    $program_result = $program_stmt->get_result();
-                                    while($row = $program_result->fetch_assoc()) : ?>
+                                    $p_sql = "SELECT name FROM program ORDER BY name ASC";
+                                    $p_stmt = $conn->prepare($p_sql);
+                                    $p_stmt->execute();
+                                    $p_result = $p_stmt->get_result();
+                                    while($row = $p_result->fetch_assoc()) : ?>
                                         <option value="<?= $row['name'] ?>"><?= htmlspecialchars($row['name']) ?></option>
                                     <?php endwhile; ?>
                                 </select>
@@ -137,131 +121,100 @@ session_start();
                         </div>
                     </div>
 
-                    <!-- Column Selection Section -->
+                    <!-- Step 2: Column Selection -->
                     <div class="form-section">
                         <h3>Step 2: Select Columns to Include</h3>
-
-                        <!-- checkbox required fields which shows checked and user cannot uncheck -->
-                        <!-- <p><strong>Required Fields (always included):</strong></p> -->
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="student_id" name="columns[]" value="student_id" checked/>
-                            <label for="student_id">Student ID</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="last_name" name="columns[]" value="last_name" checked/>
-                            <label for="last_name">Last Name</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="given_name" name="columns[]" value="given_name" checked/>
-                            <label for="given_name">Given Name</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="ext_name" name="columns[]" value="ext_name" checked/>
-                            <label for="ext_name">Extended Name</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="middle_name" name="columnsd[]" value="middle_name" checked/>
-                            <label for="middle_name">Middle Name</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="program_name" name="columns[]" value="program_name" checked/>
-                            <label for="program_name">Program Name</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="scholarship" name="columns[]" value="scholarship_prgram_name" checked/>
-                            <label for="scholarship">Scholarship Program</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="year_level" name="columns[]" value="year_level" checked/>
-                            <label for="year_level">Year Level</label>
-                        </div>
-
-                        <!-- <p style="margin-top: 15px;"><strong>Optional Fields:</strong></p> -->
-                        <!-- checkbox for optional fields -->
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="father_name" name="columns[]" value="father_name" checked/>
-                            <label for="father_name">Father's Name</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="mother_name" name="columns[]" value="mother_name" checked/>
-                            <label for="mother_name">Mother's Name</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="permanent_address" name="columns[]" value="permanent_address" checked/>
-                            <label for="permanent_address">Permanent Address</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="disability" name="columns[]" value="disability" checked/>
-                            <label for="disability">Disability</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="contact" name="columns[]" value="contact" checked/>
-                            <label for="contact">Contact Number</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="birthdate" name="columns[]" value="birthdate" checked/>
-                            <label for="birthdate">Birthdate</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="sex" name="columns[]" value="sex" checked/>
-                            <label for="sex">Sex</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="email" name="columns[]" value="email" checked/>
-                            <label for="email">Email Address</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="ip_group" name="columns[]" value="ip_group" checked/>
-                            <label for="ip_group">IP Group</label>
-                        </div>
-
-                        <!-- dynamic checkbox for extra fields (if any) to include or not -->
-                        <?php 
-                        $extra_keys = [];
-                        $extra_sql = "SELECT notes FROM scholar_notes WHERE notes IS NOT NULL AND notes <> ''";
-                        $extra_stmt = $conn->prepare($extra_sql);
-                        $extra_stmt->execute();
-                        $extra_result = $extra_stmt->get_result();
-
-                        while($row = $extra_result->fetch_assoc()) {
-                            // data from db is a json so we decode it
-                            $data = json_decode($row['notes'], true);
-                            if(is_array($data)) {
-                                foreach(array_keys($data) as $key) {
-                                    if(!in_array($key, $extra_keys)) {
-                                        $extra_keys[] = $key;
+                        <div class="checkbox-grid">
+                            <!-- Required / Core -->
+                            <?php
+                            $all_columns = [
+                                'student_id' => 'Student ID',
+                                'last_name' => 'Last Name',
+                                'given_name' => 'Given Name',
+                                'ext_name' => 'Ext. Name',
+                                'middle_name' => 'Middle Name',
+                                'program_name' => 'Program Name',
+                                'scholarship_program' => 'Scholarship Program',
+                                'year_level' => 'Year Level',
+                                'academic_status' => 'Academic Status',
+                                'father_name' => "Father's Name",
+                                'mother_name' => "Mother's Name",
+                                'permanent_address' => 'Permanent Address',
+                                'disability' => 'Disability',
+                                'contact' => 'Contact Number',
+                                'birthdate' => 'Birthdate',
+                                'sex' => 'Sex',
+                                'email' => 'Email Address',
+                                'ip_group' => 'IP Group',
+                            ];
+                            // Extra fields from scholar_notes
+                            $extra_keys = [];
+                            $extra_sql = "SELECT notes FROM scholar_notes WHERE notes IS NOT NULL AND notes <> ''";
+                            $extra_stmt = $conn->prepare($extra_sql);
+                            $extra_stmt->execute();
+                            $extra_result = $extra_stmt->get_result();
+                            while($row = $extra_result->fetch_assoc()) {
+                                $data = json_decode($row['notes'], true);
+                                if(is_array($data)) {
+                                    foreach(array_keys($data) as $key) {
+                                        if(!in_array($key, $extra_keys)) {
+                                            $extra_keys[] = $key;
+                                        }
                                     }
                                 }
                             }
-                        }
-
-                        if(!empty($extra_keys)) : ?>
-                            <p style="margin-top: 15px;"><strong>Extra Fields (from scholar notes):</strong></p>
-                            <?php foreach($extra_keys as $key) : ?>
+                            foreach($all_columns as $col => $label) : ?>
                                 <div class="checkbox-group">
-                                    <input type="checkbox" id="extra_<?= $key ?>" name="columns[]" value="extra_<?= $key ?>"/>
-                                    <label for="extra_<?= $key ?>"><?= htmlspecialchars($key) ?></label>
+                                    <input type="checkbox" id="col_<?= $col ?>" name="columns[]" value="<?= $col ?>" checked />
+                                    <label for="col_<?= $col ?>"><?= $label ?></label>
                                 </div>
                             <?php endforeach; ?>
-                        <?php endif; ?>
+                            <?php if(!empty($extra_keys)) : ?>
+                                <div class="checkbox-group full-width"><strong>Extra Fields (from scholar notes):</strong></div>
+                                <?php foreach($extra_keys as $key) : ?>
+                                    <div class="checkbox-group">
+                                        <input type="checkbox" id="extra_<?= $key ?>" name="columns[]" value="extra_<?= $key ?>" />
+                                        <label for="extra_<?= $key ?>"><?= htmlspecialchars($key) ?></label>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
                     </div>
 
-                    <!-- Filename -->
+                    <!-- Step 3: Filename -->
                     <div class="form-section">
                         <h3>Step 3: Set Filename</h3>
                         <div class="form-row">
                             <div class="form-group full-width">
                                 <label for="filename">Filename <span class="required">*</span></label>
-                                <input type="text" name="filename" id="filename" value="scholars_export_<?= date('Y-m-d') ?>" required/>
+                                <input type="text" name="filename" id="filename" value="scholars_export_<?= date('Y-m-d') ?>" required />
                                 <small class="help-text">.xlsx will be added automatically.</small>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Submit Buttons -->
-                    <div class="form-actions">
-                        <button type="submit" name="export" class="btn btn-success" onclick="return confirm('Export scholar list?')">Export</button>
-                        <a href="scholar_list.php" class="btn btn-secondary">Cancel</a>
+                    <!-- Preview & Export Area -->
+                    <div class="form-section" id="preview-section" style="display:none;">
+                        <h3>Step 4: Preview & Rearrange Columns</h3>
+                        <p>Drag column headers to reorder. The order in the preview will be used in the exported file.</p>
+                        <div class="table-wrapper">
+                            <table id="preview-table">
+                                <thead id="preview-headers"></thead>
+                                <tbody id="preview-body"></tbody>
+                            </table>
+                        </div>
+                        <div class="form-actions" style="margin-top:15px;">
+                            <button type="button" id="export-btn" class="btn btn-success">Export Now</button>
+                            <button type="button" id="refresh-preview" class="btn btn-secondary">Refresh Preview</button>
+                            <a href="export_scholars.php" class="btn btn-cancel">Cancel</a>
+                        </div>
+                    </div>
+
+                    <!-- Hidden input to store column order -->
+                    <input type="hidden" name="column_order" id="column_order" value="">
+
+                    <div class="form-actions" style="margin-top:20px;">
+                        <button type="button" id="proceed-btn" class="btn btn-success">Preview & Rearrange</button>
                     </div>
                 </form>
             </div>
@@ -271,6 +224,9 @@ session_start();
                 © 2026 PIT ScholarshipHub. All rights reserved.
             </div>
         </div>
+
+        <!-- Custom JS -->
+        <script src="../assets/js/export_reorder.js"></script>
     <?php endif; ?>
 </body>
 </html>
