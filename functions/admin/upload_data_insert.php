@@ -14,6 +14,22 @@ if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
     $valid_rows = json_decode($valid_rows_json, true);
     $column_names = isset($_POST['column_names']) ? $_POST['column_names'] : [];
 
+    // Get school_year from the scholarship program
+    $school_year_sql = "SELECT school_year FROM scholarship_program WHERE id = ?";
+    $school_year_stmt = $conn->prepare($school_year_sql);
+    $school_year_stmt->bind_param('i', $scholarship_program_id);
+    $school_year_stmt->execute();
+    $school_year_result = $school_year_stmt->get_result();
+    
+    if ($row = $school_year_result->fetch_assoc()) {
+        $school_year = $row['school_year'];
+    } else {
+        // handle error – program not found
+        $_SESSION['fail'] = "Invalid scholarship program ID.";
+        header("Location: ../../admin/upload_excel.php");
+        exit();
+    }
+
     foreach($valid_rows as $rows => $rowData) {
         // store each values from each row to variables
         $student_id = $rowData[1];
@@ -55,10 +71,10 @@ if(isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
         // get program id and store in the variable
         if($row=$program_result->fetch_assoc()) $program_id = $row['id'];
 
-        $insert_sql = "INSERT INTO scholar_info(student_id, last_name, given_name, ext_name, middle_name, sex, birthdate, scholarship_program_id, program_id, year_level, academic_status, father_last_name, father_given_name, father_middle_name, mother_last_name, mother_given_name, mother_middle_name, permanent_address, zipcode, disability, contact_num, email, ip_group, username, password) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $insert_sql = "INSERT INTO scholar_info(student_id, last_name, given_name, ext_name, middle_name, sex, birthdate, scholarship_program_id, program_id, year_level, academic_status, father_last_name, father_given_name, father_middle_name, mother_last_name, mother_given_name, mother_middle_name, permanent_address, zipcode, disability, contact_num, email, ip_group, username, password, school_year) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'Active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $insert_stmt = $conn->prepare($insert_sql);
-        $insert_stmt->bind_param("sssssisiiisssssssissssss", $student_id, $last_name, $given_name, $ext_name, $middle_name, $sex, $birthdate, $scholarship_program_id, $program_id, $year_lvl, $father_last_name, $father_given_name, $father_middle_name, $mother_last_name, $mother_given_name, $mother_middle_name, $permanent_address, $zipcode, $disability, $contact_num, $email, $ip_group, $student_id, $hashed_pass);
+        $insert_stmt->bind_param("sssssisiiisssssssisssssss", $student_id, $last_name, $given_name, $ext_name, $middle_name, $sex, $birthdate, $scholarship_program_id, $program_id, $year_lvl, $father_last_name, $father_given_name, $father_middle_name, $mother_last_name, $mother_given_name, $mother_middle_name, $permanent_address, $zipcode, $disability, $contact_num, $email, $ip_group, $student_id, $hashed_pass, $school_year);
         
         // if row insertion is success full increment success count else increment error count
         if($insert_stmt->execute()) {
