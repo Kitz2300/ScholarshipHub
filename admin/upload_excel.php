@@ -214,12 +214,12 @@ if(isset($_FILES['excel_file'])) {
                                 <select name="scholarship_program" required>
                                     <option value="" disabled selected>Select Scholarship Program</option>
                                     <?php 
-                                    $sql = "SELECT id, name FROM scholarship_program";
+                                    $sql = "SELECT id, name, school_year FROM scholarship_program";
                                     $stmt = $conn->prepare($sql);
                                     $stmt->execute();
                                     $results = $stmt->get_result();
                                     while($row = $results->fetch_assoc()): ?>
-                                        <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['name']) ?></option>
+                                        <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['name']) ?> (<?= $row['school_year'] ?>)</option>
                                     <?php endwhile; ?>
                                 </select>
                             </div>
@@ -329,7 +329,9 @@ if(isset($_FILES['excel_file'])) {
                                     <input type="hidden" name="file_name" value="<?= htmlspecialchars($file_name) ?>" />
 
                                     <div class="form-actions">
-                                        <button type="submit" name="confirm" class="btn btn-success">Add Scholar Records</button>
+                                        <?php if(COUNT($valid_rows) > 0) : ?>
+                                            <button type="submit" name="confirm" class="btn btn-success">Add Scholar Records</button>
+                                        <?php endif; ?>
                                         <a href="upload_excel.php" class="btn btn-secondary">Cancel</a>
                                     </div>
                                 </form>
