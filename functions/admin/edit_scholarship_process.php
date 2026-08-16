@@ -20,13 +20,14 @@ if(isset($_POST['update'])) {
     $description = $_POST['desc'];
     $gwa_req = (float) $_POST['gwa_req'];
     $pay = (float) $_POST['pay_amount'];
-    $is_grant = isset($_POST['is_grant']) ? 1 : 0;
+    $sc_type = $_POST['sc_type'];
+    // $is_grant = isset($_POST['is_grant']) ? 1 : 0;
 
     // validate empty required fields
-    if(!empty($name) && !empty($code) && !empty($description) && !empty($school_year) && !empty($pay)) {
-        $update_sql = "UPDATE scholarship_program SET name = ?, code = ?, school_year = ?, description = ?, min_gwa_req = ?, pay_amount = ?, financial_grant = ? WHERE id = ?";
+    if(!empty($name) && !empty($code) && !empty($description) && !empty($school_year) && !empty($pay) && !empty($sc_type)) {
+        $update_sql = "UPDATE scholarship_program SET name = ?, code = ?, school_year = ?, description = ?, min_gwa_req = ?, pay_amount = ?, scholarship_type = ? WHERE id = ?";
         $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("ssssddii", $name, $code, $school_year, $description, $gwa_req, $pay, $is_grant, $scholarship_id);
+        $update_stmt->bind_param("ssssddsi", $name, $code, $school_year, $description, $gwa_req, $pay, $sc_type, $scholarship_id);
         
         $update_scholar_sql = "UPDATE scholar_info SET school_year = ? WHERE scholarship_program_id = ?";
         $update_scholar_stmt = $conn->prepare($update_scholar_sql);
