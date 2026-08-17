@@ -283,12 +283,8 @@ body::before {
     background: #2980b9;
 }
 
-.btn-delete {
-    background: #e74c3c;
-}
-.btn-delete:hover {
-    background: #c0392b;
-}
+.action-buttons .btn-archive { background: rgb(77, 120, 201)}
+.action-buttons .btn-archive:hover { background: rgb(52, 84, 144)}
 
 /* ========== TABLE ========== */
 .table-wrapper {

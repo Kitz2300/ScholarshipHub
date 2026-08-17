@@ -9,8 +9,6 @@ body {
     color: #333;
     min-height: 100vh;
     position: relative;
-    
-    /* Aerial background from main portal */
     background-image: url('../images/background.png');
     background-repeat: no-repeat;
     background-size: cover;
@@ -21,7 +19,6 @@ body {
     justify-content: center;
 }
 
-/* Dark overlay to ensure text stands out */
 body::before {
     content: '';
     position: fixed;
@@ -34,7 +31,9 @@ body::before {
     pointer-events: none;
 }
 
-/* Main Glass Container */
+/* ============================================================
+   MAIN CONTAINER
+   ============================================================ */
 .container {
     max-width: 1200px;
     width: 100%;
@@ -49,7 +48,9 @@ body::before {
     overflow: hidden;
 }
 
-/* ========== HEADER ========== */
+/* ============================================================
+   HEADER
+   ============================================================ */
 .header {
     background: rgba(26, 59, 34, 0.9) !important;
     backdrop-filter: blur(10px);
@@ -75,7 +76,7 @@ body::before {
     padding: 5px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255,255,255,0.5);
+    border: 2px solid rgba(255, 255, 255, 0.5);
     background-color: rgba(255, 255, 255, 0.8);
 }
 
@@ -100,9 +101,9 @@ body::before {
 }
 
 .logout-btn {
-    background: rgba(255,255,255,0.15);
+    background: rgba(255, 255, 255, 0.15);
     color: #fff;
-    border: 1px solid rgba(255,255,255,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     padding: 6px 14px;
     border-radius: 4px;
     cursor: pointer;
@@ -111,10 +112,12 @@ body::before {
 }
 
 .logout-btn:hover {
-    background: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.3);
 }
 
-/* ========== NAVIGATION ========== */
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
 .nav-bar {
     background: rgba(255, 255, 255, 0.4);
     padding: 10px 25px;
@@ -147,7 +150,9 @@ body::before {
     font-weight: bold;
 }
 
-/* ========== DROPDOWN ========== */
+/* ============================================================
+   DROPDOWN
+   ============================================================ */
 .nav-bar ul li {
     position: relative;
 }
@@ -163,7 +168,7 @@ body::before {
     left: 0;
     background: #338043;
     min-width: 200px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-radius: 4px;
     border: 1px solid #ddd;
     padding: 8px 0;
@@ -199,14 +204,15 @@ body::before {
     display: block;
 }
 
-/* ========== PAGE CONTENT ========== */
+/* ============================================================
+   PAGE CONTENT
+   ============================================================ */
 .page-content {
     background: rgba(255, 255, 255, 0.4);
     padding: 25px;
     border-radius: 0 0 8px 8px;
 }
 
-/* Page Header */
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -214,45 +220,12 @@ body::before {
     flex-wrap: wrap;
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 2px solid rgba(0,0,0,0.08);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.08);
 }
 
 .page-header h2 {
     color: #1e4628;
     font-size: 22px;
-}
-
-/* Scholar Notes */
-.note-item {
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 6px;
-    padding: 12px 15px;
-    margin-bottom: 12px;
-}
-
-.note-item:last-child {
-    margin-bottom: 0;
-}
-
-.note-item .note-content {
-    font-size: 13px;
-    color: #333;
-}
-
-.note-item .note-content ul {
-    margin: 0;
-    padding-left: 20px;
-}
-
-.note-item .note-content ul li {
-    margin-bottom: 2px;
-}
-
-.no-data {
-    color: #888;
-    font-size: 14px;
-    padding: 10px 0;
 }
 
 .page-actions {
@@ -261,59 +234,9 @@ body::before {
     flex-wrap: wrap;
 }
 
-
-
-/* Buttons */
-.btn {
-    display: inline-block;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-    color: #fff;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-}
-
-.btn-secondary { background: #7f8c8d; }
-.btn-secondary:hover { background: #6c7a7d; }
-
-.btn-warning { background: #f39c12; }
-.btn-warning:hover { background: #e67e22; }
-
-.btn-info { background: #1abc9c; }
-.btn-info:hover { background: #16a085; }
-
-/* ========== BUTTON SIZES & PRIMARY ========== */
-.btn-sm {
-    padding: 5px 12px;
-    font-size: 13px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    text-decoration: none;
-    color: #fff;
-    transition: background 0.3s, transform 0.2s;
-}
-
-.btn-sm:hover {
-    transform: translateY(-2px);
-}
-
-.btn-primary {
-    background: #2a6b37;
-    color: #fff;
-}
-.btn-primary:hover {
-    background: #1e4628;
-}
-
-/* ========== PROFILE GRID ========== */
+/* ============================================================
+   PROFILE GRID
+   ============================================================ */
 .profile-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -325,7 +248,7 @@ body::before {
     border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 8px;
     padding: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .profile-card h3 {
@@ -343,6 +266,149 @@ body::before {
     margin-bottom: 8px;
 }
 
+.profile-card.full-width {
+    grid-column: 1 / -1;
+}
+
+/* ============================================================
+   CARD HEADER (inline title + button)
+   ============================================================ */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #2a6b37;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.card-header h3 {
+    margin: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* ============================================================
+   INFO GROUP (labels + values)
+   ============================================================ */
+.info-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.info-row {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    gap: 15px;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: bold;
+    font-size: 17px;
+    color: #444;
+    min-width: 180px;
+    flex: 0 0 120px;
+}
+
+.info-value {
+    font-size: 15px;
+    color: #333;
+    flex: 1;
+}
+
+/* ============================================================
+   FAMILY SECTION
+   ============================================================ */
+.family-section {
+    margin-bottom: 12px;
+}
+
+.family-section:last-child {
+    margin-bottom: 0;
+}
+
+/* ============================================================
+   NOTES
+   ============================================================ */
+.note-item {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 6px;
+    padding: 12px 15px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.note-item:last-child {
+    margin-bottom: 0;
+}
+
+.note-content {
+    font-size: 16px;
+    color: #333;
+    flex: 1;
+}
+
+.note-actions {
+    flex-shrink: 0;
+}
+
+.note-actions form {
+    display: inline;
+}
+
+/* ============================================================
+   ACADEMIC TABLE
+   ============================================================ */
+.academic-table-wrapper {
+    overflow-x: auto;
+    margin-top: 10px;
+}
+
+.academic-table-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.academic-table-wrapper thead th {
+    background: #1e4628;
+    color: #fff;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.academic-table-wrapper tbody td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.academic-table-wrapper tbody tr {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.academic-table-wrapper tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.academic-table-wrapper tbody tr:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* ============================================================
+   STATUS BADGES
+   ============================================================ */
 .status-badge {
     padding: 4px 14px;
     border-radius: 20px;
@@ -371,223 +437,73 @@ body::before {
     color: #e74c3c;
 }
 
-.profile-card.full-width {
-    grid-column: 1 / -1;
-}
-
-.info-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.info-row {
-    display: flex;
-    flex-wrap: wrap;
-    padding: 6px 0;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-
-.info-row:last-child {
-    border-bottom: none;
-}
-
-.info-label {
-    font-weight: bold;
-    font-size: 13px;
-    color: #444;
-    min-width: 120px;
-    flex: 0 0 120px;
-}
-
-.info-value {
-    font-size: 13px;
-    color: #333;
-    flex: 1;
-}
-
-/* Family Section */
-.family-section {
-    margin-bottom: 12px;
-}
-
-.family-section:last-child {
-    margin-bottom: 0;
-}
-
-/* Academic Table */
-.academic-table-wrapper {
-    overflow-x: auto;
-    margin-top: 10px;
-}
-
-.academic-table-wrapper table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-}
-
-.academic-table-wrapper thead th {
-    background: #1e4628;
-    color: #fff;
-    padding: 8px 12px;
-    text-align: left;
-}
-
-.academic-table-wrapper tbody td {
-    padding: 8px 12px;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-
-.academic-table-wrapper tbody tr {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.academic-table-wrapper tbody tr:nth-child(even) {
-    background: rgba(255, 255, 255, 0.4);
-}
-
-.academic-table-wrapper tbody tr:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-.no-data {
-    color: #666;
-    font-size: 14px;
-    padding: 10px 0;
-}
-
-/* ========== FOOTER ========== */
-.footer {
-    text-align: center;
-    padding: 15px 25px;
-    color: #666;
-    font-size: 13px;
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
-    background: rgba(255, 255, 255, 0.3);
-}
-
-/* ========== RESPONSIVE ========== */
-@media (max-width: 992px) {
-    .profile-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 768px) {
-    .container {
-        margin: 10px;
-    }
-
-    .header {
-        flex-direction: column;
-        text-align: center;
-        gap: 10px;
-    }
-    
-    .header-left {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .nav-bar ul {
-        justify-content: center;
-        gap: 15px;
-    }
-    
-    .page-header {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-    }
-    
-    .page-actions {
-        justify-content: center;
-    }
-    
-    .info-row {
-        flex-direction: column;
-        gap: 2px;
-    }
-    
-    .info-label {
-        flex: 0 0 auto;
-        min-width: auto;
-    }
-}
-
-@media (max-width: 480px) {
-    .container {
-        margin: 5px;
-    }
-    
-    .page-content {
-        padding: 15px;
-    }
-    
-    .profile-card {
-        padding: 15px;
-    }
-}
-
 /* ============================================================
-   NEW: NOTES CARD HEADER (inline title + button)
+   BUTTONS
    ============================================================ */
-
-.notes-card .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid #2a6b37;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    color: #fff;
 }
 
-.notes-card .card-header h3 {
-    margin: 0;
-    border-bottom: none; /* remove the underline if you want, or keep */
-    padding-bottom: 0;
+.btn:hover {
+    transform: translateY(-2px);
 }
 
-/* ===== Note Item with Delete Button ===== */
-.note-item {
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 6px;
-    padding: 12px 15px;
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+.btn-secondary {
+    background: #7f8c8d;
+}
+.btn-secondary:hover {
+    background: #6c7a7d;
 }
 
-.note-item:last-child {
-    margin-bottom: 0;
+.btn-warning {
+    background: #f39c12;
+}
+.btn-warning:hover {
+    background: #e67e22;
 }
 
-.note-content {
-    font-size: 13px;
-    color: #333;
-    flex: 1;
+.btn-info {
+    background: #1abc9c;
+}
+.btn-info:hover {
+    background: #16a085;
 }
 
-.note-actions {
-    flex-shrink: 0;
-}
-
-.note-actions form {
-    display: inline;
-}
-
-/* Danger button for delete */
 .btn-danger {
     background: #e74c3c;
-    color: #fff;
 }
 .btn-danger:hover {
     background: #c0392b;
+}
+
+.btn-primary {
+    background: #2a6b37;
+}
+.btn-primary:hover {
+    background: #1e4628;
+}
+
+.btn-sm {
+    padding: 7px 12px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    color: #fff;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.btn-sm:hover {
+    transform: translateY(-2px);
 }
 
 .open-modal-btn {
@@ -595,11 +511,19 @@ body::before {
 }
 
 /* ============================================================
+   NO DATA
+   ============================================================ */
+.no-data {
+    color: #666;
+    font-size: 14px;
+    padding: 10px 0;
+}
+
+/* ============================================================
    MODAL OVERLAY
    ============================================================ */
-
 .modal {
-    display: none;               /* hidden by default */
+    display: none;
     position: fixed;
     z-index: 1000;
     left: 0;
@@ -619,8 +543,12 @@ body::before {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .modal-content {
@@ -629,14 +557,20 @@ body::before {
     max-width: 500px;
     width: 90%;
     padding: 25px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     position: relative;
     animation: slideDown 0.3s ease;
 }
 
 @keyframes slideDown {
-    from { transform: translateY(-30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .modal-header {
@@ -666,7 +600,6 @@ body::before {
 /* ============================================================
    FORM INSIDE MODAL
    ============================================================ */
-
 #addNoteForm .form-group {
     margin-bottom: 18px;
 }
@@ -693,7 +626,7 @@ body::before {
 #addNoteForm textarea:focus {
     border-color: #2a6b37;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(42,107,55,0.15);
+    box-shadow: 0 0 0 3px rgba(42, 107, 55, 0.15);
 }
 
 #addNoteForm textarea {
@@ -713,7 +646,7 @@ body::before {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 16px;
     transition: background 0.2s, transform 0.1s;
 }
 
@@ -735,4 +668,81 @@ body::before {
 }
 .form-actions .btn-primary:hover {
     background: #1e4628;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer {
+    text-align: center;
+    padding: 15px 25px;
+    color: #666;
+    font-size: 13px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 992px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        margin: 10px;
+    }
+
+    .header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+
+    .header-left {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .nav-bar ul {
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .page-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .page-actions {
+        justify-content: center;
+    }
+
+    .info-row {
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .info-label {
+        flex: 0 0 auto;
+        min-width: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        margin: 5px;
+    }
+
+    .page-content {
+        padding: 15px;
+    }
+
+    .profile-card {
+        padding: 15px;
+    }
 }
