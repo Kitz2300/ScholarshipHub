@@ -1,13 +1,12 @@
 <?php 
-include '../includes/conn.php';
-// include '../includes/check_permission.php';
+include __DIR__ . '/../includes/conn.php';
+include '../includes/check_permission.php';
 session_start();
 
-// if(!(hasPermission('view'))) {
-//     $_SESSION['fail'] = "You do not have permission to access this page";
-//     header("Location: " . $_SERVER['HTTP_REFERER']);
-//     exit();
-// }
+if($_SESSION['role'] !== 'admin') {
+    checkPageAccess($conn, $_SESSION['user_id'], 'scholars');
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -95,7 +94,9 @@ session_start();
                 <div class="page-header">
                     <h2>Scholar List</h2>
                     <div class="page-actions">
-                        <a href="add_scholar.php" class="btn btn-success">Add New Scholar</a>
+                        <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'add')) : ?>
+                            <a href="add_scholar.php" class="btn btn-success">Add New Scholar</a>
+                        <?php endif; ?>
                         <!-- <a href="upload_excel.php" class="btn btn-success">Import Excel</a>
                         <a href="export_scholars.php" class="btn btn-info">Export Excel</a> -->
                     </div>

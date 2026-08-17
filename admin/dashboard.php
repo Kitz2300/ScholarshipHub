@@ -1,5 +1,6 @@
 <?php 
-include '../includes/conn.php';
+include __DIR__ . '/../includes/conn.php';
+include __DIR__ . '/../includes/check_permission.php';
 session_start();
 
 include __DIR__ . "/../includes/school_year_helper.php";
@@ -123,7 +124,7 @@ while($row = $status_result->fetch_assoc()) {
                     <img src="../assets/images/PIT%20LOGO.png" alt="PIT Logo">
                     <div>
                         <h1>PIT ScholarshipHub</h1>
-                        <p>Admin Dashboard</p>
+                        <p>Dashboard</p>
                     </div>
                 </div>
                 <div class="header-right">
@@ -141,30 +142,49 @@ while($row = $status_result->fetch_assoc()) {
                     <li><a href="dashboard.php" class="active">Dashboard</a></li>
 
                     <!-- Records Dropdown -->
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle">Records <div class="arrow-down">▼</div></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="scholar_list.php">Scholars</a></li>
-                            <li><a href="scholarship_program.php">Scholarship Programs</a></li>
-                            <li><a href="archive.php">Archives</a></li>
-                        </ul>
-                    </li>
+                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholars') || canAccessPage($conn, $_SESSION['user_id'], 'scholarship_programs')) : ?>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle">Records <div class="arrow-down">▼</div></a>
+                            <ul class="dropdown-menu">
+                                <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholars')) : ?>
+                                    <li><a href="scholar_list.php">Scholars</a></li>
+                                <?php endif; ?>
+                                <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholarship_programs')) : ?>
+                                    <li><a href="scholarship_program.php">Scholarship Programs</a></li>
+                                <?php endif; ?>
+                                <?php if($_SESSION['role'] == 'admin') : ?>
+                                    <li><a href="archive.php">Archives</a></li>
+                                <?php endif; ?>
+                            </ul>
+                        </li>
+                    <?php endif; ?>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="upload_excel.php">Import Excel</a></li>
-                            <li><a href="export_scholars.php">Export Excel</a></li>
-                        </ul>
-                    </li>
+                    <?php //if(canAccessPage($conn, $_SESSION['user_id'], 'import_export')) : ?>
+                    <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'import') || hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) : ?>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
+                            <ul class="dropdown-menu">
+                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'import')) : ?>
+                                    <li><a href="upload_excel.php">Import Excel</a></li>
+                                <?php endif; ?>
+                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) : ?>
+                                    <li><a href="export_scholars.php">Export Excel</a></li>
+                                <?php endif; ?>
+                            </ul>
+                        </li>
+                    <?php endif; ?>
                     
                     <!-- Announcements -->
-                    <li><a href="announcements.php">Announcements</a></li>
+                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'announcements')) : ?>
+                        <li><a href="announcements.php">Announcements</a></li>
+                    <?php endif; ?>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program & College Management</a></li>
-
+                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'program_management')) : ?>
+                        <li><a href="program_management.php">Program & College Management</a></li>
+                    <?php endif; ?>
+                    
                     <!-- Account Management -->
                     <?php if($_SESSION['role'] == "admin") : ?>
                         <li><a href="account_management.php">Account Management</a></li>

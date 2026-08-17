@@ -1,6 +1,12 @@
 <?php 
-include __DIR__ . '/../includes/conn.php';
 session_start();
+include __DIR__ . '/../includes/conn.php';
+include '../includes/check_permission.php';
+
+if(!(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'add'))) {
+    header("Location: scholar_list.php");
+    exit();
+}
 
 
 // initialize year variable
@@ -53,7 +59,7 @@ $barangays_result = $stmt->get_result();
         unset($_SESSION['fail']);
     }
     ?>
-    <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
+    <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href='login.php'</script>
     <?php else : ?>

@@ -281,7 +281,9 @@ if($page > $total_pages && $total_pages > 0) {
                             <a href="scholar_profile.php?scholar_id=<?= $row['id'] ?>" class="btn-sm btn-view">View</a>
                             <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                 <input type="hidden" name="scholar_id" value="<?= $row['id'] ?>">
-                                <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirm('Archive scholar?')">Archive</button>
+                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'archive')) : ?>
+                                    <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirm('Archive scholar?')">Archive</button>
+                                <?php endif; ?>
                             </form>
                         </div>
                     </td>

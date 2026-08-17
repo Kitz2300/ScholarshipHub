@@ -1,5 +1,6 @@
 <?php 
 include __DIR__ . '/../includes/conn.php';
+include '../includes/check_permission.php';
 session_start();
 
 // Handle proper return URL ---
@@ -149,7 +150,7 @@ if($row = $scholar_result->fetch_assoc()) {
         unset($_SESSION['fail']);
     }
     ?>
-    <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
+    <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href='login.php'</script>
     <?php else : ?>
@@ -217,8 +218,9 @@ if($row = $scholar_result->fetch_assoc()) {
                     <h2>Scholar Profile</h2>
                     <div class="page-actions">
                         <a href="<?= htmlspecialchars($back_url) ?>" class="btn btn-secondary">Back to List</a>
-                        <a href="edit_scholar.php?id=<?= $scholar_id ?>" class="btn btn-warning">Edit Scholar</a>
-                        <!-- <a href="academic_performance.php?scholar_id=<?= $scholar_id ?>" class="btn btn-info">Manage GWA & Units</a> -->
+                        <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'edit')) : ?>
+                            <a href="edit_scholar.php?id=<?= $scholar_id ?>" class="btn btn-warning">Edit Scholar</a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -305,7 +307,9 @@ if($row = $scholar_result->fetch_assoc()) {
                     <div class="profile-card notes-card">
                         <div class="card-header">
                             <h3>Notes</h3>
-                            <button class="btn btn-sm btn-primary open-modal-btn">+ Add Notes</button>
+                            <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'notes')) : ?>
+                                <button class="btn btn-sm btn-primary open-modal-btn">+ Add Notes</button>
+                            <?php endif; ?>
                         </div>
                         <div class="card-body">
                             <?php if(!empty($scholar_notes)) : ?>
@@ -371,7 +375,9 @@ if($row = $scholar_result->fetch_assoc()) {
                     <div class="profile-card">
                         <div class="card-header">
                             <h3>Academic Performance</h3>
-                            <a href="academic_performance.php?scholar_id=<?= $scholar_id ?>" class="btn btn-sm btn-info">Manage GWA & Units</a>
+                            <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
+                                <a href="academic_performance.php?scholar_id=<?= $scholar_id ?>" class="btn btn-sm btn-info">Manage GWA & Units</a>
+                            <?php endif; ?>
                         </div>
                         <!-- <div class="card-body"> -->
                         <div class="info-group">
