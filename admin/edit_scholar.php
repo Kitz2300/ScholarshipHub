@@ -1,5 +1,6 @@
 <?php 
 include __DIR__ . '/../includes/conn.php';
+include __DIR__ . '/../includes/check_permission.php';
 session_start();
 
 // get scholar id
@@ -42,13 +43,15 @@ $city_id = 0;
 $province_id = 0;
 $region_id = 0;
 $country = "";
-$zipcode = "";
+$philsys_id = "";
+$lrn = "";
+$four_ps_id = "";
 
 // insert values to initialized variables
 if($row = $scholar_result->fetch_assoc()) {
     $last_name = $row['last_name'];
     $given_name = $row['given_name'];
-    $ext_name = $row['ext_name'] === "N/A" ? "Not Applicable" : $row['ext_name']; // show Not Applicable if N/A
+    $ext_name = $row['ext_name'] === "N/A" ? "Not Applicable" : $row['ext_name'];
     $middle_name = $row['middle_name'];
     $id_num = $row['student_id'];
     $sex = $row['sex'];
@@ -76,6 +79,9 @@ if($row = $scholar_result->fetch_assoc()) {
     $region_id = $row['region_id'] ?? 0;
     $country = $row['country'] ?? 'Philippines';
     $zipcode = $row['zipcode'] ?? '';
+    $philsys_id = $row['philsys_id'] ?? '';
+    $lrn = $row['lrn'] ?? '';
+    $four_ps_id = $row['four_ps_id'] ?? '';
     
 } else {
     // alert user if there are no results from query
@@ -87,7 +93,7 @@ if($row = $scholar_result->fetch_assoc()) {
 
 <!DOCTYPE html>
 <html>
-<>
+<head>
     <title>Edit Scholar - PIT ScholarshipHub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
@@ -132,29 +138,48 @@ if($row = $scholar_result->fetch_assoc()) {
                     <li><a href="dashboard.php">Dashboard</a></li>
 
                     <!-- Records Dropdown -->
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle active">Records <div class="arrow-down">▼</div></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="scholar_list.php" class="active">Scholars</a></li>
-                            <li><a href="scholarship_program.php">Scholarship Programs</a></li>
-                            <li><a href="archive.php">Archives</a></li>
-                        </ul>
-                    </li>
+                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholars') || canAccessPage($conn, $_SESSION['user_id'], 'scholarship_programs')) : ?>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle">Records <div class="arrow-down">▼</div></a>
+                            <ul class="dropdown-menu">
+                                <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholars')) : ?>
+                                    <li><a href="scholar_list.php">Scholars</a></li>
+                                <?php endif; ?>
+                                <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholarship_programs')) : ?>
+                                    <li><a href="scholarship_program.php">Scholarship Programs</a></li>
+                                <?php endif; ?>
+                                <?php if($_SESSION['role'] == 'admin') : ?>
+                                    <li><a href="archive.php">Archives</a></li>
+                                <?php endif; ?>
+                            </ul>
+                        </li>
+                    <?php endif; ?>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="upload_excel.php">Import Excel</a></li>
-                            <li><a href="export_scholars.php">Export Excel</a></li>
-                        </ul>
-                    </li>
-
+                    <?php //if(canAccessPage($conn, $_SESSION['user_id'], 'import_export')) : ?>
+                    <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'import') || hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) : ?>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
+                            <ul class="dropdown-menu">
+                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'import')) : ?>
+                                    <li><a href="upload_excel.php">Import Excel</a></li>
+                                <?php endif; ?>
+                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) : ?>
+                                    <li><a href="export_scholars.php">Export Excel</a></li>
+                                <?php endif; ?>
+                            </ul>
+                        </li>
+                    <?php endif; ?>
+                    
                     <!-- Announcements -->
-                    <li><a href="announcements.php">Announcements</a></li>
+                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'announcements')) : ?>
+                        <li><a href="announcements.php">Announcements</a></li>
+                    <?php endif; ?>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program & College Management</a></li>
+                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'program_management')) : ?>
+                        <li><a href="program_management.php">Program & College Management</a></li>
+                    <?php endif; ?>
                     
                     <!-- Account Management -->
                     <?php if($_SESSION['role'] == "admin") : ?>
@@ -197,7 +222,7 @@ if($row = $scholar_result->fetch_assoc()) {
                             <div class="form-group">
                                 <label for="ext_name">Extension Name</label>
                                 <select name="ext_name" id="ext_name" required>
-                                    <option value="N/A" <?= ($ext_name == 'N/A') ? 'selected' : '' ?>>N/A</option>
+                                    <option value="N/A" <?= ($ext_name == 'N/A' || $ext_name == 'Not Applicable') ? 'selected' : '' ?>>N/A</option>
                                     <option value="Jr." <?= ($ext_name == 'Jr.') ? 'selected' : '' ?>>Jr.</option>
                                     <option value="Sr." <?= ($ext_name == 'Sr.') ? 'selected' : '' ?>>Sr.</option>
                                     <option value="II" <?= ($ext_name == 'II') ? 'selected' : '' ?>>II</option>
@@ -221,6 +246,22 @@ if($row = $scholar_result->fetch_assoc()) {
                             </div>
                         </div>
 
+                        <!-- NEW FIELDS: PHILSYS ID, LRN, 4P's ID -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="philsys_id">PHILSYS ID <span class="required">*</span></label>
+                                <input type="text" name="philsys_id" id="philsys_id" value="<?= htmlspecialchars($philsys_id) ?>" placeholder="e.g., 4583-2739-5423-7829">
+                            </div>
+                            <div class="form-group">
+                                <label for="lrn">LRN <span class="required">*</span></label>
+                                <input type="text" name="lrn" id="lrn" value="<?= htmlspecialchars($lrn) ?>" placeholder="e.g., 121799100006">
+                            </div>
+                            <div class="form-group">
+                                <label for="four_ps_id">4P's ID</label>
+                                <input type="text" name="four_ps_id" id="four_ps_id" value="<?= htmlspecialchars($four_ps_id) ?>" placeholder="e.g., 083740027-6222-00003">
+                            </div>
+                        </div>
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="sex">Sex <span class="required">*</span></label>
@@ -235,7 +276,7 @@ if($row = $scholar_result->fetch_assoc()) {
                             </div>
                             <div class="form-group">
                                 <label for="disability">Disability</label>
-                                <input type="text" name="disability" id="disability" placeholder="e.g., Visual impairment, Dyslexia, Mobility impairment" value="<?= $disability ?>" list="disability-list"/>
+                                <input type="text" name="disability" id="disability" placeholder="e.g., Visual impairment, Dyslexia, Mobility impairment" value="<?= htmlspecialchars($disability) ?>" list="disability-list"/>
                                 <datalist id="disability-list">
                                     <option value="Not applicable"></option>
                                     <option value="Visual Impairment"></option>
@@ -246,7 +287,7 @@ if($row = $scholar_result->fetch_assoc()) {
                             </div>
                             <div class="form-group">
                                 <label for="ip_group">IP Group</label>
-                                <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa, Maranao, B'laan, Teduray" value="<?= $ip_group ?>" list="ip-group-list"/>
+                                <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa, Maranao, B'laan, Teduray" value="<?= htmlspecialchars($ip_group) ?>" list="ip-group-list"/>
                                 <datalist id="ip-group-list">
                                     <option value="Not applicable"></option>
                                     <option value="Ifugao"></option>
@@ -259,6 +300,7 @@ if($row = $scholar_result->fetch_assoc()) {
                         </div>
                     </div>
 
+                    <!-- Address Section (Unchanged) -->
                     <div class="form-section">
                         <h3>Address</h3>
                         
@@ -283,45 +325,45 @@ if($row = $scholar_result->fetch_assoc()) {
 
                         <!-- Philippine Address -->
                         <div id="philippines-address" style="<?= $country == 'Philippines' ? 'display: block;' : 'display: none;' ?>">
-                        <div class="form-row">
-                            <div class="form-group full-width">
-                                <label for="street">Street / Building / Unit <span class="required">*</span></label>
-                                <input type="text" name="street" id="street" value="<?= htmlspecialchars($street) ?>" placeholder="e.g., 123 Main St, Bldg. A">
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label for="street">Street / Building / Unit <span class="required">*</span></label>
+                                    <input type="text" name="street" id="street" value="<?= htmlspecialchars($street) ?>" placeholder="e.g., 123 Main St, Bldg. A">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="region">Region <span class="required">*</span></label>
+                                    <select name="region" id="region" data-selected="<?= $region_id ?>" required>
+                                        <option value="">Select Region</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="province">Province <span class="required">*</span></label>
+                                    <select name="province" id="province" data-selected="<?= $province_id ?>" required>
+                                        <option value="">Select Province</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="city">City / Municipality <span class="required">*</span></label>
+                                    <select name="city" id="city" data-selected="<?= $city_id ?>" required>
+                                        <option value="">Select City</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="barangay">Barangay <span class="required">*</span></label>
+                                    <select name="barangay" id="barangay" data-selected="<?= $barangay_id ?>" required>
+                                        <option value="">Select Barangay</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="zipcode">Zipcode</label>
+                                    <input type="text" name="zipcode" id="zipcode" value="<?= htmlspecialchars($zipcode) ?>" placeholder="Zipcode">
+                                </div>
                             </div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="region">Region <span class="required">*</span></label>
-                                <select name="region" id="region" data-selected="<?= $region_id ?>" required>
-                                    <option value="">Select Region</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="province">Province <span class="required">*</span></label>
-                                <select name="province" id="province" data-selected="<?= $province_id ?>" required>
-                                    <option value="">Select Province</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="city">City / Municipality <span class="required">*</span></label>
-                                <select name="city" id="city" data-selected="<?= $city_id ?>" required>
-                                    <option value="">Select City</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="barangay">Barangay <span class="required">*</span></label>
-                                <select name="barangay" id="barangay" data-selected="<?= $barangay_id ?>" required>
-                                    <option value="">Select Barangay</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="zipcode">Zipcode</label>
-                                <input type="text" name="zipcode" id="zipcode" value="<?= htmlspecialchars($zipcode) ?>" placeholder="Zipcode">
-                            </div>
-                        </div>
-                    </div>
 
                         <!-- Other Address -->
                         <div id="other-address" style="<?= $country != 'Philippines' ? 'display: block;' : 'display: none;' ?>">
@@ -334,11 +376,11 @@ if($row = $scholar_result->fetch_assoc()) {
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="other_city">City <span class="required">*</span></label>
-                                    <input type="text" name="other_city" id="other_city" value="<?= htmlspecialchars($city_name ?? '') ?>" placeholder="City">
+                                    <input type="text" name="other_city" id="other_city" placeholder="City">
                                 </div>
                                 <div class="form-group">
                                     <label for="other_state">State / Province <span class="required">*</span></label>
-                                    <input type="text" name="other_state" id="other_state" value="<?= htmlspecialchars($province_name ?? '') ?>" placeholder="State">
+                                    <input type="text" name="other_state" id="other_state" placeholder="State">
                                 </div>
                                 <div class="form-group">
                                     <label for="other_zip">Zipcode <span class="required">*</span></label>
@@ -358,7 +400,6 @@ if($row = $scholar_result->fetch_assoc()) {
                                 <select name="scholarship_program" id="scholarship_program" required>
                                     <option value="" disabled>Select Scholarship Program</option>
                                     <?php 
-                                    // scholarship programs query
                                     $scholarship_program_sql = "SELECT id, name, code FROM scholarship_program WHERE is_archived = 0";
                                     $stmt = $conn->prepare($scholarship_program_sql);
                                     $stmt->execute();
@@ -375,7 +416,6 @@ if($row = $scholar_result->fetch_assoc()) {
                                 <select name="program" id="program" required>
                                     <option value="" disabled>Select Program</option>
                                     <?php 
-                                    // program's/course query
                                     $program_sql = "SELECT id, name FROM program";
                                     $stmt = $conn->prepare($program_sql);
                                     $stmt->execute();
@@ -406,10 +446,12 @@ if($row = $scholar_result->fetch_assoc()) {
                             <div class="form-group">
                                 <label for="academic_status">Academic Status <span class="required">*</span></label>
                                 <select name="academic_status" id="academic_status" required>
-                                    <option value="Active" <?= ($academic_status == "Active") ? 'selected' : '' ?>>Active</option>
+                                    <option value="Enrolled" <?= ($academic_status == "Enrolled") ? 'selected' : '' ?>>Enrolled</option>
+                                    <option value="Not Enrolled" <?= ($academic_status == "Not Enrolled") ? 'selected' : '' ?>>Not Enrolled</option>
                                     <option value="Graduated" <?= ($academic_status == "Graduated") ? 'selected' : '' ?>>Graduated</option>
                                     <option value="Transferred" <?= ($academic_status == "Transferred") ? 'selected' : '' ?>>Transferred</option>
                                     <option value="Dropped" <?= ($academic_status == "Dropped") ? 'selected' : '' ?>>Dropped</option>
+                                    <option value="Leave of Absence" <?= ($academic_status == "Leave of Absence") ? 'selected' : '' ?>>Leave of Absence</option>
                                 </select>
                             </div>
                         </div>
@@ -422,30 +464,30 @@ if($row = $scholar_result->fetch_assoc()) {
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="father_last">Father's Last Name <span class="required">*</span></label>
-                                <input type="text" name="father_last" id="father_last" value="<?= htmlspecialchars($father_last) ?>">
+                                <input type="text" name="father_last" id="father_last" value="<?= htmlspecialchars($father_last) ?>" required>
                             </div>
                             <div class="form-group">
                                 <label for="father_first">Father's First Name <span class="required">*</span></label>
-                                <input type="text" name="father_first" id="father_first" value="<?= htmlspecialchars($father_given) ?>">
+                                <input type="text" name="father_first" id="father_first" value="<?= htmlspecialchars($father_given) ?>" required>
                             </div>
                             <div class="form-group">
                                 <label for="father_middle">Father's Middle Name <span class="required">*</span></label>
-                                <input type="text" name="father_middle" id="father_middle" value="<?= htmlspecialchars($father_middle) ?>">
+                                <input type="text" name="father_middle" id="father_middle" value="<?= htmlspecialchars($father_middle) ?>" required>
                             </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="mother_last">Mother's Maiden Last Name <span class="required">*</span></label>
-                                <input type="text" name="mother_last" id="mother_last" value="<?= htmlspecialchars($mother_last) ?>">
+                                <input type="text" name="mother_last" id="mother_last" value="<?= htmlspecialchars($mother_last) ?>" required>
                             </div>
                             <div class="form-group">
                                 <label for="mother_first">Mother's Maiden First Name <span class="required">*</span></label>
-                                <input type="text" name="mother_first" id="mother_first" value="<?= htmlspecialchars($mother_given) ?>">
+                                <input type="text" name="mother_first" id="mother_first" value="<?= htmlspecialchars($mother_given) ?>" required>
                             </div>
                             <div class="form-group">
                                 <label for="mother_middle">Mother's Maiden Middle Name <span class="required">*</span></label>
-                                <input type="text" name="mother_middle" id="mother_middle" value="<?= htmlspecialchars($mother_middle) ?>">
+                                <input type="text" name="mother_middle" id="mother_middle" value="<?= htmlspecialchars($mother_middle) ?>" required>
                             </div>
                         </div>
                     </div>
