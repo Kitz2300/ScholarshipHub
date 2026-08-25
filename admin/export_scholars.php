@@ -129,6 +129,9 @@ session_start();
                             <?php
                             $all_columns = [
                                 'student_id' => 'Student ID',
+                                'philsys_id' => 'PHILSYS ID',
+                                'lrn' => 'LRN',
+                                'four_ps_id' => "4P's ID",
                                 'last_name' => 'Last Name',
                                 'given_name' => 'Given Name',
                                 'ext_name' => 'Ext. Name',
