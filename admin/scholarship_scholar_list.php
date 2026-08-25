@@ -1,25 +1,26 @@
 <?php 
 include __DIR__ . "/../includes/conn.php";
+include __DIR__ . "/../includes/check_permission.php";
 session_start();
 
 $scholarship_id = (int) ($_GET['id'] ?? 0);
 $scholarship_name = "";
 
 // delete scholarship process
-if(isset($_POST['delete']) && isset($_POST['scholar_id'])) {
+if(isset($_POST['archive']) && isset($_POST['scholar_id'])) {
     $scholar_id = (int) ($_POST['scholar_id'] ?? 0);
 
-    $delete_sql = "DELETE FROM scholar_info WHERE id = ?";
-    $delete_stmt = $conn->prepare($delete_sql);
-    $delete_stmt->bind_param('i', $scholar_id);
+    $archive_sql = "UPDATE scholar_info SET is_archived = 1 WHERE id = ?";
+    $archive_stmt = $conn->prepare($archive_sql);
+    $archive_stmt->bind_param('i', $scholar_id);
     
     // condition if query is successful or not
-    if($delete_stmt->execute()) {
-        $_SESSION['success'] = "Scholar Removed";
+    if($archive_stmt->execute()) {
+        $_SESSION['success'] = "Scholar Archived";
         header("Location: scholarship_scholar_list.php?id=$scholarship_id");
         exit();
     } else {
-        $_SESSION['fail'] = "Failed to remove scholar";
+        $_SESSION['fail'] = "Failed to archive scholar";
         header("Location: scholarship_scholar_list.php?id=$scholarship_id");
         exit();
     }
@@ -37,7 +38,7 @@ $sql = "SELECT
             program.name AS program_name
             FROM scholar_info 
             INNER JOIN program ON scholar_info.program_id = program.id
-            WHERE scholarship_program_id = ?
+            WHERE scholarship_program_id = ? AND scholar_info.is_archived = 0
             ORDER BY scholar_info.last_name ASC";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $scholarship_id);
@@ -45,7 +46,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 // scholar name query for display
-$scholarship_name_sql = "SELECT name FROM scholarship_program WHERE id = ?";
+$scholarship_name_sql = "SELECT name, school_year FROM scholarship_program WHERE id = ?";
 $scholarship_name_stmt = $conn->prepare($scholarship_name_sql);
 $scholarship_name_stmt->bind_param("i", $scholarship_id);
 
@@ -53,6 +54,7 @@ if($scholarship_name_stmt->execute()) {
     $scholarship_name_result = $scholarship_name_stmt->get_result();
     if($row = $scholarship_name_result->fetch_assoc()) {
         $scholarship_name = $row['name'];
+        $school_year = $row['school_year'];
     }
 } else {
     $_SESSION['fail'] = "Scholarship record not found.";
@@ -82,7 +84,7 @@ if($scholarship_name_stmt->execute()) {
     ?>
 
     <!-- check if logged in or not -->
-    <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') :?>
+    <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) :?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href='login.php'</script>
     <?php else : ?>
@@ -146,7 +148,7 @@ if($scholarship_name_stmt->execute()) {
             <div class="page-content">
                 <!-- Page Header -->
                 <div class="page-header">
-                    <h2><?= htmlspecialchars($scholarship_name) ?> Scholar List</h2>
+                    <h2><?= htmlspecialchars($scholarship_name) ?> Scholar List (<?= $school_year ?>)</h2>
                     <div class="page-actions">
                         <a href="scholarship_program.php" class="btn btn-secondary">← Back to Programs</a>
                     </div>
@@ -180,7 +182,9 @@ if($scholarship_name_stmt->execute()) {
                                                 <form action="<?= $_SERVER['PHP_SELF'] ?>?id=<?= $scholarship_id ?>" method="POST" style="display: inline;">
                                                     <!-- delete button -->
                                                     <input type="hidden" name="scholar_id" value="<?= $row['scholar_id'] ?>"/>
-                                                    <button type="submit" name="delete" class="btn-sm btn-delete" onclick="return confirm('Delete Scholar?')">Delete</button>
+                                                    <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'archive')) : ?>
+                                                        <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirm('Archive Scholar?')">Archive</button>
+                                                    <?php endif; ?>
                                                 </form>
                                             </div>
                                         </td>
