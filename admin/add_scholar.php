@@ -8,7 +8,6 @@ if(!(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'add'))) {
     exit();
 }
 
-
 // initialize year variable
 $year = "";
 
@@ -53,7 +52,6 @@ $barangays_result = $stmt->get_result();
 </head>
 <body>
     <?php 
-    // insert process fail message
     if(isset($_SESSION['fail'])) {
         echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
         unset($_SESSION['fail']);
@@ -88,30 +86,49 @@ $barangays_result = $stmt->get_result();
                     <li><a href="dashboard.php">Dashboard</a></li>
 
                     <!-- Records Dropdown -->
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle active">Records <div class="arrow-down">▼</div></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="scholar_list.php" class="active">Scholars</a></li>
-                            <li><a href="scholarship_program.php">Scholarship Programs</a></li>
-                            <li><a href="archive.php">Archives</a></li>
-                        </ul>
-                    </li>
+                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholars') || canAccessPage($conn, $_SESSION['user_id'], 'scholarship_programs')) : ?>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle">Records <div class="arrow-down">▼</div></a>
+                            <ul class="dropdown-menu">
+                                <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholars')) : ?>
+                                    <li><a href="scholar_list.php" class="active">Scholars</a></li>
+                                <?php endif; ?>
+                                <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholarship_programs')) : ?>
+                                    <li><a href="scholarship_program.php">Scholarship Programs</a></li>
+                                <?php endif; ?>
+                                <?php if($_SESSION['role'] == 'admin') : ?>
+                                    <li><a href="archive.php">Archives</a></li>
+                                <?php endif; ?>
+                            </ul>
+                        </li>
+                    <?php endif; ?>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="upload_excel.php">Import Excel</a></li>
-                            <li><a href="export_scholars.php">Export Excel</a></li>
-                        </ul>
-                    </li>
-
+                    <?php //if(canAccessPage($conn, $_SESSION['user_id'], 'import_export')) : ?>
+                    <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'import') || hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) : ?>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
+                            <ul class="dropdown-menu">
+                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'import')) : ?>
+                                    <li><a href="upload_excel.php">Import Excel</a></li>
+                                <?php endif; ?>
+                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) : ?>
+                                    <li><a href="export_scholars.php">Export Excel</a></li>
+                                <?php endif; ?>
+                            </ul>
+                        </li>
+                    <?php endif; ?>
+                    
                     <!-- Announcements -->
-                    <li><a href="announcements.php">Announcements</a></li>
+                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'announcements')) : ?>
+                        <li><a href="announcements.php">Announcements</a></li>
+                    <?php endif; ?>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program & College Management</a></li>
-
+                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'program_management')) : ?>
+                        <li><a href="program_management.php">Program & College Management</a></li>
+                    <?php endif; ?>
+                    
                     <!-- Account Management -->
                     <?php if($_SESSION['role'] == "admin") : ?>
                         <li><a href="account_management.php">Account Management</a></li>
@@ -121,7 +138,6 @@ $barangays_result = $stmt->get_result();
 
             <!-- Page Content -->
             <div class="page-content">
-                <!-- Page Header -->
                 <div class="page-header">
                     <h2>Add New Scholar</h2>
                     <div class="page-actions">
@@ -145,12 +161,12 @@ $barangays_result = $stmt->get_result();
                                 <input type="text" name="first_name" id="first_name" placeholder="Enter first name" required>
                             </div>
                             <div class="form-group">
-                                <label for="middle_name">Middle Name <span class="required">*</span></label>
-                                <input type="text" name="middle_name" id="middle_name" placeholder="Enter middle name" required>
+                                <label for="middle_name">Middle Name</label>
+                                <input type="text" name="middle_name" id="middle_name" placeholder="Enter middle name">
                             </div>
                             <div class="form-group">
                                 <label for="ext_name">Extension Name</label>
-                                <select name="ext_name" id="ext_name"   >
+                                <select name="ext_name" id="ext_name">
                                     <option value="" selected disabled>N/A</option>
                                     <option value="Jr.">Jr.</option>
                                     <option value="Sr.">Sr.</option>
@@ -171,10 +187,31 @@ $barangays_result = $stmt->get_result();
                             </div>
                             <div class="form-group">
                                 <label for="student_contact">Contact Number <span class="required">*</span></label>
-                                <input type="text" name="student_contact" id="student_contact" placeholder="09171234567" pattern="09[0-9]{9}" required>
+                                <input type="text" name="student_contact" id="student_contact" placeholder="9171234567" pattern="09[0-9]{9}" required>
                             </div>
                         </div>
 
+                        <!-- NEW FIELDS: PHILSYS ID, LRN, 4P's ID -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="philsys_id">PHILSYS ID</label>
+                                <input type="text" name="philsys_id" id="philsys_id" 
+                                    placeholder="e.g., 1234-5678-9012-3456" 
+                                    pattern="[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}"
+                                    title="Format: 1234-5678-9012-3456 (16 digits with hyphens)" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lrn">LRN</label>
+                                <input type="text" name="lrn" id="lrn" 
+                                    placeholder="e.g., 123456789021" 
+                                    pattern="[0-9]{12}"
+                                    title="Must be 12 digits" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="four_ps_id">4P's ID</label>
+                                <input type="text" name="four_ps_id" id="four_ps_id">
+                            </div>
+                        </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="sex">Sex <span class="required">*</span></label>
@@ -201,7 +238,7 @@ $barangays_result = $stmt->get_result();
                             </div>
                             <div class="form-group">
                                 <label for="ip_group">IP Group</label>
-                                <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa, Maranao, B'laan, Teduray" id="ip-group-list" />
+                                <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa, Maranao, B'laan, Teduray" list="ip-group-list" />
                                 <datalist id="ip-group-list">
                                     <option value="Not applicable"></option>
                                     <option value="Ifugao"></option>
@@ -313,7 +350,7 @@ $barangays_result = $stmt->get_result();
                                 <select name="scholarship_program" id="scholarship_program" required>
                                     <option value="" selected disabled>Select Scholarship Program</option>
                                     <?php 
-                                    $scholarship_program_sql = "SELECT id, name, code FROM scholarship_program";
+                                    $scholarship_program_sql = "SELECT id, name, code FROM scholarship_program WHERE is_archived = 0";
                                     $stmt = $conn->prepare($scholarship_program_sql);
                                     $stmt->execute();
                                     $result = $stmt->get_result();
