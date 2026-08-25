@@ -7,7 +7,7 @@ if(isset($_SESSION['fail'])) {
     unset($_SESSION['fail']);
 }
 
-if(isset($_SESSION['user_id']) && $_SESSION['role'] == "admin") {
+if(isset($_SESSION['user_id']) && ($_SESSION['role'] == "admin" || $_SESSION['role'] == "staff")) {
     header("Location: dashboard.php");
     exit();
 }
