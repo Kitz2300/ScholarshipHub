@@ -1,6 +1,11 @@
 <?php 
 include __DIR__ . "/../includes/conn.php";
+include '../includes/check_permission.php';
 session_start();
+
+if($_SESSION['role'] !== 'admin') {
+    checkPageAccess($conn, $_SESSION['user_id'], 'scholars');
+}
 
 // get scholar id and initialize name
 $scholar_id = isset($_GET['scholar_id']) ? (int) $_GET['scholar_id'] : 0;
@@ -72,9 +77,9 @@ if(isset($_POST['remove']) && isset($_POST['record_id'])) {
     }
     ?>
     
-    <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
+    <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <script>alert('You are not logged in')</script>
-        <script>window.location.href='login.php'</script>
+        <script>window.location.href='portal.php'</script>
     <?php else : ?>
         <div class="container">
             <!-- Header -->
