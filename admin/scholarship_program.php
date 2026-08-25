@@ -1,7 +1,12 @@
 <?php
 include __DIR__ . "/../includes/conn.php";
 include __DIR__ . "/../includes/school_year_helper.php";
+include '../includes/check_permission.php';
 session_start();
+
+if($_SESSION['role'] !== 'admin') {
+    checkPageAccess($conn, $_SESSION['user_id'], 'scholarship_programs');
+}
 
 if(isset($_POST['set_school_year'])) {
     setSelectedSchoolYear($_POST['school_year']);
@@ -88,9 +93,9 @@ if(isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
     ?>
 
     <!-- check if logged in or not -->
-    <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') :?>
+    <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) :?>
         <script>alert('You are not logged in')</script>
-        <script>window.location.href='login.php'</script>
+        <script>window.location.href='../portal.php'</script>
     <?php else : ?>
         <div class="container">
             <!-- Header -->
@@ -117,30 +122,49 @@ if(isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
                     <li><a href="dashboard.php">Dashboard</a></li>
 
                     <!-- Records Dropdown -->
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle active">Records <div class="arrow-down">▼</div></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="scholar_list.php">Scholars</a></li>
-                            <li><a href="scholarship_program.php" class="active">Scholarship Programs</a></li>
-                            <li><a href="archive.php">Archives</a></li>
-                        </ul>
-                    </li>
+                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholars') || canAccessPage($conn, $_SESSION['user_id'], 'scholarship_programs')) : ?>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle">Records <div class="arrow-down">▼</div></a>
+                            <ul class="dropdown-menu">
+                                <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholars')) : ?>
+                                    <li><a href="scholar_list.php">Scholars</a></li>
+                                <?php endif; ?>
+                                <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholarship_programs')) : ?>
+                                    <li><a href="scholarship_program.php" class="active">Scholarship Programs</a></li>
+                                <?php endif; ?>
+                                <?php if($_SESSION['role'] == 'admin') : ?>
+                                    <li><a href="archive.php">Archives</a></li>
+                                <?php endif; ?>
+                            </ul>
+                        </li>
+                    <?php endif; ?>
 
                     <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="upload_excel.php">Import Excel</a></li>
-                            <li><a href="export_scholars.php">Export Excel</a></li>
-                        </ul>
-                    </li>
-
+                    <?php //if(canAccessPage($conn, $_SESSION['user_id'], 'import_export')) : ?>
+                    <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'import') || hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) : ?>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
+                            <ul class="dropdown-menu">
+                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'import')) : ?>
+                                    <li><a href="upload_excel.php">Import Excel</a></li>
+                                <?php endif; ?>
+                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) : ?>
+                                    <li><a href="export_scholars.php">Export Excel</a></li>
+                                <?php endif; ?>
+                            </ul>
+                        </li>
+                    <?php endif; ?>
+                    
                     <!-- Announcements -->
-                    <li><a href="announcements.php">Announcements</a></li>
+                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'announcements')) : ?>
+                        <li><a href="announcements.php">Announcements</a></li>
+                    <?php endif; ?>
 
                     <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program & College Management</a></li>
-
+                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'program_management')) : ?>
+                        <li><a href="program_management.php">Program & College Management</a></li>
+                    <?php endif; ?>
+                    
                     <!-- Account Management -->
                     <?php if($_SESSION['role'] == "admin") : ?>
                         <li><a href="account_management.php">Account Management</a></li>
@@ -172,7 +196,9 @@ if(isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
                 </div>
                 <div class="action-row">
                     <div class="action-row-right">
-                        <a href="add_scholarship.php" class="btn btn-success">Add Scholarship Program</a>
+                        <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholarship_programs', 'add')) : ?>
+                            <a href="add_scholarship.php" class="btn btn-success">Add Scholarship Program</a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -197,16 +223,30 @@ if(isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
                                 <div class="program-code">
                                     <strong>Code:</strong> <?= htmlspecialchars($row['code']) ?>
                                 </div>
+                                <?php if($row['min_gwa_req'] > 0) : ?>
+                                    <div class="program-code">
+                                        <strong>Required GWA:</strong> <?= htmlspecialchars($row['min_gwa_req']) ?>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="program-code">
                                     <strong>Type:</strong> <?= htmlspecialchars($row['scholarship_type']) ?>
                                 </div>
+                                <div class="program-code">
+                                    <strong>Allowance:</strong> ₱<?= htmlspecialchars($row['pay_amount']) ?>
+                                </div>
                                 <div class="program-actions">
                                     <a href="scholarship_scholar_list.php?id=<?= $row['id'] ?>" class="btn-sm btn-view">View Scholars</a>
-                                    <a href="edit_scholarship_program.php?id=<?= $row['id'] ?>" class="btn-sm btn-edit">Edit</a>
+                                    <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholarship_programs', 'edit')) : ?>
+                                        <a href="edit_scholarship_program.php?id=<?= $row['id'] ?>" class="btn-sm btn-edit">Edit</a>
+                                    <?php endif; ?>
                                     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                         <input type="hidden" name="scholarship_program_id" value="<?= $row['id'] ?>"/>
-                                        <button type="submit" name="change_status" class="btn-sm btn-<?= $status_class ?>">Change Status to <?= $status_title ?></button>
-                                        <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirm('Archiving Scholarship Programs also archives its list of scholars. Poceed?')">Archive</button>
+                                        <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholarship_programs', 'status')) : ?>
+                                            <button type="submit" name="change_status" class="btn-sm btn-<?= $status_class ?>">Change Status to <?= $status_title ?></button>
+                                        <?php endif; ?>
+                                        <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholarship_programs', 'archive')) : ?>
+                                            <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirm('Archiving Scholarship Programs also archives its list of scholars. Poceed?')">Archive</button>
+                                        <?php endif; ?>
                                     </form>
                                 </div>
                             </div>
