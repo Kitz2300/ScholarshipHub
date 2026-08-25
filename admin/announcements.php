@@ -1,6 +1,11 @@
 <?php 
 include __DIR__ . "/../includes/conn.php";
+include __DIR__ . "/../includes/check_permission.php";
 session_start();
+
+if($_SESSION['role'] !== 'admin') {
+    checkPageAccess($conn, $_SESSION['user_id'], 'announcements');
+}
 
 // query all the announcements, active and not active alike
 $announcement_sql = "SELECT
@@ -83,7 +88,7 @@ if(isset($_POST['delete'])) {
         unset($_SESSION['fail']);
     }
 
-    if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
+    if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <!-- if not logged in, redirect user to login page -->
         <script>alert('You are not logged in')</script>
         <script>window.location.href='login.php'</script>
@@ -150,7 +155,9 @@ if(isset($_POST['delete'])) {
                 <div class="page-header">
                     <h2>Announcements</h2>
                     <div class="page-actions">
-                        <a href="add_announcement.php" class="btn btn-success">Add Announcement</a>
+                        <?php if(hasPermission($conn, $_SESSION['user_id'], "announcements", "add")) : ?>
+                            <a href="add_announcement.php" class="btn btn-success">Create Announcement</a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -180,16 +187,22 @@ if(isset($_POST['delete'])) {
                                     <p><?= htmlspecialchars($content, ENT_QUOTES, 'UTF-8') ?></p>
                                 </div>
                                 <div class="announcement-actions">
-                                    <a href="edit_announcement.php?id=<?= $row['announcement_id'] ?>" class="btn-sm btn-edit">Edit</a>
-                                    <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
-                                        <input type="hidden" name="announcement_id" value="<?= $row['announcement_id'] ?>"/>
-                                        <button type="submit" name="change_status" class="btn-sm btn-<?= $is_active_class ?>">Change Status to <?= $is_active_title ?></button>
-                                    </form>
-                                    <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
-                                        <input type="hidden" name="announcement_id" value="<?= $row['announcement_id'] ?>"/>
-                                        <button type="submit" name="delete" class="btn-sm btn-delete" onclick="return confirm('Delete announcement?')">Delete</button>
-                                        <!-- <button type="submit" name="delete" class="btn-sm btn-delete" onclick="return confirm('Delete announcement?')"><img class="delete-ico" src="../assets/images/trash.png"></button> -->
-                                    </form>
+                                    <?php if(hasPermission($conn, $_SESSION['user_id'], "announcements", "edit")) : ?>
+                                        <a href="edit_announcement.php?id=<?= $row['announcement_id'] ?>" class="btn-sm btn-edit">Edit</a>
+                                    <?php endif; ?>
+                                    <?php if(hasPermission($conn, $_SESSION['user_id'], "announcements", "status")) : ?>
+                                        <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
+                                            <input type="hidden" name="announcement_id" value="<?= $row['announcement_id'] ?>"/>
+                                            <button type="submit" name="change_status" class="btn-sm btn-<?= $is_active_class ?>">Change Status to <?= $is_active_title ?></button>
+                                        </form>
+                                    <?php endif; ?>
+                                    <?php if(hasPermission($conn, $_SESSION['user_id'], "announcements", "delete")) : ?>
+                                        <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
+                                            <input type="hidden" name="announcement_id" value="<?= $row['announcement_id'] ?>"/>
+                                            <button type="submit" name="delete" class="btn-sm btn-delete" onclick="return confirm('Delete announcement?')">Delete</button>
+                                            <!-- <button type="submit" name="delete" class="btn-sm btn-delete" onclick="return confirm('Delete announcement?')"><img class="delete-ico" src="../assets/images/trash.png"></button> -->
+                                        </form>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         <?php endwhile; ?>
