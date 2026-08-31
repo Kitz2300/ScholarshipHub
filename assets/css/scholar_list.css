@@ -40,7 +40,7 @@ body::before {
 
 /* Main Glass Container */
 .container {
-    max-width: 1200px;
+    max-width: 1500px;
     width: 100%;
     margin: 0px;
     padding: 0px;
@@ -181,7 +181,7 @@ body::before {
 
 .arrow-down {
     display: inline;
-    font-size: 15px;
+    font-size: 20px;
     vertical-align: top;
 }
 
@@ -245,7 +245,7 @@ body::before {
     border: none;
     border-radius: 4px;
     text-decoration: none;
-    font-size: 13px;
+    font-size: 16px;
     cursor: pointer;
     transition: background 0.3s, transform 0.2s;
     color: #fff;
@@ -258,7 +258,15 @@ body::before {
 .btn-primary { background: #3498db; }
 .btn-primary:hover { background: #2980b9; }
 
-.btn-success { background: #2ecc71; }
+.btn-clear-search { background: black; }
+.btn-clear-search:hover { background: rgba(0, 0, 0, 0.467); }
+
+.btn-success { 
+    background: #2ecc71; 
+    width: 280px; 
+    text-align: center; 
+}
+
 .btn-success:hover { background: #27ae60; }
 
 .btn-info { background: #1abc9c; }
@@ -271,8 +279,8 @@ body::before {
 .btn-warning:hover { background: #e67e22; }
 
 .btn-sm {
-    padding: 4px 10px;
-    font-size: 12px;
+    padding: 10px 12px;
+    font-size: 16px;
 }
 
 /* ========== SEARCH & FILTER ========== */
@@ -293,7 +301,7 @@ body::before {
 
 .search-filter input[type="search"] {
     padding: 8px 12px;
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 2px solid rgba(0, 0, 0, 0.488);
     border-radius: 4px;
     font-size: 16px;
     min-width: 290px;
@@ -311,7 +319,8 @@ body::before {
     padding: 8px 12px;
     border: 1px solid rgba(0,0,0,0.1);
     border-radius: 4px;
-    font-size: 13px;
+    font-size: 15px;
+    font-weight: bold;
     background: rgba(255, 255, 255, 0.8);
     min-width: 140px;
 }
@@ -330,17 +339,24 @@ body::before {
 
 .search-filter .btn-sm {
     padding: 8px 14px;
-    font-size: 13px;
+    font-size: 16px;
 }
 
 .search-filter .clear-link {
-    color: #e74c3c;
+    /* color: #e74c3c; */
     text-decoration: none;
-    font-size: 13px;
+    background: black;
+    font-size: 17px;
+    
 }
 
 .search-filter .clear-link:hover {
-    text-decoration: underline;
+    background: rgba(0, 0, 0, 0.467);
+    /* text-decoration: underline; */
+}
+
+.btn-pos {
+    position: flex-end;
 }
 
 /* ========== TOGGLE FILTERS ========== */
@@ -371,9 +387,35 @@ body::before {
 
 /* ========== RECORDS INFO ========== */
 .records-info {
-    font-size: 13px;
+    font-size: 16px;
     color: #555;
     margin-bottom: 12px;
+}
+
+/* ─── Table Header with Add Button ─── */
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.table-header .records-info {
+    margin-bottom: 0;
+}
+
+/* Responsive: stack on small screens */
+@media (max-width: 480px) {
+    .table-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .table-header .btn {
+        text-align: center;
+        width: 100%;
+    }
 }
 
 /* ========== TABLE ========== */
@@ -427,6 +469,18 @@ table tbody tr:nth-child(even):hover {
     background: rgba(0, 0, 0, 0.05);
 }
 
+/* .flag-badge {
+    font-size: 20px;
+} */
+
+.data-row-1 {
+    background: rgb(249, 121, 121);
+}
+
+.data-row-1:hover {
+    background: rgb(241, 88, 88);
+}
+
 /* ========== ACTION BUTTONS ========== */
 .action-buttons {
     display: flex;
@@ -435,8 +489,8 @@ table tbody tr:nth-child(even):hover {
 }
 
 .action-buttons .btn-sm {
-    padding: 4px 10px;
-    font-size: 15px;
+    padding: 6px 10px;
+    font-size: 16px;
     display: inline-block;
     text-decoration: none;
     border: none;
