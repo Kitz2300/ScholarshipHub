@@ -23,26 +23,26 @@ $program = $_POST['program'] ?? 'all';
 $selected_cols = isset($_POST['columns']) ? $_POST['columns'] : [];
 $column_order = isset($_POST['column_order']) ? json_decode($_POST['column_order'], true) : [];
 
-// --- DO NOT expand column_order – it's already expanded by the frontend ---
-
-// Expand selected columns for SQL (these are the columns we fetch)
-$expanded_cols = [];
+// --- Separate main columns and extra columns ---
+$main_cols = [];
+$extra_cols = [];
 foreach($selected_cols as $col) {
     if($col === "father_name") {
-        $expanded_cols[] = "father_last";
-        $expanded_cols[] = "father_given";
-        $expanded_cols[] = "father_middle";
+        $main_cols[] = "father_last";
+        $main_cols[] = "father_given";
+        $main_cols[] = "father_middle";
     } elseif($col === "mother_name") {
-        $expanded_cols[] = "mother_last";
-        $expanded_cols[] = "mother_given";
-        $expanded_cols[] = "mother_middle";
+        $main_cols[] = "mother_last";
+        $main_cols[] = "mother_given";
+        $main_cols[] = "mother_middle";
+    } elseif(strpos($col, 'extra_') === 0) {
+        $extra_cols[] = $col; // keep full name e.g., "extra_Remarks"
     } else {
-        $expanded_cols[] = $col;
+        $main_cols[] = $col;
     }
 }
-$export_cols = array_unique($expanded_cols);
 
-// Column mapping
+// Column mapping for main fields
 $column_map = [
     'student_id' => 'scholar_info.student_id',
     'last_name' => 'scholar_info.last_name',
@@ -66,6 +66,9 @@ $column_map = [
     'contact' => 'scholar_info.contact_num',
     'email' => 'scholar_info.email',
     'ip_group' => 'scholar_info.ip_group',
+    'philsys_id' => 'scholar_info.philsys_id',
+    'lrn' => 'scholar_info.lrn',
+    'four_ps_id' => 'scholar_info.four_ps_id',
 ];
 
 $display_headers = [
@@ -91,14 +94,26 @@ $display_headers = [
     'contact' => 'Contact Number',
     'email' => 'Email Address',
     'ip_group' => 'IP Group',
+    'philsys_id' => 'PHILSYS ID',
+    'lrn' => 'LRN',
+    'four_ps_id' => "4P's ID",
 ];
 
-// Build SELECT part
+// Build the list of all columns (main + extra) for final ordering
+$all_selected = array_merge($main_cols, $extra_cols);
+
+// Determine if we need to join scholar_notes
+$has_extra = !empty($extra_cols);
+
+// Build SELECT part for main columns
 $select_parts = [];
-foreach($export_cols as $col) {
+foreach($main_cols as $col) {
     if(isset($column_map[$col])) {
         $select_parts[] = $column_map[$col] . ' AS ' . $col;
     }
+}
+if($has_extra) {
+    $select_parts[] = 'scholar_notes.notes AS _notes';
 }
 $select_sql = implode(', ', $select_parts);
 
@@ -106,9 +121,11 @@ $select_sql = implode(', ', $select_parts);
 $sql = "SELECT $select_sql 
         FROM scholar_info
         LEFT JOIN program ON scholar_info.program_id = program.id
-        LEFT JOIN scholarship_program ON scholar_info.scholarship_program_id = scholarship_program.id
-        WHERE scholar_info.is_archived = 0";
-
+        LEFT JOIN scholarship_program ON scholar_info.scholarship_program_id = scholarship_program.id";
+if($has_extra) {
+    $sql .= " LEFT JOIN scholar_notes ON scholar_notes.scholar_id = scholar_info.id";
+}
+$sql .= " WHERE scholar_info.is_archived = 0";
 if($scholarship_program !== 'all') {
     $sql .= " AND scholarship_program.name = '" . $conn->real_escape_string($scholarship_program) . "'";
 }
@@ -126,31 +143,69 @@ if($isPreview) {
         if(isset($row['sex'])) {
             $row['sex'] = $row['sex'] == 0 ? 'Male' : 'Female';
         }
+        // Decode notes for extra columns
+        if($has_extra && isset($row['_notes'])) {
+            $notes = json_decode($row['_notes'], true);
+            if(is_array($notes)) {
+                foreach($extra_cols as $extra_key) {
+                    // extra_key is like "extra_Remarks", we need the actual key
+                    $actual_key = substr($extra_key, 6);
+                    $row[$extra_key] = $notes[$actual_key] ?? '';
+                }
+            } else {
+                foreach($extra_cols as $extra_key) {
+                    $row[$extra_key] = '';
+                }
+            }
+            unset($row['_notes']);
+        }
         $rows[] = $row;
+    }
+    // Build the column list for preview (all selected in the order they appear in all_selected)
+    // But we need to respect the user's column_order if available.
+    $columns_for_preview = $all_selected;
+    if(!empty($column_order)) {
+        // Reorder $all_selected according to $column_order
+        $ordered = [];
+        foreach($column_order as $col) {
+            if(in_array($col, $all_selected)) {
+                $ordered[] = $col;
+            }
+        }
+        // Append any missing
+        foreach($all_selected as $col) {
+            if(!in_array($col, $ordered)) {
+                $ordered[] = $col;
+            }
+        }
+        $columns_for_preview = $ordered;
     }
     header('Content-Type: application/json');
     echo json_encode([
-        'columns' => $export_cols,
-        'display_headers' => $display_headers,
+        'columns' => $columns_for_preview,
+        'display_headers' => array_merge($display_headers, array_combine($extra_cols, array_map(function($k) { return substr($k, 6); }, $extra_cols))),
         'rows' => $rows
     ]);
     exit;
 }
 
 // ===== Otherwise, do full export =====
-// Use column_order if provided and complete, else fallback to $export_cols
-if(!empty($column_order) && is_array($column_order)) {
-    // Filter to only include columns that exist in $export_cols
-    $ordered_cols = array_intersect($column_order, $export_cols);
-    // If the filtered order has the same count as $export_cols, use it
-    if(count($ordered_cols) === count($export_cols)) {
-        $final_cols = array_values($ordered_cols); // re-index
-    } else {
-        // Otherwise fallback to default order
-        $final_cols = $export_cols;
+// Determine final column order
+$final_cols = $all_selected;
+if(!empty($column_order)) {
+    $ordered = [];
+    foreach($column_order as $col) {
+        if(in_array($col, $all_selected)) {
+            $ordered[] = $col;
+        }
     }
-} else {
-    $final_cols = $export_cols;
+    // Append missing
+    foreach($all_selected as $col) {
+        if(!in_array($col, $ordered)) {
+            $ordered[] = $col;
+        }
+    }
+    $final_cols = $ordered;
 }
 
 // Execute full query
@@ -177,23 +232,40 @@ $dataStyle = [
     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
 ];
 
-// --------------------
-// NEW: Output columns in EXACT order (no category grouping)
-// --------------------
-
-// Add header row (Row 1) with column names
+// Add header row
 $col = 1;
 foreach($final_cols as $colName) {
     $cell = Coordinate::stringFromColumnIndex($col) . '1';
-    $headerText = $display_headers[$colName] ?? ucwords(str_replace('_', ' ', $colName));
+    if(strpos($colName, 'extra_') === 0) {
+        // Extra column: use the part after extra_ as header
+        $headerText = substr($colName, 6);
+    } else {
+        $headerText = $display_headers[$colName] ?? ucwords(str_replace('_', ' ', $colName));
+    }
     $sheet->setCellValue($cell, $headerText);
     $sheet->getStyle($cell)->applyFromArray($headerStyle);
     $col++;
 }
 
-// Add data rows (Row 2 onward)
+// Add data rows
 $rowNum = 2;
 while($row = $result->fetch_assoc()) {
+    // Decode notes for extra columns
+    if($has_extra && isset($row['_notes'])) {
+        $notes = json_decode($row['_notes'], true);
+        if(is_array($notes)) {
+            foreach($extra_cols as $extra_key) {
+                $actual_key = substr($extra_key, 6);
+                $row[$extra_key] = $notes[$actual_key] ?? '';
+            }
+        } else {
+            foreach($extra_cols as $extra_key) {
+                $row[$extra_key] = '';
+            }
+        }
+        unset($row['_notes']);
+    }
+
     $col = 1;
     foreach($final_cols as $colName) {
         $value = $row[$colName] ?? '';
@@ -221,7 +293,7 @@ if($lastRow >= 2) {
     $sheet->getStyle($firstData . ':' . $lastData)->applyFromArray($dataStyle);
 }
 
-// Freeze header row (Row 1)
+// Freeze header row
 $sheet->freezePane('A2');
 
 // Set filename and download
