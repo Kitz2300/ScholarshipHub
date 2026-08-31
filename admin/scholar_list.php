@@ -303,50 +303,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                 </div>
             </div>
 
-            <!-- Navigation -->
-            <nav class="nav-bar">
-                <ul>
-                    <li><a href="dashboard.php">Dashboard</a></li>
-                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholars') || canAccessPage($conn, $_SESSION['user_id'], 'scholarship_programs')) : ?>
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle">Records <div class="arrow-down">▼</div></a>
-                            <ul class="dropdown-menu">
-                                <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholars')) : ?>
-                                    <li><a href="scholar_list.php" class="active">Scholars</a></li>
-                                <?php endif; ?>
-                                <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholarship_programs')) : ?>
-                                    <li><a href="scholarship_program.php">Scholarship Programs</a></li>
-                                <?php endif; ?>
-                                <?php if($_SESSION['role'] == 'admin') : ?>
-                                    <li><a href="archive.php">Archives</a></li>
-                                <?php endif; ?>
-                            </ul>
-                        </li>
-                    <?php endif; ?>
-                    <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'import') || hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) : ?>
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
-                            <ul class="dropdown-menu">
-                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'import')) : ?>
-                                    <li><a href="upload_excel.php">Import Excel</a></li>
-                                <?php endif; ?>
-                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) : ?>
-                                    <li><a href="export_scholars.php">Export Excel</a></li>
-                                <?php endif; ?>
-                            </ul>
-                        </li>
-                    <?php endif; ?>
-                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'announcements')) : ?>
-                        <li><a href="announcements.php">Announcements</a></li>
-                    <?php endif; ?>
-                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'program_management')) : ?>
-                        <li><a href="program_management.php">Program & College Management</a></li>
-                    <?php endif; ?>
-                    <?php if($_SESSION['role'] == "admin") : ?>
-                        <li><a href="account_management.php">Account Management</a></li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
+            <?php include __DIR__ . '/../includes/navigation.php'; ?>   
 
             <!-- Page Content -->
             <div class="page-content">
@@ -395,7 +352,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                 <?php } ?>
                             </select>
                             <select name="academic_status">
-                                <option value="" <?= $academic_status == "" ? 'selected' : '' ?>>All Scholars</option>
+                                <option value="" <?= $academic_status == "" ? 'selected' : '' ?>>All Academic Status</option>
                                 <option value="Enrolled" <?= $academic_status == "Enrolled" ? 'selected' : '' ?>>Enrolled</option>
                                 <option value="Not Enrolled" <?= $academic_status == "Not Enrolled" ? 'selected' : '' ?>>Not Enrolled</option>
                                 <option value="Transferred" <?= $academic_status == "Transferred" ? 'selected' : '' ?>>Transferred</option>

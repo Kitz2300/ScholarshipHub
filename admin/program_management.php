@@ -1,6 +1,11 @@
 <?php
 include '../includes/conn.php';
+include '../includes/check_permission.php';
 session_start();
+
+if($_SESSION['role'] !== 'admin') {
+    checkPageAccess($conn, $_SESSION['user_id'], 'program_management');
+}
 
 // ─── DELETE COLLEGE ───
 if(isset($_POST['delete_college'])) {
@@ -65,7 +70,8 @@ $programs_result = $conn->query($programs_sql);
         unset($_SESSION['fail']);
     }
     ?>
-    <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
+    <?php 
+    if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href="../portal.php"</script>
     <?php else : ?>
@@ -87,42 +93,7 @@ $programs_result = $conn->query($programs_sql);
             </div>
         </div>
 
-        <!-- Navigation -->
-        <nav class="nav-bar">
-            <ul>
-                <!-- Dashboard -->
-                <li><a href="dashboard.php">Dashboard</a></li>
-
-                <!-- Records Dropdown -->
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle">Records <div class="arrow-down">▼</div></a>
-                    <ul class="dropdown-menu">
-                        <li><a href="scholar_list.php">Scholars</a></li>
-                        <li><a href="scholarship_program.php">Scholarship Programs</a></li>
-                        <li><a href="archive.php">Archives</a></li>
-                    </ul>
-                </li>
-
-                <!-- Import/Export Dropdown -->
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
-                    <ul class="dropdown-menu">
-                        <li><a href="upload_excel.php">Import Excel</a></li>
-                        <li><a href="export_scholars.php">Export Excel</a></li>
-                    </ul>
-                </li>
-
-                <!-- Announcements -->
-                <li><a href="announcements.php">Announcements</a></li>
-
-                <li><a href="program_management.php" class="active">Program & College Management</a></li>
-
-                <!-- Account Management -->
-                <?php if($_SESSION['role'] == "admin") : ?>
-                    <li><a href="account_management.php">Account Management</a></li>
-                <?php endif; ?>
-            </ul>
-        </nav>
+        <?php include __DIR__ . "/../includes/navigation.php"; ?>
 
         <!-- Page Content -->
         <div class="page-content">
@@ -134,7 +105,9 @@ $programs_result = $conn->query($programs_sql);
             <div class="section-card">
                 <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #2a6b37; padding-bottom: 10px;">
                     <h3 style="margin: 0; border: none; padding: 0;">Colleges</h3>
-                    <button type="button" class="btn btn-success btn-sm" onclick="openAddCollege()">Add College</button>
+                    <?php if(hasPermission($conn, $_SESSION['user_id'], 'program_management', 'add')) : ?>
+                        <button type="button" class="btn btn-success btn-sm" onclick="openAddCollege()">Add College</button>
+                    <?php endif; ?>
                 </div>
 
                 <!-- College Table -->
@@ -156,11 +129,15 @@ $programs_result = $conn->query($programs_sql);
                                         <td>
                                             <div class="action-buttons">
                                                 <!-- Edit Button (opens modal) -->
-                                                <button class="btn-sm btn-edit" onclick="openEditCollege(<?= $college['id'] ?>, '<?= htmlspecialchars($college['college_name']) ?>', '<?= htmlspecialchars($college['college_code']) ?>')">Edit</button>
+                                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'program_management', 'edit')) : ?>
+                                                    <button class="btn-sm btn-edit" onclick="openEditCollege(<?= $college['id'] ?>, '<?= htmlspecialchars($college['college_name']) ?>', '<?= htmlspecialchars($college['college_code']) ?>')">Edit</button>
+                                                <?php endif; ?>
                                                 <!-- Delete Form -->
                                                 <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                     <input type="hidden" name="college_id" value="<?= $college['id'] ?>">
-                                                    <button type="submit" name="delete_college" class="btn-sm btn-delete" onclick="return confirm('Delete this college?')">Delete</button>
+                                                    <?php if(hasPermission($conn, $_SESSION['user_id'], 'program_management', 'delete')) : ?>
+                                                        <button type="submit" name="delete_college" class="btn-sm btn-delete" onclick="return confirm('Delete this college?')">Delete</button>
+                                                    <?php endif; ?>
                                                 </form>
                                             </div>
                                         </td>
@@ -178,7 +155,9 @@ $programs_result = $conn->query($programs_sql);
             <div class="section-card">
                 <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #2a6b37; padding-bottom: 10px;">
                     <h3 style="margin: 0; border: none; padding: 0;">Programs</h3>
-                    <button type="button" class="btn btn-success btn-sm" onclick="openAddProgram()">Add Program</button>
+                    <?php if(hasPermission($conn, $_SESSION['user_id'], 'program_management', 'add')) : ?>
+                        <button type="button" class="btn btn-success btn-sm" onclick="openAddProgram()">Add Program</button>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Program Table -->
@@ -202,11 +181,15 @@ $programs_result = $conn->query($programs_sql);
                                         <td>
                                             <div class="action-buttons">
                                                 <!-- Edit Button (opens modal) -->
-                                                <button class="btn-sm btn-edit" onclick="openEditProgram(<?= $program['program_id'] ?>, '<?= htmlspecialchars($program['program_name']) ?>', <?= $program['college_id'] ?? 0 ?>)">Edit</button>
+                                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'program_management', 'edit')) : ?>
+                                                    <button class="btn-sm btn-edit" onclick="openEditProgram(<?= $program['program_id'] ?>, '<?= htmlspecialchars($program['program_name']) ?>', <?= $program['college_id'] ?? 0 ?>)">Edit</button>
+                                                <?php endif; ?>
                                                 <!-- Delete Form -->
                                                 <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                     <input type="hidden" name="program_id" value="<?= $program['program_id'] ?>">
-                                                    <button type="submit" name="delete_program" class="btn-sm btn-delete" onclick="return confirm('Delete this program?')">Delete</button>
+                                                    <?php if(hasPermission($conn, $_SESSION['user_id'], 'program_management', 'delete')) : ?>
+                                                        <button type="submit" name="delete_program" class="btn-sm btn-delete" onclick="return confirm('Delete this program?')">Delete</button>
+                                                    <?php endif; ?>
                                                 </form>
                                             </div>
                                         </td>

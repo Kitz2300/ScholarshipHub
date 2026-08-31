@@ -1,6 +1,13 @@
 <?php 
 include __DIR__ . "/../includes/conn.php";
+include __DIR__ . "/../includes/check_permission.php";
 session_start();
+
+if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
+    header("Location: dashboard.php");
+    exit();
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -43,32 +50,7 @@ session_start();
                 </div>
             </div>
 
-            <!-- Navigation -->
-            <nav class="nav-bar">
-                <ul>
-                    <li><a href="dashboard.php">Dashboard</a></li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle">Records <div class="arrow-down">▼</div></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="scholar_list.php">Scholars</a></li>
-                            <li><a href="scholarship_program.php">Scholarship Programs</a></li>
-                            <li><a href="archive.php">Archives</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle active">Import / Export <div class="arrow-down">▼</div></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="upload_excel.php">Import Excel</a></li>
-                            <li><a href="export_scholars.php" class="active">Export Excel</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="announcements.php">Announcements</a></li>
-                    <li><a href="program_management.php">Program & College Management</a></li>
-                    <?php if($_SESSION['role'] == "admin") : ?>
-                        <li><a href="account_management.php">Account Management</a></li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
+            <?php include __DIR__ . "/../includes/navigation.php"; ?>
 
             <!-- Page Content -->
             <div class="page-content">
@@ -196,6 +178,11 @@ session_start();
                         </div>
                     </div>
 
+                    <!-- 🔹 Preview & Rearrange button – now stretched full width with spacing -->
+                    <div class="form-actions" style="margin-top:20px; margin-bottom:30px; display:block;">
+                        <button type="button" id="proceed-btn" class="btn btn-success" style="width:100%; padding: 20px 16px">Preview & Rearrange</button>
+                    </div>
+
                     <!-- Preview & Export Area -->
                     <div class="form-section" id="preview-section" style="display:none;">
                         <h3>Step 4: Preview & Rearrange Columns</h3>
@@ -215,10 +202,6 @@ session_start();
 
                     <!-- Hidden input to store column order -->
                     <input type="hidden" name="column_order" id="column_order" value="">
-
-                    <div class="form-actions" style="margin-top:20px;">
-                        <button type="button" id="proceed-btn" class="btn btn-success">Preview & Rearrange</button>
-                    </div>
                 </form>
             </div>
 

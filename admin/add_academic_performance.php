@@ -24,7 +24,7 @@ if($scholar_id == 0) {
 </head>
 <body>
     <?php 
-    if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
+    if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <!-- if not logged in, redirect user to login page -->
         <script>alert('You are not logged in')</script>
         <script>window.location.href='login.php'</script>
@@ -47,43 +47,7 @@ if($scholar_id == 0) {
                 </div>
             </div>
 
-            <!-- Navigation -->
-            <nav class="nav-bar">
-                <ul>
-                    <!-- Dashboard -->
-                    <li><a href="dashboard.php">Dashboard</a></li>
-
-                    <!-- Records Dropdown -->
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle active">Records <div class="arrow-down">▼</div></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="scholar_list.php" class="active">Scholars</a></li>
-                            <li><a href="scholarship_program.php">Scholarship Programs</a></li>
-                            <li><a href="archive.php">Archives</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- Import/Export Dropdown -->
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle">Import / Export <div class="arrow-down">▼</div></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="upload_excel.php">Import Excel</a></li>
-                            <li><a href="export_scholars.php">Export Excel</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- Announcements -->
-                    <li><a href="announcements.php">Announcements</a></li>
-
-                    <!-- Program / College Management -->
-                    <li><a href="program_management.php">Program & College Management</a></li>
-
-                    <!-- Account Management -->
-                    <?php if($_SESSION['role'] == "admin") : ?>
-                        <li><a href="account_management.php">Account Management</a></li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
+            <?php include __DIR__ . "/../includes/navigation.php"; ?>
 
             <!-- Page Content -->
             <div class="page-content">
