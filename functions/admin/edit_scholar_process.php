@@ -5,7 +5,7 @@ session_start();
 if(isset($_POST['update'])) {
 
     // store every input names in an array
-    $required_fields = ['last_name', 'first_name', 'middle_name', 'ext_name', 
+    $required_fields = ['last_name', 'first_name', 
                         'email', 'student_id', 'student_contact', 
                         'sex', 'birth_date', 
                         'street', 'country', 'region', 'province', 'city', 'barangay', 'zipcode',
@@ -60,13 +60,12 @@ if(isset($_POST['update'])) {
     $id_pattern = "/^[0-9]{2}-[0-9]{4}-[0-9]{3}$/";
     if(!preg_match($id_pattern, $student_id)) {
         $_SESSION['fail'] = "Student ID does not match format";
-        header("Location: ../../admin/add_scholar.php");
+        header("Location: ../../admin/edit_scholar.php?id=$id_num");
         exit();
     }
 
     $sex = $_POST['sex'] == 'Male' ? 0 : 1; // 0 for male, 1 for female
     $birth_date = $_POST['birth_date'];
-    $zipcode = $_POST['zipcode'];
     $year_lvl = $_POST['year_lvl'];
     
     // student contact regex validation
@@ -74,7 +73,8 @@ if(isset($_POST['update'])) {
     $contact_pattern = "/^09[0-9]{9}$/";
     if(!preg_match($contact_pattern, $student_contact)) {
         $_SESSION['fail'] = "Contact number does not match format";
-        header("Location: ../../admin/add_scholar.php");
+        header("Location: ../../admin/edit_scholar.php?id=$id_num");
+        exit();
     }
     
     // email regex validation
@@ -82,7 +82,7 @@ if(isset($_POST['update'])) {
     $email_pattern = "/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/";
     if(!preg_match($email_pattern, $email)) {
         $_SESSION['fail'] = "Email does not match format";
-        header("Location: ../../admin/add_scholar.php");
+        header("Location: ../../admin/edit_scholar.php?id=$id_num");
         exit();
     }
     
@@ -115,6 +115,11 @@ if(isset($_POST['update'])) {
     $mother_last_name = trim($_POST['mother_last']);
     $mother_first_name = trim($_POST['mother_first']);
     $mother_middle_name = trim($_POST['mother_middle']);
+    
+    // ─── NEW FIELDS: PHILSYS ID, LRN, 4P's ID ───
+    $philsys_id = trim($_POST['philsys_id'] ?? '');
+    $lrn = trim($_POST['lrn'] ?? '');
+    $four_ps_id = trim($_POST['four_ps_id'] ?? '');
     
     // Fetch location names for the full address
     $location_names = [];
@@ -151,6 +156,7 @@ if(isset($_POST['update'])) {
 
     $permanent_address = implode(', ', $address_parts);
 
+    // ─── UPDATE QUERY ───
     $scholar_sql = "UPDATE scholar_info SET 
                     student_id = ?, 
                     last_name = ?, 
@@ -183,50 +189,62 @@ if(isset($_POST['update'])) {
                     ip_group = ?,
                     username = ?,
                     password = ?,
-                    school_year = ?
+                    school_year = ?,
+                    philsys_id = ?,
+                    lrn = ?,
+                    four_ps_id = ?
                     WHERE id = ?";
     
     $scholar_stmt = $conn->prepare($scholar_sql);
-    $scholar_stmt->bind_param("sssssisiiisssssssssiiiisssssssssi", 
-                    $student_id, 
-                    $last_name, 
-                    $first_name, 
-                    $ext_name, 
-                    $middle_name, 
-                    $sex, 
-                    $birth_date,
-                    $scholarship_program_id, 
-                    $program_id, 
-                    $year_lvl, 
-                    $academic_status,
-                    $father_last_name, 
-                    $father_first_name, 
-                    $father_middle_name, 
-                    $mother_last_name, 
-                    $mother_first_name, 
-                    $mother_middle_name, 
-                    $permanent_address,
-                    $street,
-                    $barangay_id,
-                    $city_id,
-                    $province_id,
-                    $region_id, 
-                    $country,
-                    $zipcode,
-                    $disability, 
-                    $student_contact, 
-                    $email, 
-                    $ip_group,
-                    $student_id,
-                    $hashed_pass,
-                    $school_year,
-                    $id_num);
+    
+    // 34 parameters + 1 for WHERE id = ?
+    // Types: 40 characters (sssssisiiisssssssssiiiisssssssssssss)
+    $scholar_stmt->bind_param(
+        "sssssisiiisssssssssiiiisssssssssssss", 
+        $student_id, 
+        $last_name, 
+        $first_name, 
+        $ext_name, 
+        $middle_name, 
+        $sex, 
+        $birth_date,
+        $scholarship_program_id, 
+        $program_id, 
+        $year_lvl, 
+        $academic_status,
+        $father_last_name, 
+        $father_first_name, 
+        $father_middle_name, 
+        $mother_last_name, 
+        $mother_first_name, 
+        $mother_middle_name, 
+        $permanent_address,
+        $street,
+        $barangay_id,
+        $city_id,
+        $province_id,
+        $region_id, 
+        $country,
+        $zipcode,
+        $disability, 
+        $student_contact, 
+        $email, 
+        $ip_group,
+        $student_id,
+        $hashed_pass,
+        $school_year,
+        $philsys_id,
+        $lrn,
+        $four_ps_id,
+        $id_num
+    );
+    
     if($scholar_stmt->execute()) {
         // success
         $_SESSION['success'] = "Scholar Updated";
     } else {
         // failure
-        $_SESSION['fail'] = "Update Failded " . $scholar_stmt->error;
+        $_SESSION['fail'] = "Update Failed: " . $scholar_stmt->error;
     }
     
     // redirect user to scholar_profile page
