@@ -35,7 +35,7 @@ body::before {
    MAIN CONTAINER
    ============================================================ */
 .container {
-    max-width: 1200px;
+    max-width: 1500px;
     width: 100%;
     margin: 20px;
     padding: 0;
@@ -85,7 +85,7 @@ body::before {
 }
 
 .header-left p {
-    font-size: 13px;
+    font-size: 16px;
     opacity: 0.85;
 }
 
@@ -96,7 +96,7 @@ body::before {
 }
 
 .welcome-text {
-    font-size: 14px;
+    font-size: 16px;
     opacity: 0.9;
 }
 
@@ -107,7 +107,7 @@ body::before {
     padding: 6px 14px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 16px;
     transition: background 0.3s;
 }
 
@@ -177,7 +177,7 @@ body::before {
 
 .arrow-down {
     display: inline;
-    font-size: 15px;
+    font-size: 20px;
     vertical-align: top;
 }
 
@@ -261,7 +261,7 @@ body::before {
 
 .profile-card h4 {
     color: #1e4628;
-    font-size: 14px;
+    font-size: 16px;
     margin-top: 10px;
     margin-bottom: 8px;
 }
@@ -302,7 +302,7 @@ body::before {
     flex-wrap: wrap;
     padding: 8px 0;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    gap: 15px;
+    gap: 20px;
 }
 
 .info-row:last-child {
@@ -313,7 +313,7 @@ body::before {
     font-weight: bold;
     font-size: 17px;
     color: #444;
-    min-width: 180px;
+    min-width: 190px;
     flex: 0 0 120px;
 }
 
@@ -410,20 +410,30 @@ body::before {
    STATUS BADGES
    ============================================================ */
 .status-badge {
-    padding: 4px 14px;
+    padding: 7px 14px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 17px;
     font-weight: bold;
     text-transform: uppercase;
     display: inline-block;
 }
 
-.status-active {
+.status-Enrolled {
     background: #d4edda;
     color: #155724;
 }
 
-.status-inactive {
+.status-Dropped {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-Transferred {
+    background:rgb(235, 154, 32)w;
+    color: white;
+}
+
+.status-Not.Enrolled {
     background: #f8d7da;
     color: #721c24;
 }
@@ -515,7 +525,7 @@ body::before {
    ============================================================ */
 .no-data {
     color: #666;
-    font-size: 14px;
+    font-size: 16px;
     padding: 10px 0;
 }
 

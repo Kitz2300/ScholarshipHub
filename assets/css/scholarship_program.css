@@ -40,7 +40,7 @@ body::before {
 
 /* Main Glass Container */
 .container {
-    max-width: 1200px;
+    max-width: 1500px;
     width: 100%;
     margin: 0;
     padding: 0;
@@ -115,7 +115,7 @@ body::before {
     padding: 6px 14px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 16px;
     transition: background 0.3s;
 }
 
@@ -181,7 +181,7 @@ body::before {
 
 .arrow-down {
     display: inline;
-    font-size: 15px;
+    font-size: 20px;
     vertical-align: top;
 }
 
@@ -228,7 +228,7 @@ body::before {
 
 .action-row .btn {
     padding: 8px 20px;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 /* Page Header */
@@ -302,7 +302,7 @@ body::before {
     border: none;
     border-radius: 4px;
     text-decoration: none;
-    font-size: 13px;
+    font-size: 16px;
     cursor: pointer;
     transition: background 0.3s, transform 0.2s;
     color: #fff;
@@ -322,10 +322,10 @@ body::before {
 
 .btn-sm {
     display: inline-block;
-    padding: 4px 12px;
+    padding: 7px 12px;
     border: none;
     border-radius: 3px;
-    font-size: 15px;
+    font-size: 16px;
     cursor: pointer;
     text-decoration: none;
     color: #fff;
@@ -370,18 +370,21 @@ body::before {
 /* ========== PROGRAMS GRID ========== */
 .programs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 20px;
 }
 
 .program-card {
+    display: flex;
+    flex-direction: column;
     background: rgba(255, 255, 255, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 8px;
     padding: 20px;
     border-left: 4px solid #2ecc71;
     transition: box-shadow 0.3s, transform 0.2s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    height: 100%;
 }
 
 .program-card:hover {
@@ -416,7 +419,7 @@ body::before {
     align-self: start;
     padding: 3px 10px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: bold;
     text-transform: uppercase;
     white-space: nowrap;        /* keeps badge text on one line */
@@ -433,28 +436,29 @@ body::before {
 }
 
 .program-description {
+    flex: 1;
     margin: 10px 0;
 }
 
 .program-description p {
     color: #444;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.5;
 }
 
 .program-code {
-    font-size: 13px;
+    font-size: 14px;
     color: #666;
     margin: 10px 0;
 }
 
 .program-actions {
+    margin-top: auto;   /* ← pushes the button row to the bottom */
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    margin-top: 10px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(0,0,0,0.05);
 }
 
 /* ========== NO DATA ========== */

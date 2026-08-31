@@ -44,7 +44,7 @@ body::before {
 
 /* Main Glass Container */
 .container {
-    max-width: 1200px;
+    max-width: 1500px;
     width: 100%;
     
     /* CHANGED: Removed the margin here, because the body padding handles the spacing now */
@@ -120,7 +120,7 @@ body::before {
     padding: 6px 14px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 16px;
     transition: background 0.3s;
 }
 
@@ -186,7 +186,7 @@ body::before {
 
 .arrow-down {
     display: inline;
-    font-size: 15px;
+    font-size: 20px;
     vertical-align: top;
 }
 
@@ -268,7 +268,7 @@ body::before {
     border: none;
     border-radius: 4px;
     text-decoration: none;
-    font-size: 13px;
+    font-size: 16px;
     cursor: pointer;
     transition: background 0.3s, transform 0.2s;
     color: #fff;
@@ -292,7 +292,7 @@ body::before {
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 table thead th {
@@ -334,10 +334,10 @@ table tbody tr:nth-child(even):hover {
 
 .btn-sm {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 6px 10px;
     border: none;
     border-radius: 3px;
-    font-size: 12px;
+    font-size: 16px;
     cursor: pointer;
     text-decoration: none;
     color: #fff;
