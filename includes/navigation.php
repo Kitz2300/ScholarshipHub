@@ -74,13 +74,6 @@ $management_pages = array_merge(
             </li>
         <?php endif; ?>
 
-        <!-- Archives -->
-        <!-- <?php if($_SESSION['role'] === 'admin') : ?>
-            <li>
-                <a href="archive.php" class="<?= isActive('archive.php', $current_page) ?>">Archives</a>
-            </li>
-        <?php endif; ?> -->
-
         <!-- Management Dropdown -->
         <?php 
         $can_see_management = canAccessPage($conn, $_SESSION['user_id'], 'announcements') || 
@@ -111,6 +104,13 @@ $management_pages = array_merge(
                     <?php if($_SESSION['role'] === 'admin') : ?>
                         <li>
                             <a href="account_management.php" class="<?= isActive('account_management.php', $current_page) ?>">Accounts</a>
+                        </li>
+                    <?php endif; ?>
+
+                    <!-- Archives -->
+                    <?php if($_SESSION['role'] === 'admin') : ?>
+                        <li>
+                            <a href="archive.php" class="<?= isActive('archive.php', $current_page) ?>">Archives</a>
                         </li>
                     <?php endif; ?>
                 </ul>
