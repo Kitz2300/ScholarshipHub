@@ -1,5 +1,6 @@
 <?php
 include '../includes/conn.php';
+include '../includes/check_permission.php';
 session_start();
 
 // Check if logged in and is admin/staff
