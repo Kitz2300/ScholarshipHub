@@ -7,22 +7,49 @@ if($_SESSION['role'] !== 'admin') {
     checkPageAccess($conn, $_SESSION['user_id'], 'scholars');
 }
 
-// Handle proper return URL ---
+// get scholar id
+$scholar_id = isset($_GET['scholar_id']) ? (int) $_GET['scholar_id'] : 0;
+
+if($scholar_id === 0) {
+    $_SESSION['fail'] = "No scholar selected.";
+    header("Location: scholar_list.php");
+    exit();
+}
+
+// ─── Delete Academic Record Process ───
+if(isset($_POST['remove_academic']) && isset($_POST['record_id'])) {
+    if($_SESSION['role'] === 'admin' || hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) {
+        $record_id = (int) $_POST['record_id'];
+
+        if($record_id > 0) {
+            $delete_sql = "DELETE FROM academic_performance WHERE id = ? AND scholar_id = ?";
+            $delete_stmt = $conn->prepare($delete_sql);
+            $delete_stmt->bind_param('ii', $record_id, $scholar_id);
+            
+            if($delete_stmt->execute()) {
+                $_SESSION['success'] = "Academic record removed successfully!";
+            } else {
+                $_SESSION['fail'] = "Failed to remove academic record.";
+            }
+        }
+    } else {
+        $_SESSION['fail'] = "You do not have permission to delete academic records.";
+    }
+    header("Location: scholar_profile.php?scholar_id=" . $scholar_id);
+    exit();
+}
+
+// Handle proper return URL
 $current_referrer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
 
-// If we are coming from a valid List page (not the edit page), save it into the session.
-if (!empty($current_referrer) && strpos($current_referrer, 'edit_scholar.php') === false && strpos($current_referrer, 'academic_performance.php') === false) {
+if (!empty($current_referrer) && strpos($current_referrer, 'edit_scholar.php') === false && strpos($current_referrer, 'academic_performance.php') === false && strpos($current_referrer, 'edit_academic_performance.php') === false) {
     $_SESSION['redirect_back_url'] = $current_referrer;
 }
 
-// Determine which URL to use for the "Back" button
-$back_url = 'scholar_list.php'; // Default fallback if no session exists
+$back_url = 'scholar_list.php';
 if (isset($_SESSION['redirect_back_url'])) {
     $back_url = $_SESSION['redirect_back_url'];
 }
-
-// get scholar id
-$scholar_id = isset($_GET['scholar_id']) ? (int) $_GET['scholar_id'] : 0;
 
 // Fetch scholar notes
 $notes_sql = "SELECT notes FROM scholar_notes WHERE scholar_id = ?";
@@ -40,7 +67,7 @@ while($note_row = $notes_result->fetch_assoc()) {
     $scholar_notes[] = $note_content;
 }
 
-// scholar info query (include the PSGC ID fields)
+// Scholar info query
 $scholar_sql = "SELECT scholar_info.*, 
                 scholarship_program.name AS scholarship_program_name,
                 scholarship_program.min_gwa_req AS gwa_req,
@@ -62,9 +89,10 @@ $given_name = "";
 $ext_name = "";
 $middle_name = "";
 $id_num = "";
-$sex = 0;
+$sex = "";
 $birthdate = "";
 $scholarship_program = "";
+$gwa_req = 0.00;
 $program = "";
 $year_lvl = "";
 $college = "";
@@ -83,7 +111,6 @@ $mother_last = "";
 $mother_given = "";
 $mother_middle = "";
 
-// ─── New fields ───
 $philsys_id = "";
 $lrn = "";
 $four_ps_id = "";
@@ -92,13 +119,11 @@ $town_city = "";
 $province = "";
 $country = "";
 
-// PSGC IDs for address breakdown
 $barangay_id = 0;
 $city_id = 0;
 $province_id = 0;
 $region_id = 0;
 
-// Placeholders for PSGC names
 $barangay_name = "";
 $city_name = "";
 $province_name = "";
@@ -107,13 +132,14 @@ $region_name = "";
 if($row = $scholar_result->fetch_assoc()) {
     $last_name = $row['last_name'];
     $given_name = $row['given_name'];
-    $ext_name = $row['ext_name'] === "N/A" ? "" : $row['ext_name'];
+    $raw_ext = trim($row['ext_name'] ?? '');
+    $ext_name = (in_array(strtoupper($raw_ext), ['N/A', 'NONE', '']) || empty($raw_ext)) ? '' : $raw_ext;
     $middle_name = $row['middle_name'];
     $id_num = $row['student_id'];
     $sex = $row['sex'] === 0 ? "Male" : "Female";
     $birthdate = $row['birthdate'];
     $scholarship_program = $row['scholarship_program_name'];
-    $gwa_req = $row['gwa_req'];
+    $gwa_req = (float) $row['gwa_req'];
     $program = $row['program_name'];
     $year = $row['year_level'] ?? 0;
     $college = $row['college_name'];
@@ -132,7 +158,6 @@ if($row = $scholar_result->fetch_assoc()) {
     $mother_given = $row['mother_given_name'];
     $mother_middle = $row['mother_middle_name'];
     
-    // ─── New fields ───
     $philsys_id = $row['philsys_id'] ?? '';
     $lrn = $row['lrn'] ?? '';
     $four_ps_id = $row['four_ps_id'] ?? '';
@@ -141,43 +166,48 @@ if($row = $scholar_result->fetch_assoc()) {
     $province = $row['province'] ?? '';
     $country = $row['country'] ?? 'Philippines';
 
-    // PSGC IDs
     $barangay_id = (int) ($row['barangay_id'] ?? 0);
     $city_id = (int) ($row['city_id'] ?? 0);
     $province_id = (int) ($row['province_id'] ?? 0);
     $region_id = (int) ($row['region_id'] ?? 0);
 
-    // Fetch PSGC names for address breakdown
     if($barangay_id > 0) {
-        $psgc_sql = "SELECT name FROM psgc WHERE id = $barangay_id";
-        $psgc_result = $conn->query($psgc_sql);
-        if($psgc_row = $psgc_result->fetch_assoc()) {
+        $psgc_sql = "SELECT name FROM psgc WHERE id = ?";
+        $psgc_stmt = $conn->prepare($psgc_sql);
+        $psgc_stmt->bind_param("i", $barangay_id);
+        $psgc_stmt->execute();
+        if($psgc_row = $psgc_stmt->get_result()->fetch_assoc()) {
             $barangay_name = $psgc_row['name'];
         }
     }
     if($city_id > 0) {
-        $psgc_sql = "SELECT name FROM psgc WHERE id = $city_id";
-        $psgc_result = $conn->query($psgc_sql);
-        if($psgc_row = $psgc_result->fetch_assoc()) {
+        $psgc_sql = "SELECT name FROM psgc WHERE id = ?";
+        $psgc_stmt = $conn->prepare($psgc_sql);
+        $psgc_stmt->bind_param("i", $city_id);
+        $psgc_stmt->execute();
+        if($psgc_row = $psgc_stmt->get_result()->fetch_assoc()) {
             $city_name = $psgc_row['name'];
         }
     }
     if($province_id > 0) {
-        $psgc_sql = "SELECT name FROM psgc WHERE id = $province_id";
-        $psgc_result = $conn->query($psgc_sql);
-        if($psgc_row = $psgc_result->fetch_assoc()) {
+        $psgc_sql = "SELECT name FROM psgc WHERE id = ?";
+        $psgc_stmt = $conn->prepare($psgc_sql);
+        $psgc_stmt->bind_param("i", $province_id);
+        $psgc_stmt->execute();
+        if($psgc_row = $psgc_stmt->get_result()->fetch_assoc()) {
             $province_name = $psgc_row['name'];
         }
     }
     if($region_id > 0) {
-        $psgc_sql = "SELECT name FROM psgc WHERE id = $region_id";
-        $psgc_result = $conn->query($psgc_sql);
-        if($psgc_row = $psgc_result->fetch_assoc()) {
+        $psgc_sql = "SELECT name FROM psgc WHERE id = ?";
+        $psgc_stmt = $conn->prepare($psgc_sql);
+        $psgc_stmt->bind_param("i", $region_id);
+        $psgc_stmt->execute();
+        if($psgc_row = $psgc_stmt->get_result()->fetch_assoc()) {
             $region_name = $psgc_row['name'];
         }
     }
 
-    // conditions for year level
     if($year == 1) {
         $year_lvl = "1st Year";
     } elseif($year == 2) {
@@ -196,7 +226,18 @@ if($row = $scholar_result->fetch_assoc()) {
     exit();
 }
 
-
+// ─── Fetch Chronological Academic Data for Chart ───
+$chart_labels = [];
+$chart_gwa = [];
+$chart_sql = "SELECT * FROM academic_performance WHERE scholar_id = ? ORDER BY school_year ASC, semester ASC";
+$chart_stmt = $conn->prepare($chart_sql);
+$chart_stmt->bind_param('i', $scholar_id);
+$chart_stmt->execute();
+$chart_res = $chart_stmt->get_result();
+while($c_row = $chart_res->fetch_assoc()) {
+    $chart_labels[] = $c_row['school_year'] . ' (' . $c_row['semester'] . ')';
+    $chart_gwa[] = (float)$c_row['gwa'];
+}
 ?>
 
 <!DOCTYPE html>
@@ -206,15 +247,21 @@ if($row = $scholar_result->fetch_assoc()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/scholar_profile.css?v=<?= filemtime('../assets/css/scholar_profile.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <script src="../assets/js/scholar_notes.js"></script>
+    <script src="../assets/js/scholar_profile.js?v=<?= filemtime('../assets/js/scholar_profile.js') ?>" defer></script>
+    <script src="../assets/js/gwa_chart.js?v=<?= filemtime('../assets/js/gwa_chart.js') ?>" defer></script>
 </head>
 <body>
     <?php 
     if(isset($_SESSION['success'])) {
-        echo "<script>alert('" . $_SESSION['success'] . "')</script>";
+        echo "<script>alert('" . htmlspecialchars($_SESSION['success'], ENT_QUOTES) . "')</script>";
         unset($_SESSION['success']);
     } else if(isset($_SESSION['fail'])) {
-        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+        echo "<script>alert('" . htmlspecialchars($_SESSION['fail'], ENT_QUOTES) . "')</script>";
         unset($_SESSION['fail']);
     }
     ?>
@@ -224,7 +271,7 @@ if($row = $scholar_result->fetch_assoc()) {
     <?php else : ?>
         <div class="container">
             <!-- Header -->
-            <div class="header" >
+            <div class="header">
                 <div class="header-left">
                     <img src="../assets/images/PIT%20LOGO.png" alt="PIT Logo">
                     <div>
@@ -233,7 +280,7 @@ if($row = $scholar_result->fetch_assoc()) {
                     </div>
                 </div>
                 <div class="header-right">
-                    <span class="welcome-text">Welcome, Admin!</span>
+                    <span class="welcome-text">Welcome, <?= $_SESSION['role'] === 'admin' ? 'Admin!' : 'Staff!' ?></span>
                     <form action="../functions/logout.php" method="post" style="display: inline;">
                         <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
                     </form>
@@ -349,16 +396,109 @@ if($row = $scholar_result->fetch_assoc()) {
                         </div>
                     </div>
 
-                    <!-- Contact Information with address breakdown including barangay and region -->
+                    <!-- Combined Academic Performance & Progress Profile Card -->
+                    <div class="profile-card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="margin: 0;">Academic Performance & Progress</h3>
+                            <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
+                                <button type="button" class="btn btn-sm btn-primary" onclick="openAddAcadModal()">+ Add Record</button>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- GWA Trend Line Chart -->
+                        <div style="position: relative; height: 220px; width: 100%; margin-bottom: 20px;">
+                            <?php if(!empty($chart_gwa)) : ?>
+                                <canvas id="gwaProgressChart" 
+                                    data-labels='<?= json_encode($chart_labels, JSON_HEX_APOS | JSON_HEX_QUOT) ?>'
+                                    data-gwa='<?= json_encode($chart_gwa) ?>'
+                                    data-req='<?= $gwa_req ?>'>
+                                </canvas>
+                            <?php else : ?>
+                                <p class="no-data">No academic performance records available to plot progress.</p>
+                            <?php endif; ?>
+                        </div>
+
+                        <h4 style="border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 6px; margin-bottom: 12px; font-size: 15px;">Historical Records</h4>
+
+                        <!-- Academic Performance Table -->
+                        <div class="academic-table-wrapper">
+                            <?php 
+                            $academic_sql = "SELECT * FROM academic_performance WHERE scholar_id = ? ORDER BY school_year DESC, semester DESC";
+                            $academic_stmt = $conn->prepare($academic_sql);
+                            $academic_stmt->bind_param('i', $scholar_id);
+                            $academic_stmt->execute();
+                            $academic_result = $academic_stmt->get_result();
+                            ?>
+
+                            <?php if($academic_result->num_rows > 0) : ?>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Semester</th>
+                                            <th>GWA</th>
+                                            <th>Units</th>
+                                            <th>Year Level</th>
+                                            <th>School Year</th>
+                                            <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
+                                                <th>Actions</th>
+                                            <?php endif; ?>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php while($acad_row = $academic_result->fetch_assoc()) : ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($acad_row['semester']) ?></td>
+                                                <td>
+                                                    <?= htmlspecialchars($acad_row['gwa']) ?>
+                                                    <?php if($gwa_req > 0) : ?>
+                                                        <?php if((float)$acad_row['gwa'] > $gwa_req) : ?>
+                                                            <span style="color: #dc3545; font-size: 11px; font-weight: bold; display: block;">
+                                                                (Req: <?= htmlspecialchars($gwa_req) ?> - Not Met)
+                                                            </span>
+                                                        <?php else : ?>
+                                                            <span style="color: #28a745; font-size: 11px; display: block;">
+                                                                (Req: <?= htmlspecialchars($gwa_req) ?> - Met)
+                                                            </span>
+                                                        <?php endif; ?>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td><?= htmlspecialchars($acad_row['units']) ?></td>
+                                                <td><?= htmlspecialchars($acad_row['year_level']) ?></td>
+                                                <td><?= htmlspecialchars($acad_row['school_year']) ?></td>
+                                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
+                                                    <td>
+                                                        <div class="action-buttons">
+                                                            <button type="button" class="btn-sm btn-edit" 
+                                                                onclick="openEditAcadModal(<?= $acad_row['id'] ?>, '<?= htmlspecialchars($acad_row['semester'], ENT_QUOTES) ?>', '<?= htmlspecialchars($acad_row['gwa'], ENT_QUOTES) ?>', '<?= htmlspecialchars($acad_row['units'], ENT_QUOTES) ?>')">
+                                                                Edit
+                                                            </button>
+                                                            <form action="scholar_profile.php?scholar_id=<?= $scholar_id ?>" method="POST" style="display: inline;">
+                                                                <input type="hidden" name="record_id" value="<?= $acad_row['id'] ?>">
+                                                                <button type="submit" name="remove_academic" class="btn-sm btn-delete" onclick="return confirm('Delete this academic record?')">Delete</button>
+                                                            </form>
+                                                        </div>
+                                                    </td>
+                                                <?php endif; ?>
+                                            </tr>
+                                        <?php endwhile; ?>
+                                    </tbody>
+                                </table>
+                            <?php else : ?>
+                                <div class="no-data">
+                                    <p>No academic performance records found for this scholar.</p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
                     <div class="profile-card">
                         <h3>Contact Information</h3>
                         <div class="info-group">
-                            <!-- Full address summary -->
                             <div class="info-row">
                                 <span class="info-label">Full Address</span>
                                 <span class="info-value"><?= htmlspecialchars($address) ?></span>
                             </div>
-                            <!-- Address breakdown with barangay and region -->
                             <?php if(!empty($street)) : ?>
                             <div class="info-row">
                                 <span class="info-label">Street</span>
@@ -389,7 +529,6 @@ if($row = $scholar_result->fetch_assoc()) {
                                 <span class="info-value"><?= htmlspecialchars($region_name) ?></span>
                             </div>
                             <?php endif; ?>
-                            <!-- Also show the string town_city and province if they exist (fallback) -->
                             <?php if(!empty($town_city) && empty($city_name)) : ?>
                             <div class="info-row">
                                 <span class="info-label">Town / City</span>
@@ -421,56 +560,6 @@ if($row = $scholar_result->fetch_assoc()) {
                         </div>
                     </div>
 
-                    <!-- Academic Performance -->
-                    <div class="profile-card">
-                        <div class="card-header">
-                            <h3>Academic Performance</h3>
-                            <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
-                                <a href="academic_performance.php?scholar_id=<?= $scholar_id ?>" class="btn btn-sm btn-info">Manage GWA & Units</a>
-                            <?php endif; ?>
-                        </div>
-                        <div class="info-group">
-                            <?php 
-                            $academic_performance_sql = "SELECT * FROM academic_performance WHERE scholar_id = ? ORDER BY school_year DESC, semester DESC LIMIT 1";
-                            $academic_performance_stmt = $conn->prepare($academic_performance_sql);
-                            $academic_performance_stmt->bind_param('i', $scholar_id);
-                            $academic_performance_stmt->execute();
-                            $academic_performance_result = $academic_performance_stmt->get_result();
-                            
-                            if($academic_performance_result->num_rows > 0) : 
-                                $row = $academic_performance_result->fetch_assoc(); ?>
-                                <div class="info-row">
-                                    <span class="info-label">Semester</span>
-                                    <span class="info-value"><?= htmlspecialchars($row['semester']) ?></span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">GWA</span>
-                                    <?php if($gwa_req > 0) : ?>
-                                        <?php if($row['gwa'] > $gwa_req) : ?>
-                                            <span class="info-value" style="color: red; font-weight: bold;">
-                                                <?= htmlspecialchars($row['gwa']) ?> 
-                                                <span style="font-size: 13px;">(Requirement: <?= htmlspecialchars($gwa_req) ?> – Not Met)</span>
-                                            </span>
-                                        <?php else : ?>
-                                            <span class="info-value" style="color: green;">
-                                                <?= htmlspecialchars($row['gwa']) ?> 
-                                                <span style="font-size: 13px;">(Requirement: <?= htmlspecialchars($gwa_req) ?> – Met)</span>
-                                            </span>
-                                        <?php endif; ?>
-                                    <?php else : ?>
-                                        <span class="info-value"><?= htmlspecialchars($row['gwa']) ?></span>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Units</span>
-                                    <span class="info-value"><?= htmlspecialchars($row['units']) ?></span>
-                                </div>
-                            <?php else: ?>
-                                <p class="no-data">No academic records found.</p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
                     <!-- Family Background -->
                     <div class="profile-card">
                         <h3>Family Background</h3>
@@ -478,7 +567,7 @@ if($row = $scholar_result->fetch_assoc()) {
                             <div class="info-group">
                                 <div class="info-row">
                                     <span class="info-label">Father's Name</span>
-                                    <?php if(!empty($father_last) && !empty($father_given) && !empty($father_middle)) : ?>
+                                    <?php if(!empty($father_last) && !empty($father_given)) : ?>
                                         <span class="info-value"><?= htmlspecialchars($father_last) ?>, <?= htmlspecialchars($father_given) ?> <?= htmlspecialchars($father_middle) ?></span>
                                     <?php else : ?>
                                         <span class="info-value" style="color: red;">Not Provided</span>
@@ -490,7 +579,7 @@ if($row = $scholar_result->fetch_assoc()) {
                             <div class="info-group">
                                 <div class="info-row">
                                     <span class="info-label">Mother's Maiden Name</span>
-                                    <?php if(!empty($mother_last) && !empty($mother_given) && !empty($mother_middle)) : ?>
+                                    <?php if(!empty($mother_last) && !empty($mother_given)) : ?>
                                         <span class="info-value"><?= htmlspecialchars($mother_last) ?>, <?= htmlspecialchars($mother_given) ?> <?= htmlspecialchars($mother_middle) ?></span>
                                     <?php else : ?>
                                         <span class="info-value" style="color: red;">Not Provided</span>
@@ -518,9 +607,9 @@ if($row = $scholar_result->fetch_assoc()) {
                                         </div>
                                         <div class="note-actions">
                                             <form action="../functions/admin/delete_note_process.php" method="POST" 
-                                                onsubmit="return confirm('Delete the note \'<?= htmlspecialchars($key) ?>\'?')">
+                                                onsubmit="return confirm('Delete the note \'<?= htmlspecialchars($key, ENT_QUOTES) ?>\'?')">
                                                 <input type="hidden" name="scholar_id" value="<?= $scholar_id ?>">
-                                                <input type="hidden" name="note_title" value="<?= htmlspecialchars($key) ?>">
+                                                <input type="hidden" name="note_title" value="<?= htmlspecialchars($key, ENT_QUOTES) ?>">
                                                 <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'notes')) : ?>
                                                     <button type="submit" class="btn-sm btn-danger">Delete</button>
                                                 <?php endif; ?>
@@ -566,6 +655,76 @@ if($row = $scholar_result->fetch_assoc()) {
                 </form>
             </div>
         </div>
+
+        <!-- Add Academic Performance Modal -->
+        <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
+            <div id="addAcadModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Add Academic Performance</h3>
+                        <span class="modal-close" onclick="closeAcadModals()">&times;</span>
+                    </div>
+                    <form action="../functions/admin/add_academic_performance_process.php" method="POST">
+                        <input type="hidden" name="scholar_id" value="<?= $scholar_id ?>">
+                        <div class="form-group">
+                            <label for="add_sem">Semester <span class="required">*</span></label>
+                            <select name="sem" id="add_sem" required>
+                                <option value="" selected disabled>--Select Semester--</option>
+                                <option value="1st Semester">1st Semester</option>
+                                <option value="2nd Semester">2nd Semester</option>
+                                <option value="3rd Semester">3rd Semester</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="add_gwa">General Weighted Average (GWA) <span class="required">*</span></label>
+                            <input type="number" name="gwa" id="add_gwa" step="0.01" min="1.00" max="4.00" placeholder="e.g., 1.75" required/>
+                        </div>
+                        <div class="form-group">
+                            <label for="add_units">Units <span class="required">*</span></label>
+                            <input type="number" name="units" id="add_units" step="0.5" min="1" placeholder="e.g., 20.0" required/>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeAcadModals()">Cancel</button>
+                            <button type="submit" name="add" class="btn btn-success">Add Record</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Edit Academic Performance Modal -->
+            <div id="editAcadModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Edit Academic Performance</h3>
+                        <span class="modal-close" onclick="closeAcadModals()">&times;</span>
+                    </div>
+                    <form action="../functions/admin/edit_academic_performance_process.php" method="POST">
+                        <input type="hidden" name="scholar_id" value="<?= $scholar_id ?>">
+                        <input type="hidden" name="record_id" id="edit_acad_record_id">
+                        <div class="form-group">
+                            <label for="edit_sem">Semester <span class="required">*</span></label>
+                            <select name="sem" id="edit_sem" required>
+                                <option value="1st Semester">1st Semester</option>
+                                <option value="2nd Semester">2nd Semester</option>
+                                <option value="3rd Semester">3rd Semester</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit_gwa">General Weighted Average (GWA) <span class="required">*</span></label>
+                            <input type="number" name="gwa" id="edit_gwa" step="0.01" min="1.00" max="4.00" placeholder="e.g., 1.75" required/>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit_units">Units <span class="required">*</span></label>
+                            <input type="number" name="units" id="edit_units" step="0.5" min="1" placeholder="e.g., 20.0" required/>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeAcadModals()">Cancel</button>
+                            <button type="submit" name="update" class="btn btn-success">Update Record</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
 </body>
 </html>
