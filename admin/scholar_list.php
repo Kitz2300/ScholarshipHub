@@ -46,7 +46,7 @@ $searched = isset($_GET['search']) ? trim($_GET['search']) : "";
 $course_filter = isset($_GET['course_filter']) ? (int)$_GET['course_filter'] : 0;
 $college_filter = isset($_GET['college_filter']) ? (int)$_GET['college_filter'] : 0;
 $scholarship_filter = isset($_GET['scholarship_filter']) ? (int)$_GET['scholarship_filter'] : 0;
-$academic_status = isset($_GET['academic_status']) ? $_GET['academic_status'] : "";
+$academic_status = isset($_GET['academic_status']) ? $_GET['academic_status'] : "Enrolled";
 $flagged_filter = isset($_GET['flagged_filter']) ? (int)$_GET['flagged_filter'] : 0;
 $school_year_filter = isset($_GET['school_year_filter']) ? $_GET['school_year_filter'] : null;
 
@@ -259,7 +259,7 @@ $clear_filters_url = !empty($clear_filters_params)
     : $_SERVER['PHP_SELF'];
 
 $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filter != 0 || 
-                ($academic_status != "" && $academic_status != '') || $flagged_filter == 1);
+                ($academic_status != "" && $academic_status != 'Enrolled') || $flagged_filter == 1);
 ?>
 
 <!DOCTYPE html>
@@ -323,7 +323,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                             <?php endif; ?>
                             <button type="button" class="btn btn-sm btn-info toggle-filters">Filters ▼</button>
                         </div>
-                        <div class="filter-row<?= ( $course_filter != 0 || $college_filter != 0 || $scholarship_filter != 0 || ($academic_status != "" && $academic_status != '') || $flagged_filter == 1) ? ' open' : '' ?>" id="filter-row">
+                        <div class="filter-row<?= ( $course_filter != 0 || $college_filter != 0 || $scholarship_filter != 0 || ($academic_status != "" && $academic_status != 'Enrolled') || $flagged_filter == 1) ? ' open' : '' ?>" id="filter-row">
                             <select name="course_filter" style="max-width: 240px;">
                                 <option value="0" <?= $course_filter == 0 ? 'selected' : '' ?>>All Courses</option>
                                 <?php 
@@ -352,7 +352,6 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                 <?php } ?>
                             </select>
                             <select name="academic_status">
-                                <option value="" <?= $academic_status == "" ? 'selected' : '' ?>>All Academic Status</option>
                                 <option value="Enrolled" <?= $academic_status == "Enrolled" ? 'selected' : '' ?>>Enrolled</option>
                                 <option value="Not Enrolled" <?= $academic_status == "Not Enrolled" ? 'selected' : '' ?>>Not Enrolled</option>
                                 <option value="Transferred" <?= $academic_status == "Transferred" ? 'selected' : '' ?>>Transferred</option>
