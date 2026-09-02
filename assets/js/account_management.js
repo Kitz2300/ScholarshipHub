@@ -1,27 +1,44 @@
 // account_management.js
 
+// ─── MODAL HELPERS ───
 function openAddModal() {
     document.getElementById('addModal').style.display = 'flex';
     document.querySelector('#addModal form').reset();
-    // Uncheck all checkboxes
-    document.querySelectorAll('#addModal input[type="checkbox"]').forEach(cb => cb.checked = false);
+    // Reset checkboxes to default: only 'view' checked on all pages
+    document.querySelectorAll('#addModal .view-checkbox').forEach(cb => {
+        cb.checked = true;
+        togglePagePermissions(cb, cb.dataset.page);
+    });
 }
 
-function openEditModal(id, username, role, given_name, middle_name, last_name, permissions) {
+function openEditModal(id, username, role, given_name, middle_name, last_name, permissions_json) {
     document.getElementById('edit_user_id').value = id;
     document.getElementById('edit_username').value = username;
-    document.getElementById('edit_role').value = role;
     document.getElementById('edit_given_name').value = given_name;
     document.getElementById('edit_middle_name').value = middle_name || '';
     document.getElementById('edit_last_name').value = last_name;
-    
-    // Set checkboxes based on stored permissions
-    const permArray = permissions ? permissions.split(',').map(p => p.trim()) : [];
-    const checkboxes = document.querySelectorAll('#edit_permissions_container input[type="checkbox"]');
-    checkboxes.forEach(cb => {
-        cb.checked = permArray.includes(cb.value);
-    });
-    
+    document.getElementById('edit_role').value = role;
+
+    // Parse permissions JSON and check checkboxes
+    try {
+        const perms = JSON.parse(permissions_json);
+        // First set all view checkboxes
+        document.querySelectorAll('#editModal .view-checkbox').forEach(cb => {
+            const page = cb.dataset.page;
+            cb.checked = perms[page] && perms[page].includes('view');
+            togglePagePermissions(cb, page);
+        });
+        // Then set action checkboxes
+        document.querySelectorAll('#editModal .perm-checkbox').forEach(cb => {
+            const page = cb.dataset.page;
+            const action = cb.dataset.action;
+            cb.checked = perms[page] && perms[page].includes(action);
+        });
+    } catch(e) {
+        // If parsing fails, uncheck all
+        document.querySelectorAll('#editModal input[type="checkbox"]').forEach(cb => cb.checked = false);
+    }
+
     document.getElementById('editModal').style.display = 'flex';
 }
 
@@ -33,57 +50,60 @@ function openPasswordModal(id) {
     document.getElementById('passwordModal').style.display = 'flex';
 }
 
+function closeModal() {
+    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+}
+
+// ─── PASSWORD MATCH CHECK ───
 function checkPasswordMatch() {
     const pass = document.getElementById('new_password').value;
     const confirm = document.getElementById('confirm_password').value;
     const msg = document.getElementById('password_match_msg');
+    const submitBtn = document.querySelector('#passwordModal button[type="submit"]');
     
-    if(confirm.length === 0) {
-        msg.textContent = '';
-    } else if(pass === confirm) {
-        msg.textContent = 'Passwords match';
+    if (pass === confirm && pass !== '') {
+        msg.textContent = '✅ Passwords match.';
         msg.style.color = 'green';
-    } else {
-        msg.textContent = 'Passwords do not match';
+        if (submitBtn) submitBtn.disabled = false;
+    } else if (pass !== '' && confirm !== '') {
+        msg.textContent = '❌ Passwords do not match.';
         msg.style.color = 'red';
+        if (submitBtn) submitBtn.disabled = true;
+    } else {
+        msg.textContent = '';
+        if (submitBtn) submitBtn.disabled = false;
     }
 }
 
-function closeModal() {
-    document.getElementById('addModal').style.display = 'none';
-    document.getElementById('editModal').style.display = 'none';
-    document.getElementById('passwordModal').style.display = 'none';
+// ─── TOGGLE PERMISSIONS WHEN VIEW IS TOGGLED ───
+function togglePagePermissions(viewCheckbox, pageKey) {
+    const container = viewCheckbox.closest('tr');
+    const actionCheckboxes = container.querySelectorAll('.perm-checkbox');
+    
+    if (!viewCheckbox.checked) {
+        // Uncheck all action checkboxes when View is unchecked
+        actionCheckboxes.forEach(cb => {
+            cb.checked = false;
+            cb.disabled = true;
+        });
+    } else {
+        // Enable action checkboxes when View is checked
+        actionCheckboxes.forEach(cb => {
+            cb.disabled = false;
+        });
+    }
 }
 
+// ─── CLOSE MODALS ON CLICK OUTSIDE ───
 window.onclick = function(event) {
-    if (event.target === document.getElementById('addModal')) closeModal();
-    if (event.target === document.getElementById('editModal')) closeModal();
-    if (event.target === document.getElementById('passwordModal')) closeModal();
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
 }
 
+// ─── INITIALIZE: Disable action checkboxes if view is unchecked ───
 document.addEventListener('DOMContentLoaded', function() {
-    // Listen for clicks on any checkbox inside permission containers
-    document.addEventListener('change', function(e) {
-        if (e.target.matches('#perm_all')) {
-            const container = e.target.closest('.checkbox-group');
-            const permCheckboxes = container.querySelectorAll('.perm');
-            const isChecked = e.target.checked;
-            permCheckboxes.forEach(function(cb) {
-                cb.checked = isChecked;
-                cb.disabled = isChecked;
-            });
-        }
-
-        if (e.target.matches('.perm')) {
-            const container = e.target.closest('.checkbox-group');
-            const permCheckboxes = container.querySelectorAll('.perm');
-            const allCheckbox = container.querySelector('#perm_all');
-            const allChecked = Array.from(permCheckboxes).every(function(cb) {
-                return cb.checked;
-            });
-            if (allCheckbox) {
-                allCheckbox.checked = allChecked;
-            }
-        }
+    document.querySelectorAll('.view-checkbox').forEach(cb => {
+        togglePagePermissions(cb, cb.dataset.page);
     });
 });
