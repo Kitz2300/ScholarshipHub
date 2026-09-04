@@ -55,13 +55,18 @@ if (isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
     exit();
 }
 
-// Build query based on archive filter
+// Build query with Provider JOIN based on archive filter
+$base_sql = "SELECT sp.*, p.name AS provider_name, p.code AS provider_code 
+            FROM scholarship_program sp 
+            LEFT JOIN providers p ON sp.provider_id = p.id 
+            WHERE sp.school_year = ?";
+
 if ($archive_filter === '1') {
-    $scholarships_sql = "SELECT * FROM scholarship_program WHERE school_year = ? AND is_archived = 1 ORDER BY name ASC";
+    $scholarships_sql = $base_sql . " AND sp.is_archived = 1 ORDER BY sp.name ASC";
 } elseif ($archive_filter === 'all') {
-    $scholarships_sql = "SELECT * FROM scholarship_program WHERE school_year = ? ORDER BY name ASC";
+    $scholarships_sql = $base_sql . " ORDER BY sp.name ASC";
 } else { // Default: Active only
-    $scholarships_sql = "SELECT * FROM scholarship_program WHERE school_year = ? AND is_archived = 0 ORDER BY name ASC";
+    $scholarships_sql = $base_sql . " AND sp.is_archived = 0 ORDER BY sp.name ASC";
 }
 
 $scholarships_stmt = $conn->prepare($scholarships_sql);
@@ -117,7 +122,7 @@ $scholarships_result = $scholarships_stmt->get_result();
             <div class="page-content">
                 <!-- Page Header -->
                 <div class="page-header">
-                    <h2>Scholarship Programs</h2>
+                    <h2>Scholarship Management</h2>
                     
                     <!-- Filters Form -->
                     <form action="scholarship_program.php" method="POST" class="school-year-selector">
@@ -143,6 +148,12 @@ $scholarships_result = $scholarships_stmt->get_result();
 
                         <button type="submit" name="apply_filters" class="btn btn-sm btn-primary">Apply</button>
                     </form>
+                </div>
+
+                <!-- Mini Tab Navigation -->
+                <div class="sub-nav">
+                    <a href="scholarship_program.php" class="sub-nav-item active">Scholarship Programs</a>
+                    <a href="providers.php" class="sub-nav-item">Funding Providers</a>
                 </div>
 
                 <div class="action-row">
@@ -174,6 +185,10 @@ $scholarships_result = $scholarships_stmt->get_result();
                                 </div>
                                 <div class="program-code">
                                     <strong>Code:</strong> <?= htmlspecialchars($row['code']) ?>
+                                </div>
+                                <div class="program-code">
+                                    <strong>Funding Provider:</strong> 
+                                    <?= !empty($row['provider_name']) ? htmlspecialchars($row['provider_name']) . ' (' . htmlspecialchars($row['provider_code']) . ')' : 'Not Specified' ?>
                                 </div>
                                 <?php if ($row['min_gwa_req'] > 0) : ?>
                                     <div class="program-code">

@@ -1,7 +1,15 @@
 <?php 
 include __DIR__ . "/../includes/conn.php";
 include __DIR__ . "/../includes/check_permission.php";
-session_start(); 
+session_start();
+
+if ($_SESSION['role'] !== 'admin') {
+    checkPageAccess($conn, $_SESSION['user_id'], 'scholarship_programs');
+}
+
+// Fetch active funding providers from database
+$providers_sql = "SELECT id, name, code FROM providers WHERE is_archived = 0 ORDER BY name ASC";
+$providers_result = $conn->query($providers_sql);
 ?>
 
 <!DOCTYPE html>
@@ -15,14 +23,13 @@ session_start();
 </head>
 <body>
     <?php 
-    // if add failed alert users
-    if(isset($_SESSION['fail'])) {
-        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+    if (isset($_SESSION['fail'])) {
+        echo "<script>alert('" . htmlspecialchars($_SESSION['fail'], ENT_QUOTES) . "')</script>";
         unset($_SESSION['fail']);
     }
     ?>
 
-    <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
+    <?php if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href="login.php"</script>
     <?php else : ?>
@@ -56,9 +63,11 @@ session_start();
                     </div>
                 </div>
 
-                <!-- add form -->
+                <!-- Add Form -->
                 <form action="../functions/admin/add_scholarship_process.php" method="POST" class="reusable-form">
                     <div class="form-section">
+                        <h3>Program Details</h3>
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="name">Scholarship Name <span class="required">*</span></label>
@@ -66,13 +75,13 @@ session_start();
                             </div>
                             <div class="form-group">
                                 <label for="code">Scholarship Code <span class="required">*</span></label>
-                                <input type="text" name="code" id="code" placeholder="e.g., DOST" required/>
+                                <input type="text" name="code" id="code" placeholder="e.g., DOST-SEI" required/>
                             </div>
                             <div class="form-group">
                                 <label for="start_year">School Year <span class="required">*</span></label>
                                 <div class="school-year-group">
                                     <select name="start_year" id="start_year" required>
-                                        <?php for($y = date('Y') - 5; $y <= date('Y'); $y++) : ?>
+                                        <?php for ($y = date('Y') - 5; $y <= date('Y'); $y++) : ?>
                                             <option value="<?= $y ?>"><?= $y ?></option>
                                         <?php endfor; ?>
                                     </select>
@@ -83,63 +92,65 @@ session_start();
                             </div>
                         </div>
 
+                        <!-- Provider and Qualification Type Row -->
                         <div class="form-row">
-                            <div class="form-group full-width">
-                                <label for="desc">Description <span class="required">*</span></label>
-                                <textarea name="desc" id="desc" rows="5" placeholder="Enter scholarship description" required></textarea>
+                            <div class="form-group half-width">
+                                <label for="provider_id">Funding Provider <span class="required">*</span></label>
+                                <select name="provider_id" id="provider_id" required>
+                                    <option value="" disabled selected>-- Select Provider --</option>
+                                    <?php if ($providers_result && $providers_result->num_rows > 0) : ?>
+                                        <?php while ($p = $providers_result->fetch_assoc()) : ?>
+                                            <option value="<?= $p['id'] ?>">
+                                                <?= htmlspecialchars($p['name']) ?> (<?= htmlspecialchars($p['code']) ?>)
+                                            </option>
+                                        <?php endwhile; ?>
+                                    <?php else : ?>
+                                        <option value="" disabled>No active providers found</option>
+                                    <?php endif; ?>
+                                </select>
+                                <?php if (!$providers_result || $providers_result->num_rows === 0) : ?>
+                                    <small class="help-text" style="color: #e74c3c;">No active provider available. Please <a href="add_provider.php" style="color: #1e4628; text-decoration: underline;">add a provider</a> first.</small>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="form-group half-width">
+                                <label for="sc_type">Scholarship Category / Type <span class="required">*</span></label>
+                                <select name="sc_type" id="sc_type" required>
+                                    <option value="" disabled selected>-- Select Type --</option>
+                                    <option value="Merit-Based">Merit-Based</option>
+                                    <option value="Need-Based">Need-Based</option>
+                                    <option value="Academic Excellence">Academic Excellence</option>
+                                    <option value="Athletic">Athletic</option>
+                                    <option value="Leadership & Community Service">Leadership & Community Service</option>
+                                    <option value="Career/Degree-Specific">Career/Degree-Specific</option>
+                                    <option value="Identity/Group-Based">Identity/Group-Based</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <!-- Dynamic Input for "Other" Type -->
+                            <div class="form-group half-width" id="other_type_container" style="display: none;">
+                                <label for="sc_type_other">Specify Other Category / Type <span class="required">*</span></label>
+                                <input type="text" name="sc_type_other" id="sc_type_other" placeholder="e.g., Community Service Grant">
                             </div>
                         </div>
 
                         <div class="form-row">
-                            <div class="form-group">
+                            <div class="form-group full-width">
+                                <label for="desc">Description <span class="required">*</span></label>
+                                <textarea name="desc" id="desc" rows="4" placeholder="Enter scholarship description" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group half-width">
                                 <label for="pay_amount">Allowance <span class="required">*</span></label>
                                 <input type="number" name="pay_amount" id="pay_amount" step="0.01" min="0" placeholder="e.g., 5000.00" required/>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group half-width">
                                 <label for="gwa_req">Minimum GWA Requirement</label>
-                                <input type="number" name="gwa_req" id="gwa_req" step="0.01" min="1.0" max="4.0" placeholder="e.g., 2.5 or leave blank"/>
+                                <input type="number" name="gwa_req" id="gwa_req" step="0.01" min="1.0" max="4.0" placeholder="e.g., 2.50"/>
                                 <small class="help-text">Leave blank if no GWA requirement.</small>
-                            </div>
-                        </div>
-                        
-                        <!-- Scholarship Type Selection -->
-                        <div class="form-row">
-                            <div class="form-group full-width">
-                                <!-- <label for="scholarship_type">Type <span class="required">*</span></label>
-                                <div class="radio-group">
-                                    <div class="radio-option">
-                                        <input type="radio" name="is_grant" id="scholarship_type" value="0" checked>
-                                        <label for="scholarship_type">Scholarship</label>
-                                    </div>
-                                    <div class="radio-option">
-                                        <input type="radio" name="is_grant" id="financial_grant_type" value="1">
-                                        <label for="financial_grant_type">Financial Grant</label>
-                                    </div>
-                                </div> -->
-                                
-                                <label for="type">Type <span class="required">*</span></label>
-                                <select name="sc_type" required>
-                                    <option value="Not Specified">Not Specified</option>
-                                    <optgroup label="By Qualifications">
-                                        <option value="Merit-Based">Merit-Based</option>
-                                        <option value="Need-Based">Need-Based</option>
-                                        <option value="Career-specific">Career-specific</option>
-                                        <option value="Athletic">Athletic</option>
-                                        <option value="Identity or Group-Based">Identity or Group-Based</option>
-                                    </optgroup>
-                                    <optgroup label="By Funding Source">
-                                        <option value="Government Scholarship">Government Scholarship</option>
-                                        <option value="Private / Corporate Scholarship">Private / Corporate Scholarship</option>
-                                        <option value="Institutional / University Grant">Institutional / University Grant</option>
-                                        <option value="International Scholarship">International Scholarship</option>
-                                    </optgroup>
-                                    <optgroup label="Other">
-                                        <option value="Academic Excellence Grant">Academic Excellence Grant</option>
-                                        <option value="Leadership / Community Services">Leadership / Community Service</option>
-                                        <option value="Research Scholarship">Research Scholarship</option>
-                                        <option value="External Partner Scholarship">External Partner Scholarship</option>
-                                    </optgroup>
-                                </select>
                             </div>
                         </div>
                     </div>
@@ -156,6 +167,27 @@ session_start();
                 © 2026 PIT ScholarshipHub. All rights reserved.
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const scTypeSelect = document.getElementById('sc_type');
+                const otherTypeContainer = document.getElementById('other_type_container');
+                const otherTypeInput = document.getElementById('sc_type_other');
+
+                function toggleOtherTypeInput() {
+                    if (scTypeSelect.value === 'Other') {
+                        otherTypeContainer.style.display = 'flex';
+                        otherTypeInput.required = true;
+                    } else {
+                        otherTypeContainer.style.display = 'none';
+                        otherTypeInput.required = false;
+                        otherTypeInput.value = '';
+                    }
+                }
+
+                scTypeSelect.addEventListener('change', toggleOtherTypeInput);
+            });
+        </script>
     <?php endif; ?>
 </body>
 </html>
