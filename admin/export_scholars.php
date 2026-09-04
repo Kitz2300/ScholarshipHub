@@ -56,9 +56,9 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
             <div class="page-content">
                 <div class="page-header">
                     <h2>Export Scholar Records</h2>
-                    <div class="page-actions">
+                    <!-- <div class="page-actions">
                         <a href="scholar_list.php" class="btn btn-secondary">← Back to Scholars</a>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Export Form -->
@@ -194,8 +194,8 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                             </table>
                         </div>
                         <div class="form-actions" style="margin-top:15px;">
-                            <button type="button" id="export-btn" class="btn btn-success">Export Now</button>
-                            <button type="button" id="refresh-preview" class="btn btn-secondary">Refresh Preview</button>
+                            <button type="button" id="export-btn" class="btn btn-success">Export & Download Now</button>
+                            <button type="button" id="refresh-preview" class="btn btn-secondary">Reset</button>
                             <a href="export_scholars.php" class="btn btn-cancel">Cancel</a>
                         </div>
                     </div>

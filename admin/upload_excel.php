@@ -344,9 +344,9 @@ unset($_SESSION['upload_error']);
             <div class="page-content">
                 <div class="page-header">
                     <h2>Upload Excel File</h2>
-                    <div class="page-actions">
+                    <!-- <div class="page-actions">
                         <a href="scholar_list.php" class="btn btn-secondary">← Back to Scholars</a>
-                    </div>
+                    </div> -->
                 </div>
 
                 <?php if($upload_error): ?>
