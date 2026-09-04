@@ -67,14 +67,17 @@ while($note_row = $notes_result->fetch_assoc()) {
     $scholar_notes[] = $note_content;
 }
 
-// Scholar info query
+// Scholar info query with Funding Provider JOIN
 $scholar_sql = "SELECT scholar_info.*, 
                 scholarship_program.name AS scholarship_program_name,
                 scholarship_program.min_gwa_req AS gwa_req,
                 program.name AS program_name,
-                college_name
+                college_name,
+                providers.name AS provider_name,
+                providers.code AS provider_code
                 FROM scholar_info 
                 INNER JOIN scholarship_program ON scholar_info.scholarship_program_id = scholarship_program.id
+                LEFT JOIN providers ON scholarship_program.provider_id = providers.id
                 INNER JOIN program ON scholar_info.program_id = program.id
                 INNER JOIN college ON program.college_id = college.id
                 WHERE scholar_info.id = ?";
@@ -92,6 +95,7 @@ $id_num = "";
 $sex = "";
 $birthdate = "";
 $scholarship_program = "";
+$provider_display = "";
 $gwa_req = 0.00;
 $program = "";
 $year_lvl = "";
@@ -139,6 +143,7 @@ if($row = $scholar_result->fetch_assoc()) {
     $sex = $row['sex'] === 0 ? "Male" : "Female";
     $birthdate = $row['birthdate'];
     $scholarship_program = $row['scholarship_program_name'];
+    $provider_display = !empty($row['provider_name']) ? $row['provider_name'] . ' (' . $row['provider_code'] . ')' : 'Not Specified';
     $gwa_req = (float) $row['gwa_req'];
     $program = $row['program_name'];
     $year = $row['year_level'] ?? 0;
@@ -158,9 +163,9 @@ if($row = $scholar_result->fetch_assoc()) {
     $mother_given = $row['mother_given_name'];
     $mother_middle = $row['mother_middle_name'];
     
-    $philsys_id = $row['philsys_id'] ?? '';
-    $lrn = $row['lrn'] ?? '';
-    $four_ps_id = $row['four_ps_id'] ?? '';
+    $philsys_id = trim($row['philsys_id'] ?? '');
+    $lrn = trim($row['lrn'] ?? '');
+    $four_ps_id = trim($row['four_ps_id'] ?? '');
     $street = $row['street'] ?? '';
     $town_city = $row['town_city'] ?? '';
     $province = $row['province'] ?? '';
@@ -312,24 +317,43 @@ while($c_row = $chart_res->fetch_assoc()) {
                                 <span class="info-label">Student ID</span>
                                 <span class="info-value"><?= htmlspecialchars($id_num) ?></span>
                             </div>
-                            <?php if(!empty($philsys_id)) : ?>
+                            
+                            <!-- Always visible PHILSYS ID -->
                             <div class="info-row">
                                 <span class="info-label">PHILSYS ID</span>
-                                <span class="info-value"><?= htmlspecialchars($philsys_id) ?></span>
+                                <span class="info-value">
+                                    <?php if (!empty($philsys_id)) : ?>
+                                        <?= htmlspecialchars($philsys_id) ?>
+                                    <?php else : ?>
+                                        <span class="info-value">N/A</span>
+                                    <?php endif; ?>
+                                </span>
                             </div>
-                            <?php endif; ?>
-                            <?php if(!empty($lrn)) : ?>
+
+                            <!-- Always visible LRN -->
                             <div class="info-row">
                                 <span class="info-label">LRN</span>
-                                <span class="info-value"><?= htmlspecialchars($lrn) ?></span>
+                                <span class="info-value">
+                                    <?php if (!empty($lrn)) : ?>
+                                        <?= htmlspecialchars($lrn) ?>
+                                    <?php else : ?>
+                                        <span class="info-value">N/A</span>
+                                    <?php endif; ?>
+                                </span>
                             </div>
-                            <?php endif; ?>
-                            <?php if(!empty($four_ps_id)) : ?>
+
+                            <!-- Always visible 4P's ID -->
                             <div class="info-row">
                                 <span class="info-label">4P's ID</span>
-                                <span class="info-value"><?= htmlspecialchars($four_ps_id) ?></span>
+                                <span class="info-value">
+                                    <?php if (!empty($four_ps_id)) : ?>
+                                        <?= htmlspecialchars($four_ps_id) ?>
+                                    <?php else : ?>
+                                        <span class="info-value">N/A</span>
+                                    <?php endif; ?>
+                                </span>
                             </div>
-                            <?php endif; ?>
+
                             <div class="info-row">
                                 <span class="info-label">Last Name</span>
                                 <span class="info-value"><?= htmlspecialchars($last_name) ?></span>
@@ -372,6 +396,10 @@ while($c_row = $chart_res->fetch_assoc()) {
                             <div class="info-row">
                                 <span class="info-label">Scholarship Program</span>
                                 <span class="info-value"><?= htmlspecialchars($scholarship_program) ?></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Funding Provider</span>
+                                <span class="info-value"><?= htmlspecialchars($provider_display) ?></span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Program</span>
