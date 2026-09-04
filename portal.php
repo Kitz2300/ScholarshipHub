@@ -1,7 +1,22 @@
 <?php 
 include __DIR__ . "/includes/conn.php";
+
+// Helper function to turn plain URLs into clickable links safely
+function makeLinksClickable($text) {
+    // 1. Escape HTML first to prevent XSS
+    $safe_text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+
+    // 2. Regex to detect HTTP/HTTPS URLs
+    $pattern = '/(https?:\/\/[^\s<]+)/i';
+
+    // 3. Wrap URLs in <a> tags
+    $replacement = '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>';
+
+    return preg_replace($pattern, $replacement, $safe_text);
+}
 ?>
 
+<!DOCTYPE html>
 <html>
     <head>
         <title>Scholarship Portal</title>
@@ -28,16 +43,16 @@ include __DIR__ . "/includes/conn.php";
             <div class="role-cards">
                 <a href="admin/login.php" class="role-card admin">
                     <img src="assets/images/admin-icon.png" alt="Admin Icon">
-                    <div class="role-name">Admin / Coordinator</div>
+                    <div class="role-name">Scholarship Coordinator</div>
                     <div class="role-desc">Manage scholars, imports, exports</div>
                 </a>
                 <a href="staff/login.php" class="role-card staff">
-                    <img src="assets/images/staff-icon.png" alt="Admin Icon">
+                    <img src="assets/images/staff-icon.png" alt="Staff Icon">
                     <div class="role-name">Staff</div>
                     <div class="role-desc">View and edit scholar records</div>
                 </a>
                 <a href="student/login.php" class="role-card student">
-                    <img src="assets/images/student-icon.png" alt="Admin Icon">
+                    <img src="assets/images/student-icon.png" alt="Student Icon">
                     <div class="role-name">Scholar / Student</div>
                     <div class="role-desc">View your scholarship information</div>
                 </a>
@@ -53,20 +68,61 @@ include __DIR__ . "/includes/conn.php";
                 $announcement_stmt->execute();
                 $announcement_result = $announcement_stmt->get_result();
 
-                if($announcement_result->num_rows > 0) :
-                    while($row = $announcement_result->fetch_assoc()) : ?>
-                        <div class="announcement-item">
-                            <div class="title">
-                                <?= htmlspecialchars($row['title']) ?>
-                                <span class="date">Date Posted:  <?= htmlspecialchars($row['created_at_date']) ?></span>
-                            </div>
-                            <div class="content"><?= htmlspecialchars($row['content'], ENT_QUOTES, 'UTF-8') ?></div>
+                $announcements = [];
+                while ($row = $announcement_result->fetch_assoc()) {
+                    $announcements[] = $row;
+                }
+                ?>
+
+                <?php if (!empty($announcements)) : ?>
+                    <div class="announcements-layout">
+                        <!-- Left Column: Titles List -->
+                        <div class="announcements-list">
+                            <?php foreach ($announcements as $index => $item) : ?>
+                                <div class="announcement-title-item <?= $index === 0 ? 'active' : '' ?>" 
+                                     onclick="selectAnnouncement(<?= $index ?>)" 
+                                     id="title-item-<?= $index ?>">
+                                    <div class="title-text"><?= htmlspecialchars($item['title']) ?></div>
+                                    <div class="title-date">Posted: <?= htmlspecialchars($item['created_at_date']) ?></div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-                    <?php endwhile;
-                else: ?>
-                    <p>No announcements available at this time.</p>
+
+                        <!-- Right Column: Content Viewer -->
+                        <div class="announcement-content-viewer">
+                            <?php foreach ($announcements as $index => $item) : ?>
+                                <div class="announcement-detail <?= $index === 0 ? 'active' : '' ?>" 
+                                     id="content-item-<?= $index ?>">
+                                    <h3><?= htmlspecialchars($item['title']) ?></h3>
+                                    <span class="detail-date">Date Posted: <?= htmlspecialchars($item['created_at_date']) ?></span>
+                                    <hr class="detail-divider">
+                                    <div class="detail-content"><?= makeLinksClickable($item['content']) ?></div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php else : ?>
+                    <p class="no-data">No announcements available at this time.</p>
                 <?php endif; ?>
             </div>
         </div>
+
+        <!-- Inline Switcher Script -->
+        <script>
+            function selectAnnouncement(index) {
+                // Remove active status from all titles & contents
+                document.querySelectorAll('.announcement-title-item').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.announcement-detail').forEach(el => el.classList.remove('active'));
+
+                // Activate selected title & corresponding content
+                const selectedTitle = document.getElementById('title-item-' + index);
+                const selectedContent = document.getElementById('content-item-' + index);
+
+                if (selectedTitle && selectedContent) {
+                    selectedTitle.classList.add('active');
+                    selectedContent.classList.add('active');
+                }
+            }
+        </script>
     </body>
 </html>
