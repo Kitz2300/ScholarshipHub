@@ -30,6 +30,7 @@ $scholarship_program = 0;
 $program = 0;
 $year_lvl = 0;
 $academic_status = "";
+$loa_date = "";
 $address = "";
 $zipcode = "";
 $disability = "";
@@ -60,11 +61,18 @@ if($row = $scholar_result->fetch_assoc()) {
     $middle_name = $row['middle_name'];
     $id_num = $row['student_id'];
     $sex = $row['sex'];
-    $birthdate = $row['birthdate'];
+    
+    // Format strictly as YYYY-MM-DD
+    $birthdate = (!empty($row['birthdate']) && $row['birthdate'] !== '0000-00-00') ? date('Y-m-d', strtotime($row['birthdate'])) : '';
+    
     $scholarship_program = $row['scholarship_program_id'];
     $program = $row['program_id'];
     $year_lvl = $row['year_level'];
     $academic_status = $row['academic_status'];
+    
+    // Format strictly as YYYY-MM-DD
+    $loa_date = (!empty($row['loa_date']) && $row['loa_date'] !== '0000-00-00') ? date('Y-m-d', strtotime($row['loa_date'])) : '';
+    
     $address = $row['permanent_address'];
     $zipcode = $row['zipcode'];
     $disability = $row['disability'];
@@ -89,7 +97,6 @@ if($row = $scholar_result->fetch_assoc()) {
     $four_ps_id = $row['four_ps_id'] ?? '';
     
 } else {
-    // alert user if there are no results from query
     $_SESSION['fail'] = "Scholar not available";
     header("Location: scholar_list.php");
     exit();
@@ -108,9 +115,8 @@ if($row = $scholar_result->fetch_assoc()) {
 </head>
 <body>
     <?php 
-    // update fail message
     if(isset($_SESSION['fail'])) {
-        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+        echo "<script>alert('" . htmlspecialchars($_SESSION['fail'], ENT_QUOTES) . "')</script>";
         unset($_SESSION['fail']);
     }
     ?>
@@ -148,7 +154,6 @@ if($row = $scholar_result->fetch_assoc()) {
                     </div>
                 </div>
 
-                <!-- Edit Form with it's current values-->
                 <form action="../functions/admin/edit_scholar_process.php" method="POST" class="reusable-form">
                     <input type="hidden" name="scholar_id" value="<?= $scholar_id ?>">
 
@@ -196,15 +201,14 @@ if($row = $scholar_result->fetch_assoc()) {
                             </div>
                         </div>
 
-                        <!-- NEW FIELDS: PHILSYS ID, LRN, 4P's ID -->
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="philsys_id">PHILSYS ID <span class="required">*</span></label>
-                                <input type="text" name="philsys_id" id="philsys_id" value="<?= htmlspecialchars($philsys_id) ?>" placeholder="e.g., 4583-2739-5423-7829">
+                                <input type="text" name="philsys_id" id="philsys_id" value="<?= htmlspecialchars($philsys_id) ?>" placeholder="e.g., 4583-2739-5423-7829" required>
                             </div>
                             <div class="form-group">
                                 <label for="lrn">LRN <span class="required">*</span></label>
-                                <input type="text" name="lrn" id="lrn" value="<?= htmlspecialchars($lrn) ?>" placeholder="e.g., 121799100006">
+                                <input type="text" name="lrn" id="lrn" value="<?= htmlspecialchars($lrn) ?>" placeholder="e.g., 121799100006" required>
                             </div>
                             <div class="form-group">
                                 <label for="four_ps_id">4P's ID</label>
@@ -220,13 +224,20 @@ if($row = $scholar_result->fetch_assoc()) {
                                     <option value="Female" <?= ($sex == 1) ? 'selected' : '' ?>>Female</option>
                                 </select>
                             </div>
+
+                            <!-- Birth Date Field with Clean Hidden Picker -->
                             <div class="form-group">
-                                <label for="birth_date">Birth Date <span class="required">*</span></label>
-                                <input type="date" name="birth_date" id="birth_date" value="<?= htmlspecialchars($birthdate) ?>" required>
+                                <label for="birth_date">Birth Date (YYYY-MM-DD) <span class="required">*</span></label>
+                                <div style="display: flex; gap: 6px; align-items: center; position: relative;">
+                                    <input type="text" name="birth_date" id="birth_date" value="<?= htmlspecialchars($birthdate) ?>" placeholder="YYYY-MM-DD" pattern="\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" required style="flex: 1;">
+                                    <button type="button" id="btn_birth_picker" class="btn btn-secondary" style="padding: 8px 12px; font-size: 16px; cursor: pointer; background: #ffff; border: 1px solid black;" title="Select Birth Date">📅</button>
+                                    <input type="date" id="birth_date_picker" value="<?= htmlspecialchars($birthdate) ?>" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;">
+                                </div>
                             </div>
+
                             <div class="form-group">
                                 <label for="disability">Disability</label>
-                                <input type="text" name="disability" id="disability" placeholder="e.g., Visual impairment, Dyslexia, Mobility impairment" value="<?= htmlspecialchars($disability) ?>" list="disability-list"/>
+                                <input type="text" name="disability" id="disability" placeholder="e.g., Visual impairment, Dyslexia" value="<?= htmlspecialchars($disability) ?>" list="disability-list"/>
                                 <datalist id="disability-list">
                                     <option value="Not applicable"></option>
                                     <option value="Visual Impairment"></option>
@@ -237,7 +248,7 @@ if($row = $scholar_result->fetch_assoc()) {
                             </div>
                             <div class="form-group">
                                 <label for="ip_group">IP Group</label>
-                                <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa, Maranao, B'laan, Teduray" value="<?= htmlspecialchars($ip_group) ?>" list="ip-group-list"/>
+                                <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa" value="<?= htmlspecialchars($ip_group) ?>" list="ip-group-list"/>
                                 <datalist id="ip-group-list">
                                     <option value="Not applicable"></option>
                                     <option value="Ifugao"></option>
@@ -250,11 +261,10 @@ if($row = $scholar_result->fetch_assoc()) {
                         </div>
                     </div>
 
-                    <!-- Address Section (Unchanged) -->
+                    <!-- Address Section -->
                     <div class="form-section">
                         <h3>Address</h3>
                         
-                        <!-- Country -->
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="country">Country <span class="required">*</span></label>
@@ -265,7 +275,6 @@ if($row = $scholar_result->fetch_assoc()) {
                             </div>
                         </div>
 
-                        <!-- Other Country Name -->
                         <div id="other-country-row" style="<?= $country != 'Philippines' ? 'display: block;' : 'display: none;' ?>">
                             <div class="form-group">
                                 <label for="other_country">Country Name <span class="required">*</span></label>
@@ -273,7 +282,6 @@ if($row = $scholar_result->fetch_assoc()) {
                             </div>
                         </div>
 
-                        <!-- Philippine Address -->
                         <div id="philippines-address" style="<?= $country == 'Philippines' ? 'display: block;' : 'display: none;' ?>">
                             <div class="form-row">
                                 <div class="form-group full-width">
@@ -315,7 +323,6 @@ if($row = $scholar_result->fetch_assoc()) {
                             </div>
                         </div>
 
-                        <!-- Other Address -->
                         <div id="other-address" style="<?= $country != 'Philippines' ? 'display: block;' : 'display: none;' ?>">
                             <div class="form-row">
                                 <div class="form-group full-width">
@@ -404,6 +411,17 @@ if($row = $scholar_result->fetch_assoc()) {
                                     <option value="Leave of Absence" <?= ($academic_status == "Leave of Absence") ? 'selected' : '' ?>>Leave of Absence</option>
                                 </select>
                             </div>
+
+                            <!-- LOA Date Field with Clean Hidden Picker -->
+                            <div class="form-group" id="loa_date_container" style="display: <?= ($academic_status == "Leave of Absence") ? 'flex' : 'none' ?>;">
+                                <label for="loa_date">LOA Filed Date (YYYY-MM-DD) <span class="required">*</span></label>
+                                <div style="display: flex; gap: 6px; align-items: center; position: relative;">
+                                    <input type="text" name="loa_date" id="loa_date" value="<?= htmlspecialchars($loa_date) ?>" placeholder="YYYY-MM-DD" pattern="\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" style="flex: 1;">
+                                    <button type="button" id="btn_loa_picker" class="btn btn-secondary" style="padding: 8px 12px; font-size: 16px; cursor: pointer;" title="Select LOA Date">📅</button>
+                                    <button type="button" class="btn btn-primary" id="btn_loa_today" style="padding: 8px 12px; font-size: 14px; white-space: nowrap;">Today</button>
+                                    <input type="date" id="loa_date_picker" value="<?= htmlspecialchars($loa_date) ?>" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -455,6 +473,89 @@ if($row = $scholar_result->fetch_assoc()) {
                 © 2026 PIT ScholarshipHub. All rights reserved.
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const statusSelect = document.getElementById('academic_status');
+                const loaContainer = document.getElementById('loa_date_container');
+                
+                const birthTextInput = document.getElementById('birth_date');
+                const birthPickerInput = document.getElementById('birth_date_picker');
+                const btnBirthPicker = document.getElementById('btn_birth_picker');
+
+                const loaTextInput = document.getElementById('loa_date');
+                const loaPickerInput = document.getElementById('loa_date_picker');
+                const btnLoaPicker = document.getElementById('btn_loa_picker');
+
+                // Get Today's Date in YYYY-MM-DD
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const todayStr = `${yyyy}-${mm}-${dd}`;
+
+                // Trigger Native Pickers On Icon Button Click
+                btnBirthPicker.addEventListener('click', function() {
+                    if (birthPickerInput.showPicker) {
+                        birthPickerInput.showPicker();
+                    } else {
+                        birthPickerInput.focus();
+                    }
+                });
+
+                btnLoaPicker.addEventListener('click', function() {
+                    if (loaPickerInput.showPicker) {
+                        loaPickerInput.showPicker();
+                    } else {
+                        loaPickerInput.focus();
+                    }
+                });
+
+                // Sync Picker Selection to Text Input (YYYY-MM-DD)
+                birthPickerInput.addEventListener('change', function() {
+                    if (this.value) {
+                        birthTextInput.value = this.value;
+                    }
+                });
+                birthTextInput.addEventListener('change', function() {
+                    if (this.value) {
+                        birthPickerInput.value = this.value;
+                    }
+                });
+
+                loaPickerInput.addEventListener('change', function() {
+                    if (this.value) {
+                        loaTextInput.value = this.value;
+                    }
+                });
+                loaTextInput.addEventListener('change', function() {
+                    if (this.value) {
+                        loaPickerInput.value = this.value;
+                    }
+                });
+
+                // Toggle LOA Field Requirement
+                function toggleLoaInput() {
+                    if (statusSelect.value === 'Leave of Absence') {
+                        loaContainer.style.display = 'flex';
+                        loaTextInput.required = true;
+                    } else {
+                        loaContainer.style.display = 'none';
+                        loaTextInput.required = false;
+                        loaTextInput.value = '';
+                        loaPickerInput.value = '';
+                    }
+                }
+
+                statusSelect.addEventListener('change', toggleLoaInput);
+
+                // Quick "Today" Button Action
+                document.getElementById('btn_loa_today').addEventListener('click', function() {
+                    loaTextInput.value = todayStr;
+                    loaPickerInput.value = todayStr;
+                });
+            });
+        </script>
     <?php endif; ?>
 </body>
 </html>

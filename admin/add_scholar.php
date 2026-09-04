@@ -53,7 +53,7 @@ $barangays_result = $stmt->get_result();
 <body>
     <?php 
     if(isset($_SESSION['fail'])) {
-        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+        echo "<script>alert('" . htmlspecialchars($_SESSION['fail'], ENT_QUOTES) . "')</script>";
         unset($_SESSION['fail']);
     }
     ?>
@@ -112,7 +112,7 @@ $barangays_result = $stmt->get_result();
                             <div class="form-group">
                                 <label for="ext_name">Extension Name</label>
                                 <select name="ext_name" id="ext_name">
-                                    <option value="" selected disabled>N/A</option>
+                                    <option value="N/A" selected>N/A</option>
                                     <option value="Jr.">Jr.</option>
                                     <option value="Sr.">Sr.</option>
                                     <option value="II">II</option>
@@ -132,31 +132,30 @@ $barangays_result = $stmt->get_result();
                             </div>
                             <div class="form-group">
                                 <label for="student_contact">Contact Number <span class="required">*</span></label>
-                                <input type="text" name="student_contact" id="student_contact" placeholder="9171234567" pattern="09[0-9]{9}" required>
+                                <input type="text" name="student_contact" id="student_contact" placeholder="09171234567" pattern="09[0-9]{9}" required>
                             </div>
                         </div>
 
-                        <!-- NEW FIELDS: PHILSYS ID, LRN, 4P's ID -->
+                        <!-- PHILSYS ID, LRN, 4P's ID -->
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="philsys_id">PHILSYS ID</label>
+                                <label for="philsys_id">PHILSYS ID <span class="required">*</span></label>
                                 <input type="text" name="philsys_id" id="philsys_id" 
                                     placeholder="e.g., 1234-5678-9012-3456" 
-                                    pattern="[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}"
-                                    title="Format: 1234-5678-9012-3456 (16 digits with hyphens)" required>
+                                    required>
                             </div>
                             <div class="form-group">
-                                <label for="lrn">LRN</label>
+                                <label for="lrn">LRN <span class="required">*</span></label>
                                 <input type="text" name="lrn" id="lrn" 
                                     placeholder="e.g., 123456789021" 
-                                    pattern="[0-9]{12}"
-                                    title="Must be 12 digits" required>
+                                    required>
                             </div>
                             <div class="form-group">
                                 <label for="four_ps_id">4P's ID</label>
-                                <input type="text" name="four_ps_id" id="four_ps_id">
+                                <input type="text" name="four_ps_id" id="four_ps_id" placeholder="e.g., 083740027-6222-00003">
                             </div>
                         </div>
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="sex">Sex <span class="required">*</span></label>
@@ -166,10 +165,17 @@ $barangays_result = $stmt->get_result();
                                     <option value="Female">Female</option>
                                 </select>
                             </div>
+
+                            <!-- Birth Date Field with Clean Hidden Picker -->
                             <div class="form-group">
-                                <label for="birth_date">Birth Date <span class="required">*</span></label>
-                                <input type="date" name="birth_date" id="birth_date" required>
+                                <label for="birth_date">Birth Date (YYYY-MM-DD) <span class="required">*</span></label>
+                                <div style="display: flex; gap: 6px; align-items: center; position: relative;">
+                                    <input type="text" name="birth_date" id="birth_date" placeholder="YYYY-MM-DD" pattern="\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" required style="flex: 1;">
+                                    <button type="button" id="btn_birth_picker" class="btn btn-secondary" style="padding: 8px 12px; font-size: 16px; cursor: pointer; background: #ffff; border: 1px solid black;" title="Select Birth Date">📅</button>
+                                    <input type="date" id="birth_date_picker" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;">
+                                </div>
                             </div>
+
                             <div class="form-group">
                                 <label for="disability">Disability</label>
                                 <input type="text" name="disability" id="disability" placeholder="e.g., Visual impairment, Dyslexia, Mobility impairment" list="disability-list" />
@@ -196,6 +202,7 @@ $barangays_result = $stmt->get_result();
                         </div>
                     </div>
 
+                    <!-- Address Section -->
                     <div class="form-section">
                         <h3>Address</h3>
                         
@@ -204,7 +211,7 @@ $barangays_result = $stmt->get_result();
                             <div class="form-group">
                                 <label for="country">Country <span class="required">*</span></label>
                                 <select name="country" id="country">
-                                    <option value="Philippines">Philippines</option>
+                                    <option value="Philippines" selected>Philippines</option>
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
@@ -285,9 +292,9 @@ $barangays_result = $stmt->get_result();
                         </div>
                     </div>
 
-                    <!-- Scholarship Information -->
+                    <!-- Scholarship & Academic Information -->
                     <div class="form-section">
-                        <h3>Scholarship Information</h3>
+                        <h3>Scholarship & Academic Information</h3>
                         
                         <div class="form-row">
                             <div class="form-group">
@@ -295,7 +302,7 @@ $barangays_result = $stmt->get_result();
                                 <select name="scholarship_program" id="scholarship_program" required>
                                     <option value="" selected disabled>Select Scholarship Program</option>
                                     <?php 
-                                    $scholarship_program_sql = "SELECT id, name, code FROM scholarship_program WHERE is_archived = 0";
+                                    $scholarship_program_sql = "SELECT id, name, code FROM scholarship_program WHERE is_archived = 0 ORDER BY name ASC";
                                     $stmt = $conn->prepare($scholarship_program_sql);
                                     $stmt->execute();
                                     $result = $stmt->get_result();
@@ -307,9 +314,9 @@ $barangays_result = $stmt->get_result();
                             <div class="form-group">
                                 <label for="program">Program / Course <span class="required">*</span></label>
                                 <select name="program" id="program" required>
-                                    <option selected disabled>Select Program</option>
+                                    <option value="" selected disabled>Select Program</option>
                                     <?php 
-                                    $program_sql = "SELECT id, name FROM program";
+                                    $program_sql = "SELECT id, name FROM program ORDER BY name ASC";
                                     $stmt = $conn->prepare($program_sql);
                                     $stmt->execute();
                                     $result = $stmt->get_result();
@@ -321,7 +328,7 @@ $barangays_result = $stmt->get_result();
                             <div class="form-group">
                                 <label for="year_lvl">Year Level <span class="required">*</span></label>
                                 <select name="year_lvl" id="year_lvl" required>
-                                    <option selected disabled>Select Year Level</option>
+                                    <option value="" selected disabled>Select Year Level</option>
                                     <?php for($i = 1; $i <= 6; $i++) : 
                                         switch ($i) {
                                             case 1: $year = "1st Year"; break;
@@ -333,6 +340,28 @@ $barangays_result = $stmt->get_result();
                                         <option value="<?= $i ?>"><?= $year ?></option>
                                     <?php endfor; ?>
                                 </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="academic_status">Academic Status <span class="required">*</span></label>
+                                <select name="academic_status" id="academic_status" required>
+                                    <option value="Enrolled" selected>Enrolled</option>
+                                    <option value="Not Enrolled">Not Enrolled</option>
+                                    <option value="Graduated">Graduated</option>
+                                    <option value="Transferred">Transferred</option>
+                                    <option value="Dropped">Dropped</option>
+                                    <option value="Leave of Absence">Leave of Absence</option>
+                                </select>
+                            </div>
+
+                            <!-- LOA Date Field with Clean Hidden Picker -->
+                            <div class="form-group" id="loa_date_container" style="display: none;">
+                                <label for="loa_date">LOA Filed Date (YYYY-MM-DD) <span class="required">*</span></label>
+                                <div style="display: flex; gap: 6px; align-items: center; position: relative;">
+                                    <input type="text" name="loa_date" id="loa_date" placeholder="YYYY-MM-DD" pattern="\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" style="flex: 1;">
+                                    <button type="button" id="btn_loa_picker" class="btn btn-secondary" style="padding: 8px 12px; font-size: 16px; cursor: pointer; background: #ffff; border: 1px solid black;" title="Select LOA Date">📅</button>
+                                    <button type="button" class="btn btn-primary" id="btn_loa_today" style="padding: 8px 12px; font-size: 14px; white-space: nowrap;">Today</button>
+                                    <input type="date" id="loa_date_picker" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -385,6 +414,89 @@ $barangays_result = $stmt->get_result();
                 © 2026 PIT ScholarshipHub. All rights reserved.
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const statusSelect = document.getElementById('academic_status');
+                const loaContainer = document.getElementById('loa_date_container');
+                
+                const birthTextInput = document.getElementById('birth_date');
+                const birthPickerInput = document.getElementById('birth_date_picker');
+                const btnBirthPicker = document.getElementById('btn_birth_picker');
+
+                const loaTextInput = document.getElementById('loa_date');
+                const loaPickerInput = document.getElementById('loa_date_picker');
+                const btnLoaPicker = document.getElementById('btn_loa_picker');
+
+                // Get Today's Date in YYYY-MM-DD
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const todayStr = `${yyyy}-${mm}-${dd}`;
+
+                // Trigger Native Pickers On Icon Button Click
+                btnBirthPicker.addEventListener('click', function() {
+                    if (birthPickerInput.showPicker) {
+                        birthPickerInput.showPicker();
+                    } else {
+                        birthPickerInput.focus();
+                    }
+                });
+
+                btnLoaPicker.addEventListener('click', function() {
+                    if (loaPickerInput.showPicker) {
+                        loaPickerInput.showPicker();
+                    } else {
+                        loaPickerInput.focus();
+                    }
+                });
+
+                // Sync Picker Selection to Text Input (YYYY-MM-DD)
+                birthPickerInput.addEventListener('change', function() {
+                    if (this.value) {
+                        birthTextInput.value = this.value;
+                    }
+                });
+                birthTextInput.addEventListener('change', function() {
+                    if (this.value) {
+                        birthPickerInput.value = this.value;
+                    }
+                });
+
+                loaPickerInput.addEventListener('change', function() {
+                    if (this.value) {
+                        loaTextInput.value = this.value;
+                    }
+                });
+                loaTextInput.addEventListener('change', function() {
+                    if (this.value) {
+                        loaPickerInput.value = this.value;
+                    }
+                });
+
+                // Toggle LOA Field Requirement
+                function toggleLoaInput() {
+                    if (statusSelect.value === 'Leave of Absence') {
+                        loaContainer.style.display = 'flex';
+                        loaTextInput.required = true;
+                    } else {
+                        loaContainer.style.display = 'none';
+                        loaTextInput.required = false;
+                        loaTextInput.value = '';
+                        loaPickerInput.value = '';
+                    }
+                }
+
+                statusSelect.addEventListener('change', toggleLoaInput);
+
+                // Quick "Today" Button Action
+                document.getElementById('btn_loa_today').addEventListener('click', function() {
+                    loaTextInput.value = todayStr;
+                    loaPickerInput.value = todayStr;
+                });
+            });
+        </script>
     <?php endif; ?>
 </body>
 </html>

@@ -4,7 +4,7 @@ session_start();
 
 if(isset($_POST['update'])) {
 
-    // store every input names in an array
+    // Store required input field names in an array
     $required_fields = ['last_name', 'first_name', 
                         'email', 'student_id', 'student_contact', 
                         'sex', 'birth_date', 
@@ -13,20 +13,25 @@ if(isset($_POST['update'])) {
                         'father_last', 'father_first', 'father_middle', 
                         'mother_last', 'mother_first', 'mother_middle'];
     
+    // Check if LOA Date is required when status is Leave of Absence
+    if (isset($_POST['academic_status']) && $_POST['academic_status'] === 'Leave of Absence') {
+        $required_fields[] = 'loa_date';
+    }
+
     $missing_fields = [];
     
-    // loop through the required fields and check if each one is empty, if true insert input name in missing_fields array
+    // Loop through required fields and validate presence
     foreach ($required_fields as $field) {
         if(empty($_POST[$field])) {
             $missing_fields[] = $field;
         }
     }
     
-    $id_num = $_POST['scholar_id'];
+    $id_num = (int) ($_POST['scholar_id'] ?? 0);
     
-    // if there are missing fields notify user of it
+    // Notify user of missing fields
     if(!empty($missing_fields)) {
-        $_SESSION['fail'] = "Missing Fields: " . implode(",", $missing_fields);
+        $_SESSION['fail'] = "Missing Fields: " . implode(", ", $missing_fields);
         header("Location: ../../admin/edit_scholar.php?id=$id_num"); 
         exit();
     }
@@ -46,16 +51,15 @@ if(isset($_POST['update'])) {
     // Get street
     $street = trim($_POST['street'] ?? '');
 
-    // Get zipcode (optional - can be from PSGC or manual)
+    // Get zipcode
     $zipcode = trim($_POST['zipcode'] ?? '');
 
-    // student information
-    // required fields
+    // Student information
     $last_name = trim($_POST['last_name']);
     $first_name = trim($_POST['first_name']);
     $middle_name = trim($_POST['middle_name']);
 
-    // student id regex validation
+    // Student ID regex validation
     $student_id = trim($_POST['student_id']);
     $id_pattern = "/^[0-9]{2}-[0-9]{4}-[0-9]{3}$/";
     if(!preg_match($id_pattern, $student_id)) {
@@ -66,9 +70,9 @@ if(isset($_POST['update'])) {
 
     $sex = $_POST['sex'] == 'Male' ? 0 : 1; // 0 for male, 1 for female
     $birth_date = $_POST['birth_date'];
-    $year_lvl = $_POST['year_lvl'];
+    $year_lvl = (int) $_POST['year_lvl'];
     
-    // student contact regex validation
+    // Student contact regex validation
     $student_contact = trim($_POST['student_contact']);
     $contact_pattern = "/^09[0-9]{9}$/";
     if(!preg_match($contact_pattern, $student_contact)) {
@@ -77,7 +81,7 @@ if(isset($_POST['update'])) {
         exit();
     }
     
-    // email regex validation
+    // Email regex validation
     $email = trim($_POST['email']);
     $email_pattern = "/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/";
     if(!preg_match($email_pattern, $email)) {
@@ -86,9 +90,12 @@ if(isset($_POST['update'])) {
         exit();
     }
     
-    $program_id = $_POST['program'];
-    $scholarship_program_id = $_POST['scholarship_program'];
-    $academic_status = $_POST['academic_status'];
+    $program_id = (int) $_POST['program'];
+    $scholarship_program_id = (int) $_POST['scholarship_program'];
+    $academic_status = trim($_POST['academic_status']);
+    
+    // Set LOA Date if status is Leave of Absence, otherwise set NULL
+    $loa_date = ($academic_status === 'Leave of Absence' && !empty($_POST['loa_date'])) ? $_POST['loa_date'] : NULL;
 
     $school_year_sql = "SELECT school_year FROM scholarship_program WHERE id = ?";
     $school_year_stmt = $conn->prepare($school_year_sql);
@@ -96,32 +103,32 @@ if(isset($_POST['update'])) {
     $school_year_stmt->execute();
     $school_year_result = $school_year_stmt->get_result();
     $school_year = "";
-    if($row=$school_year_result->fetch_assoc()) $school_year = $row['school_year'];
+    if($row = $school_year_result->fetch_assoc()) $school_year = $row['school_year'];
     
-    // optional fields
-    $ext_name = $_POST['ext_name'] ?? "N/A"; // if empty store N/A
-    $ip_group = trim($_POST['ip_group']) ?? "Not applicable"; // if empty store Not applicable
-    $disability = trim($_POST['disability']) ?? "Not applicable"; // if empty store Not applicable
+    // Optional fields
+    $ext_name = $_POST['ext_name'] ?? "N/A";
+    $ip_group = !empty(trim($_POST['ip_group'])) ? trim($_POST['ip_group']) : "Not applicable";
+    $disability = !empty(trim($_POST['disability'])) ? trim($_POST['disability']) : "Not applicable";
     
-    // bcrypt hashing password for scholar
+    // BCrypt password hash
     $hashed_pass = password_hash($student_id, PASSWORD_BCRYPT);
     
-    // father information
+    // Father information
     $father_last_name = trim($_POST['father_last']);
     $father_first_name = trim($_POST['father_first']);
     $father_middle_name = trim($_POST['father_middle']);
     
-    // mother information
+    // Mother information
     $mother_last_name = trim($_POST['mother_last']);
     $mother_first_name = trim($_POST['mother_first']);
     $mother_middle_name = trim($_POST['mother_middle']);
     
-    // ─── NEW FIELDS: PHILSYS ID, LRN, 4P's ID ───
+    // PHILSYS ID, LRN, 4P's ID
     $philsys_id = trim($_POST['philsys_id'] ?? '');
     $lrn = trim($_POST['lrn'] ?? '');
     $four_ps_id = trim($_POST['four_ps_id'] ?? '');
     
-    // Fetch location names for the full address
+    // Fetch location names for address compilation
     $location_names = [];
 
     if($region_id > 0) {
@@ -145,7 +152,7 @@ if(isset($_POST['update'])) {
         $location_names['barangay'] = $result->fetch_assoc()['name'] ?? '';
     }
 
-    // Build full permanent address
+    // Build permanent address
     $address_parts = [];
     if(!empty($street)) $address_parts[] = $street;
     if(!empty($location_names['barangay'])) $address_parts[] = $location_names['barangay'];
@@ -169,6 +176,7 @@ if(isset($_POST['update'])) {
                     program_id = ?, 
                     year_level = ?, 
                     academic_status = ?,
+                    loa_date = ?,
                     father_last_name = ?, 
                     father_given_name = ?, 
                     father_middle_name = ?, 
@@ -197,10 +205,10 @@ if(isset($_POST['update'])) {
     
     $scholar_stmt = $conn->prepare($scholar_sql);
     
-    // 34 parameters + 1 for WHERE id = ?
-    // Types: 40 characters (sssssisiiisssssssssiiiisssssssssssss)
+    // 36 parameters + 1 WHERE parameter = 37 total
+    // Types: sssssisiiissssssssssiiiisssssssssssssi
     $scholar_stmt->bind_param(
-        "sssssisiiisssssssssiiiisssssssssssss", 
+        "sssssisiiiss" . "ssssss" . "ss" . "iiii" . "ssssssssssss" . "i", 
         $student_id, 
         $last_name, 
         $first_name, 
@@ -212,6 +220,7 @@ if(isset($_POST['update'])) {
         $program_id, 
         $year_lvl, 
         $academic_status,
+        $loa_date,
         $father_last_name, 
         $father_first_name, 
         $father_middle_name, 
@@ -240,14 +249,11 @@ if(isset($_POST['update'])) {
     );
     
     if($scholar_stmt->execute()) {
-        // success
-        $_SESSION['success'] = "Scholar Updated";
+        $_SESSION['success'] = "Scholar profile updated successfully.";
     } else {
-        // failure
         $_SESSION['fail'] = "Update Failed: " . $scholar_stmt->error;
     }
     
-    // redirect user to scholar_profile page
     header("Location: ../../admin/scholar_profile.php?scholar_id=" . $id_num); 
     exit();
 }
