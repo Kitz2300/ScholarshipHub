@@ -1,4 +1,36 @@
-/* scholar_list.css - Scholar List Page (Glassmorphism & Background Match) */
+/* ============================================================
+   DESIGN TOKENS & GLOBAL RESETS
+   ============================================================ */
+:root {
+    --primary-dark: #1e4628;
+    --primary-main: #2a6b37;
+    --primary-header: rgba(26, 59, 34, 0.9);
+    
+    --text-dark: #333333;
+    --text-muted: #555555;
+    --text-light: #ffffff;
+    
+    --glass-bg-main: rgba(255, 255, 255, 0.85);
+    --glass-bg-sub: rgba(255, 255, 255, 0.4);
+    --glass-bg-card: rgba(255, 255, 255, 0.6);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+    --btn-primary: #3498db;
+    --btn-primary-hover: #2980b9;
+    --btn-success: #2ecc71;
+    --btn-success-hover: #27ae60;
+    --btn-info: #1abc9c;
+    --btn-info-hover: #16a085;
+    --btn-warning: #f39c12;
+    --btn-warning-hover: #e67e22;
+    --btn-danger: #e74c3c;
+    --btn-danger-hover: #c0392b;
+    --btn-archive: rgb(77, 120, 201);
+    --btn-archive-hover: rgb(52, 84, 144);
+    --btn-dark: #000000;
+    --btn-dark-hover: rgba(0, 0, 0, 0.7);
+}
 
 * {
     margin: 0;
@@ -8,11 +40,9 @@
 
 body {
     font-family: Arial, sans-serif;
-    color: #333;
+    color: var(--text-dark);
     min-height: 100vh;
     position: relative;
-    
-    /* Aerial background from main portal */
     background-image: url('../images/background.png');
     background-repeat: no-repeat;
     background-size: cover;
@@ -22,10 +52,9 @@ body {
     align-items: stretch;
     justify-content: center;
     padding: 10px;
-    box-sizing: border-box;
 }
 
-/* Dark overlay to ensure text stands out */
+/* Dark overlay */
 body::before {
     content: '';
     position: fixed;
@@ -38,33 +67,35 @@ body::before {
     pointer-events: none;
 }
 
-/* Main Glass Container */
+/* ============================================================
+   MAIN CONTAINER
+   ============================================================ */
 .container {
     max-width: 1500px;
     width: 100%;
-    margin: 0px;
-    padding: 0px;
-    background: rgba(255, 255, 255, 0.85);
+    margin: 0;
+    padding: 0;
+    background: var(--glass-bg-main);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: var(--glass-border);
     border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--glass-shadow);
     overflow: hidden;
-
-    /* Flex column to stretch height and push footer down */
     display: flex;
     flex-direction: column;
     min-height: calc(100vh - 20px);
 }
 
-/* ========== HEADER ========== */
+/* ============================================================
+   HEADER
+   ============================================================ */
 .header {
-    background: rgba(26, 59, 34, 0.9) !important;
+    background: var(--primary-header);
     backdrop-filter: blur(10px);
-    color: #fff;
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--text-light);
     padding: 15px 25px;
-    border-radius: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -72,7 +103,8 @@ body::before {
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.header-left {
+.header-left,
+.header-right {
     display: flex;
     align-items: center;
     gap: 15px;
@@ -84,34 +116,18 @@ body::before {
     padding: 5px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255,255,255,0.5);
+    border: 2px solid rgba(255, 255, 255, 0.5);
     background-color: rgba(255, 255, 255, 0.8);
 }
 
-.header-left h1 {
-    font-size: 24px;
-}
-
-.header-left p {
-    font-size: 13px;
-    opacity: 0.85;
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.welcome-text {
-    font-size: 14px;
-    opacity: 0.9;
-}
+.header-left h1 { font-size: 24px; }
+.header-left p { font-size: 13px; opacity: 0.85; }
+.welcome-text { font-size: 14px; opacity: 0.9; }
 
 .logout-btn {
-    background: rgba(255,255,255,0.15);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-light);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     padding: 6px 14px;
     border-radius: 4px;
     cursor: pointer;
@@ -120,14 +136,16 @@ body::before {
 }
 
 .logout-btn:hover {
-    background: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.3);
 }
 
-/* ========== NAVIGATION ========== */
+/* ============================================================
+   NAVIGATION & DROPDOWN
+   ============================================================ */
 .nav-bar {
-    background: rgba(255, 255, 255, 0.4);
+    background: var(--glass-bg-sub);
     padding: 10px 25px;
-    border-bottom: 2px solid #2a6b37;
+    border-bottom: 2px solid var(--primary-main);
 }
 
 .nav-bar ul {
@@ -135,6 +153,10 @@ body::before {
     display: flex;
     gap: 25px;
     flex-wrap: wrap;
+}
+
+.nav-bar ul li {
+    position: relative;
 }
 
 .nav-bar ul li a {
@@ -146,19 +168,14 @@ body::before {
     transition: all 0.3s;
 }
 
-.nav-bar ul li a:hover {
-    color: #1e4628;
+.nav-bar ul li a:hover,
+.nav-bar ul li a.active {
+    color: var(--primary-dark);
 }
 
 .nav-bar ul li a.active {
-    color: #1e4628;
-    border-bottom-color: #1e4628;
+    border-bottom-color: var(--primary-dark);
     font-weight: bold;
-}
-
-/* ========== DROPDOWN ========== */
-.nav-bar ul li {
-    position: relative;
 }
 
 .nav-bar ul li .dropdown-toggle {
@@ -172,11 +189,32 @@ body::before {
     left: 0;
     background: #338043;
     min-width: 200px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-radius: 4px;
     border: 1px solid #ddd;
     padding: 8px 0;
     z-index: 999;
+}
+
+.nav-bar ul li:hover .dropdown-menu {
+    display: block;
+}
+
+.nav-bar ul li .dropdown-menu li {
+    display: block;
+}
+
+.nav-bar ul li .dropdown-menu li a {
+    display: block;
+    padding: 8px 16px;
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.nav-bar ul li .dropdown-menu li a:hover {
+    background: #f0f4f8;
+    color: var(--primary-dark);
 }
 
 .arrow-down {
@@ -185,38 +223,16 @@ body::before {
     vertical-align: top;
 }
 
-.nav-bar ul li .dropdown-menu li {
-    display: block;
-    padding: 0;
-}
-
-.nav-bar ul li .dropdown-menu li a {
-    display: block;
-    padding: 8px 16px;
-    color: #ffffff;
-    text-decoration: none;
-    border-bottom: none;
-    font-size: 16px;
-}
-
-.nav-bar ul li .dropdown-menu li a:hover {
-    background: #f0f4f8;
-    color: #1e4628;
-}
-
-.nav-bar ul li:hover .dropdown-menu {
-    display: block;
-}
-
-/* ========== PAGE CONTENT ========== */
+/* ============================================================
+   PAGE CONTENT & HEADER
+   ============================================================ */
 .page-content {
-    background: rgba(255, 255, 255, 0.4);
+    background: var(--glass-bg-sub);
     padding: 25px;
     border-radius: 0 0 8px 8px;
-    /* No hard shadow, letting the glass container handle it */
+    flex: 1;
 }
 
-/* Page Header */
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -224,11 +240,11 @@ body::before {
     flex-wrap: wrap;
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 2px solid rgba(0,0,0,0.08);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.08);
 }
 
 .page-header h2 {
-    color: #1e4628;
+    color: var(--primary-dark);
     font-size: 22px;
 }
 
@@ -238,54 +254,11 @@ body::before {
     flex-wrap: wrap;
 }
 
-/* Buttons */
-.btn {
-    display: inline-block;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-    color: #fff;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-}
-
-.btn-primary { background: #3498db; }
-.btn-primary:hover { background: #2980b9; }
-
-.btn-clear-search { background: black; }
-.btn-clear-search:hover { background: rgba(0, 0, 0, 0.467); }
-
-.btn-success { 
-    background: #2ecc71; 
-    width: 280px; 
-    text-align: center; 
-}
-
-.btn-success:hover { background: #27ae60; }
-
-.btn-info { background: #1abc9c; }
-.btn-info:hover { background: #16a085; }
-
-.btn-danger { background: #e74c3c; }
-.btn-danger:hover { background: #c0392b; }
-
-.btn-warning { background: #f39c12; }
-.btn-warning:hover { background: #e67e22; }
-
-.btn-sm {
-    padding: 10px 12px;
-    font-size: 16px;
-}
-
-/* ========== SEARCH & FILTER ========== */
+/* ============================================================
+   SEARCH & FILTERS
+   ============================================================ */
 .search-filter {
-    background: rgba(255, 255, 255, 0.6);
+    background: var(--glass-bg-card);
     border: 1px solid rgba(255, 255, 255, 0.4);
     padding: 15px 20px;
     border-radius: 6px;
@@ -310,14 +283,14 @@ body::before {
 }
 
 .search-filter input[type="search"]:focus {
-    border-color: #1e4628;
+    border-color: var(--primary-dark);
     outline: none;
     box-shadow: 0 0 0 3px rgba(26, 59, 34, 0.15);
 }
 
 .search-filter select {
     padding: 8px 12px;
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 4px;
     font-size: 15px;
     font-weight: bold;
@@ -326,7 +299,7 @@ body::before {
 }
 
 .search-filter select:focus {
-    border-color: #1e4628;
+    border-color: var(--primary-dark);
     outline: none;
 }
 
@@ -337,45 +310,21 @@ body::before {
     margin-right: 5px;
 }
 
-.search-filter .btn-sm {
-    padding: 8px 14px;
-    font-size: 16px;
-}
-
-.search-filter .clear-link {
-    /* color: #e74c3c; */
-    text-decoration: none;
-    background: black;
-    font-size: 17px;
-    
-}
-
-.search-filter .clear-link:hover {
-    background: rgba(0, 0, 0, 0.467);
-    /* text-decoration: underline; */
-}
-
-.btn-pos {
-    position: flex-end;
-}
-
-/* ========== TOGGLE FILTERS ========== */
 .toggle-filters {
     margin-left: auto;
-    background: #6c757d !important;
+    background: #6c757d;
 }
 
 .toggle-filters:hover {
-    background: #5a6268 !important;
+    background: #5a6268;
 }
 
-/* Filter row – hidden by default, shown with .open */
 .filter-row {
     display: none;
     width: 100%;
     margin-top: 12px;
     padding-top: 12px;
-    border-top: 1px solid rgba(0,0,0,0.08);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
     flex-wrap: wrap;
     align-items: center;
     gap: 10px;
@@ -385,14 +334,15 @@ body::before {
     display: flex;
 }
 
-/* ========== RECORDS INFO ========== */
+/* ============================================================
+   TABLE & WRAPPER
+   ============================================================ */
 .records-info {
     font-size: 16px;
-    color: #555;
+    color: var(--text-muted);
     margin-bottom: 12px;
 }
 
-/* ─── Table Header with Add Button ─── */
 .table-header {
     display: flex;
     justify-content: space-between;
@@ -406,19 +356,6 @@ body::before {
     margin-bottom: 0;
 }
 
-/* Responsive: stack on small screens */
-@media (max-width: 480px) {
-    .table-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .table-header .btn {
-        text-align: center;
-        width: 100%;
-    }
-}
-
-/* ========== TABLE ========== */
 .table-wrapper {
     overflow-x: auto;
     overflow-y: auto;
@@ -440,8 +377,8 @@ table {
 }
 
 table thead th {
-    background: #1e4628; /* Forest Green */
-    color: #fff;
+    background: var(--primary-dark);
+    color: var(--text-light);
     padding: 12px 14px;
     text-align: left;
     font-weight: bold;
@@ -449,7 +386,7 @@ table thead th {
 
 table tbody td {
     padding: 10px 14px;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     vertical-align: middle;
 }
 
@@ -461,18 +398,12 @@ table tbody tr:nth-child(even) {
     background: rgba(255, 255, 255, 0.4);
 }
 
-table tbody tr:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
+table tbody tr:hover,
 table tbody tr:nth-child(even):hover {
     background: rgba(0, 0, 0, 0.05);
 }
 
-/* .flag-badge {
-    font-size: 20px;
-} */
-
+/* Highlighted/Flagged Rows */
 .data-row-1 {
     background: rgb(249, 121, 121);
 }
@@ -481,7 +412,56 @@ table tbody tr:nth-child(even):hover {
     background: rgb(241, 88, 88);
 }
 
-/* ========== ACTION BUTTONS ========== */
+/* ============================================================
+   BUTTONS & ACTIONS
+   ============================================================ */
+.btn,
+.btn-sm {
+    display: inline-block;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    color: var(--text-light);
+    transition: background 0.3s, transform 0.2s;
+}
+
+.btn {
+    padding: 8px 16px;
+    font-size: 16px;
+}
+
+.btn-sm {
+    padding: 8px 14px;
+    font-size: 16px;
+}
+
+.btn:hover,
+.btn-sm:hover {
+    transform: translateY(-2px);
+}
+
+.btn-primary, .btn-view { background: var(--btn-primary); }
+.btn-primary:hover, .btn-view:hover { background: var(--btn-primary-hover); }
+
+.btn-success { background: var(--btn-success); width: 280px; text-align: center; }
+.btn-success:hover { background: var(--btn-success-hover); }
+
+.btn-info { background: var(--btn-info); }
+.btn-info:hover { background: var(--btn-info-hover); }
+
+.btn-warning, .btn-edit { background: var(--btn-warning); }
+.btn-warning:hover, .btn-edit:hover { background: var(--btn-warning-hover); }
+
+.btn-danger { background: var(--btn-danger); }
+.btn-danger:hover { background: var(--btn-danger-hover); }
+
+.btn-archive { background: var(--btn-archive); }
+.btn-archive:hover { background: var(--btn-archive-hover); }
+
+.btn-clear-search, .search-filter .clear-link { background: var(--btn-dark); }
+.btn-clear-search:hover, .search-filter .clear-link:hover { background: var(--btn-dark-hover); }
+
 .action-buttons {
     display: flex;
     gap: 5px;
@@ -490,25 +470,12 @@ table tbody tr:nth-child(even):hover {
 
 .action-buttons .btn-sm {
     padding: 6px 10px;
-    font-size: 16px;
-    display: inline-block;
-    text-decoration: none;
-    border: none;
     border-radius: 3px;
-    cursor: pointer;
-    color: #fff;
 }
 
-.action-buttons .btn-view { background: #3498db;}
-.action-buttons .btn-view:hover { background: #2980b9; }
-
-.action-buttons .btn-edit { background: #f39c12;}
-.action-buttons .btn-edit:hover { background: #e67e22; }
-
-.action-buttons .btn-archive { background: rgb(77, 120, 201)}
-.action-buttons .btn-archive:hover { background: rgb(52, 84, 144)}
-
-/* ========== PAGINATION ========== */
+/* ============================================================
+   PAGINATION & FOOTER
+   ============================================================ */
 .pagination {
     display: flex;
     justify-content: center;
@@ -521,115 +488,86 @@ table tbody tr:nth-child(even):hover {
 .pagination strong {
     display: inline-block;
     padding: 6px 12px;
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 4px;
     text-decoration: none;
     font-size: 13px;
-    color: #333;
+    color: var(--text-dark);
     transition: all 0.3s;
     background: rgba(255, 255, 255, 0.4);
 }
 
-.pagination a:hover {
-    background: #1e4628;
-    color: #fff;
-    border-color: #1e4628;
-}
-
+.pagination a:hover,
 .pagination strong {
-    background: #1e4628;
-    color: #fff;
-    border-color: #1e4628;
+    background: var(--primary-dark);
+    color: var(--text-light);
+    border-color: var(--primary-dark);
 }
 
-/* ========== NO DATA ========== */
 .no-data {
     text-align: center;
-    color: #666;
+    color: var(--text-muted);
     padding: 30px 0;
     font-size: 16px;
 }
 
-/* ========== FOOTER ========== */
 .footer {
     text-align: center;
     padding: 15px 25px;
-    color: #666;
+    color: var(--text-muted);
     font-size: 13px;
     border-top: 1px solid rgba(0, 0, 0, 0.05);
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* ========== RESPONSIVE ========== */
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 @media (max-width: 768px) {
     .container {
         margin: 10px;
     }
 
-    .header {
+    .header,
+    .header-left,
+    .page-header {
         flex-direction: column;
         text-align: center;
         gap: 10px;
     }
-    
-    .header-left {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .nav-bar ul {
+
+    .nav-bar ul,
+    .page-actions {
         justify-content: center;
         gap: 15px;
     }
-    
-    .page-header {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-    }
-    
-    .page-actions {
-        justify-content: center;
-    }
-    
-    .search-filter form {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .search-filter input[type="search"] {
-        min-width: 100%;
-    }
-    
-    .search-filter select {
-        min-width: 100%;
-    }
-    
-    .search-filter .btn-sm {
-        width: 100%;
-        text-align: center;
-    }
-    
+
+    .search-filter form,
     .filter-row {
         flex-direction: column;
         align-items: stretch;
     }
+
+    .search-filter input[type="search"],
+    .search-filter select,
+    .search-filter .btn-sm,
     .filter-row select,
     .filter-row .btn-sm,
     .filter-row .clear-link {
         width: 100%;
+        min-width: 100%;
         text-align: center;
     }
 
     table {
         font-size: 12px;
     }
-    
+
     table thead th,
     table tbody td {
         padding: 8px 10px;
     }
-    
+
     .action-buttons {
         flex-direction: column;
         gap: 3px;
@@ -638,15 +576,24 @@ table tbody tr:nth-child(even):hover {
 
 @media (max-width: 480px) {
     .container {
-        padding: 0; /* Container handles the margin via body */
         margin: 5px;
     }
-    
+
     .page-content {
         padding: 15px;
     }
-    
+
     .header-left h1 {
         font-size: 20px;
+    }
+
+    .table-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .table-header .btn {
+        text-align: center;
+        width: 100%;
     }
 }

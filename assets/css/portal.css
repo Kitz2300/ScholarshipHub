@@ -16,7 +16,7 @@ body {
     position: relative;
 }
 
-/* Dark overlay over the background so text is always readable */
+/* Dark overlay */
 body::before {
     content: '';
     position: fixed;
@@ -24,7 +24,7 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.15); /* 15% dark tint - adjust if needed */
+    background: rgba(0, 0, 0, 0.15);
     z-index: -1;
     pointer-events: none;
 }
@@ -33,7 +33,6 @@ body::before {
     max-width: 1100px;
     margin: 0 auto;
     padding: 20px;
-    /* Centers the content vertically on the screen */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -60,14 +59,8 @@ body::before {
     border-radius: 8px 8px 0 0;
 }
 
-.header h1 {
-    font-size: 32px;
-}
-
-.header p {
-    font-size: 16px;
-    opacity: 0.9;
-}
+.header h1 { font-size: 32px; }
+.header p { font-size: 16px; opacity: 0.9; }
 
 .header img {
     width: 70px;
@@ -88,14 +81,8 @@ body::before {
     text-align: center;
 }
 
-.welcome h2 {
-    color: #1e4628; /* Matches the header */
-}
-
-.welcome p {
-    color: #444;
-    margin-top: 10px;
-}
+.welcome h2 { color: #1e4628; }
+.welcome p { color: #444; margin-top: 10px; }
 
 /* Login Cards */
 .role-cards {
@@ -121,7 +108,7 @@ body::before {
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
-.role-card img{
+.role-card img {
     width: 90px;
     height: 90px;
     margin-bottom: 12px;
@@ -141,7 +128,9 @@ body::before {
 .role-card.staff { border-top: 4px solid #3498db; }
 .role-card.student { border-top: 4px solid #e67e22; }
 
-/* Announcements */
+/* ============================================================
+   ANNOUNCEMENTS SPLIT VIEWER (FIXED HEIGHT & SCROLLABLE)
+   ============================================================ */
 .announcements {
     padding: 25px;
     border-radius: 8px;
@@ -155,32 +144,145 @@ body::before {
     color: #1e4628;
 }
 
-.announcement-item {
-    padding: 15px 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+.announcements-layout {
+    display: flex;
+    gap: 20px;
+    height: 320px; /* Fixed container height */
 }
 
-.announcement-item:last-child {
-    border-bottom: none;
+/* Left Column: Scrollable Titles List */
+.announcements-list {
+    flex: 1;
+    max-width: 320px;
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+    padding-right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto; /* Scrollable list */
+    height: 100%;
 }
 
-.announcement-item .title {
+/* Custom Scrollbar for Left Sidebar */
+.announcements-list::-webkit-scrollbar,
+.announcement-content-viewer::-webkit-scrollbar {
+    width: 6px;
+}
+
+.announcements-list::-webkit-scrollbar-track,
+.announcement-content-viewer::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 4px;
+}
+
+.announcements-list::-webkit-scrollbar-thumb,
+.announcement-content-viewer::-webkit-scrollbar-thumb {
+    background: rgba(30, 70, 40, 0.25);
+    border-radius: 4px;
+}
+
+.announcements-list::-webkit-scrollbar-thumb:hover,
+.announcement-content-viewer::-webkit-scrollbar-thumb:hover {
+    background: rgba(30, 70, 40, 0.45);
+}
+
+.announcement-title-item {
+    padding: 12px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.4);
+    border-left: 4px solid transparent;
+    transition: background 0.2s, border-color 0.2s;
+    margin-right: 4px;
+}
+
+.announcement-title-item:hover {
+    background: rgba(30, 70, 40, 0.08);
+}
+
+.announcement-title-item.active {
+    background: rgba(30, 70, 40, 0.12);
+    border-left-color: #2a6b37;
+}
+
+.announcement-title-item .title-text {
     font-weight: bold;
-    font-size: 18px;
+    font-size: 15px;
+    color: #1e4628;
+    line-height: 1.3;
+}
+
+.announcement-title-item .title-date {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* Right Column: Scrollable Content Viewer */
+.announcement-content-viewer {
+    flex: 2;
+    padding-left: 5px;
+    padding-right: 8px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.announcement-detail {
+    display: none;
+}
+
+.announcement-detail.active {
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.announcement-detail h3 {
+    color: #1e4628;
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.announcement-detail .detail-date {
+    font-size: 13px;
+    color: #666;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.announcement-detail .detail-divider {
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    margin-bottom: 15px;
+}
+
+.announcement-detail .detail-content {
+    color: #444;
+    font-size: 15px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Clickable Announcement Links */
+.detail-content a {
+    color: #2a6b37;
+    font-weight: bold;
+    text-decoration: underline;
+    word-break: break-all; /* Prevents long links from overflowing */
+}
+
+.detail-content a:hover {
     color: #1e4628;
 }
 
-.announcement-item .date {
-    font-size: 12px;
+.no-data {
     color: #666;
-    margin-left: 10px;
-}
-
-.announcement-item .content {
-    color: #444;
-    margin-top: 5px;
-    white-space: pre-wrap; 
-    word-wrap: break-word;
+    font-size: 15px;
 }
 
 /* Responsive */
@@ -192,5 +294,21 @@ body::before {
     .role-card {
         max-width: 100%;
         width: 100%;
+    }
+    .announcements-layout {
+        flex-direction: column;
+        height: auto;
+    }
+    .announcements-list {
+        max-width: 100%;
+        max-height: 200px;
+        border-right: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        padding-right: 0;
+        padding-bottom: 10px;
+    }
+    .announcement-content-viewer {
+        padding-left: 0;
+        max-height: 250px;
     }
 }
