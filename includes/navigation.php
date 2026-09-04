@@ -24,7 +24,8 @@ $scholar_pages = [
 $program_pages = [
     'scholarship_program.php', 
     'add_scholarship.php', 
-    'edit_scholarship.php'
+    'edit_scholarship.php',
+    'providers.php'
 ];
 
 $announcement_pages = [
