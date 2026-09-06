@@ -1,7 +1,10 @@
 <?php
 require_once __DIR__ . "/../../includes/conn.php";
 require_once __DIR__ . "/../../includes/address_helper.php";
+require_once __DIR__ . "/../../includes/email_helper.php";
 session_start();
+
+set_time_limit(300); // Prevent PHP timeout during bulk emails
 
 $success_count = 0;
 $error_count = 0;
@@ -110,8 +113,6 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
         $hashed_pass = password_hash($student_id, PASSWORD_BCRYPT);
 
         // ─── Build the type string dynamically ───
-        // Data types: 1..8 string, 9 int, 10 string, 11-13 int, 14-20 string (father/mother/street), 21-24 int, 25-35 string (zipcode, perm_address, town, province, disability, contact, email, ip_group, username, password, school_year)
-        // We'll use an array of types for clarity
         $types = 'ssssssss'; 
         $types .= 'i';       
         $types .= 's';       
@@ -161,6 +162,11 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
 
         if($insert_stmt->execute()) {
             $success_count++;
+
+            // ========== SEND ACCOUNT CREATION EMAIL ==========
+            if (!empty($email)) {
+                sendAccountCreatedEmail($email, $given_name, $student_id);
+            }
         } else {
             $error_count++;
             continue;
@@ -194,8 +200,17 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
     $history_stmt->bind_param('is', $_SESSION['user_id'], $file_name);
     $history_stmt->execute();
 
+    // ─── AUDIT TRAIL LOGGING ───
+    $user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
+    $action = "Imported $success_count scholar record(s) from Excel file '$file_name' (Failed: $error_count)";
+
+    $audit_sql = "INSERT INTO audit_trail (user_id, action) VALUES (?, ?)";
+    $audit_stmt = $conn->prepare($audit_sql);
+    $audit_stmt->bind_param("is", $user_id, $action);
+    $audit_stmt->execute();
+
     if($success_count > 0 && $error_count == 0) {
-        $_SESSION['success'] = "Scholar record successfully imported.";
+        $_SESSION['success'] = "Scholar record successfully imported and email notifications sent.";
         // Clear session variables
         unset($_SESSION['mapped_columns'], $_SESSION['valid_rows'], $_SESSION['errors_by_row'], $_SESSION['import_processed']);
         header("Location: ../../admin/scholar_list.php");
@@ -205,4 +220,5 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
         header("Location: ../../admin/upload_excel.php");
         exit();
     }
-}   
+}
+?>
