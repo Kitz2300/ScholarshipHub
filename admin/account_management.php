@@ -14,12 +14,14 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 if(isset($_POST['add_staff'])) {
     $username = trim($_POST['username']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $role = $_POST['role'] ?? 'staff'; // Get role from dropdown
+    $role = $_POST['role'] ?? 'staff';
     $given_name = trim($_POST['given_name'] ?? '');
     $middle_name = trim($_POST['middle_name'] ?? '');
     $last_name = trim($_POST['last_name'] ?? '');
     
-    // For staff, we need permissions; for admin, we store empty permissions (or full access is implied)
+    // Only capture email for Admin accounts
+    $email = ($role === 'admin') ? trim($_POST['email'] ?? '') : null;
+    
     $permissions = isset($_POST['permissions']) ? $_POST['permissions'] : [];
     $permissions_json = json_encode($permissions);
 
@@ -33,9 +35,9 @@ if(isset($_POST['add_staff'])) {
         if($check_result->num_rows > 0) {
             $_SESSION['fail'] = "Username already exists.";
         } else {
-            $sql = "INSERT INTO scholarship_users (username, password, role, given_name, middle_name, last_name, permissions) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO scholarship_users (username, password, role, given_name, middle_name, last_name, email, permissions) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssssss", $username, $password, $role, $given_name, $middle_name, $last_name, $permissions_json);
+            $stmt->bind_param("ssssssss", $username, $password, $role, $given_name, $middle_name, $last_name, $email, $permissions_json);
             if($stmt->execute()) {
                 $_SESSION['success'] = "Account created successfully.";
             } else {
@@ -57,18 +59,17 @@ if(isset($_POST['edit_staff'])) {
     $given_name = trim($_POST['given_name'] ?? '');
     $middle_name = trim($_POST['middle_name'] ?? '');
     $last_name = trim($_POST['last_name'] ?? '');
+    
+    // Only update email for Admin accounts
+    $email = ($role === 'admin') ? trim($_POST['email'] ?? '') : null;
 
-    // Get submitted permissions (only checked checkboxes are sent)
     $submitted_perms = isset($_POST['permissions']) ? $_POST['permissions'] : [];
 
-    // Build final permissions: for each page, use submitted array if present, else empty
     $final_perms = [];
     foreach(getPageDefinitions() as $page_key => $page_label) {
         if (isset($submitted_perms[$page_key])) {
-            // Page was submitted – use the array of checked values (may be empty)
             $final_perms[$page_key] = array_values(array_unique($submitted_perms[$page_key]));
         } else {
-            // Page was not submitted – remove all permissions (set to empty)
             $final_perms[$page_key] = [];
         }
     }
@@ -76,9 +77,9 @@ if(isset($_POST['edit_staff'])) {
     $permissions_json = json_encode($final_perms);
 
     if(!empty($username) && $user_id > 0) {
-        $sql = "UPDATE scholarship_users SET username = ?, role = ?, given_name = ?, middle_name = ?, last_name = ?, permissions = ? WHERE id = ?";
+        $sql = "UPDATE scholarship_users SET username = ?, role = ?, given_name = ?, middle_name = ?, last_name = ?, email = ?, permissions = ? WHERE id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssssi", $username, $role, $given_name, $middle_name, $last_name, $permissions_json, $user_id);
+        $stmt->bind_param("sssssssi", $username, $role, $given_name, $middle_name, $last_name, $email, $permissions_json, $user_id);
         if($stmt->execute()) {
             $_SESSION['success'] = "Account updated successfully.";
         } else {
@@ -97,14 +98,26 @@ if(isset($_POST['change_password'])) {
     $new_password = $_POST['new_password'] ?? '';
 
     if($user_id > 0 && !empty($new_password)) {
-        $hashed = password_hash($new_password, PASSWORD_DEFAULT);
-        $sql = "UPDATE scholarship_users SET password = ? WHERE id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("si", $hashed, $user_id);
-        if($stmt->execute()) {
-            $_SESSION['success'] = "Password updated successfully.";
+        // Enforce restriction: logged-in admin cannot change other admin passwords
+        $check_stmt = $conn->prepare("SELECT role FROM scholarship_users WHERE id = ?");
+        $check_stmt->bind_param("i", $user_id);
+        $check_stmt->execute();
+        $target_user = $check_stmt->get_result()->fetch_assoc();
+        $check_stmt->close();
+
+        if ($target_user && $target_user['role'] === 'admin' && $user_id !== (int)$_SESSION['user_id']) {
+            $_SESSION['fail'] = "You cannot change the password of another admin account.";
         } else {
-            $_SESSION['fail'] = "Failed to update password.";
+            $hashed = password_hash($new_password, PASSWORD_DEFAULT);
+            $sql = "UPDATE scholarship_users SET password = ? WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("si", $hashed, $user_id);
+            if($stmt->execute()) {
+                $_SESSION['success'] = "Password updated successfully.";
+            } else {
+                $_SESSION['fail'] = "Failed to update password.";
+            }
+            $stmt->close();
         }
     } else {
         $_SESSION['fail'] = "New password is required.";
@@ -133,20 +146,12 @@ if(isset($_POST['delete_staff'])) {
 }
 
 // ─── FETCH ADMIN USERS ───
-$admin_sql = "SELECT id, username, role, given_name, middle_name, last_name, permissions FROM scholarship_users WHERE role = 'admin' ORDER BY last_name ASC, given_name ASC";
+$admin_sql = "SELECT id, username, role, given_name, middle_name, last_name, email, permissions FROM scholarship_users WHERE role = 'admin' ORDER BY last_name ASC, given_name ASC";
 $admin_result = $conn->query($admin_sql);
 
 // ─── FETCH STAFF USERS ───
 $staff_sql = "SELECT id, username, role, given_name, middle_name, last_name, permissions FROM scholarship_users WHERE role = 'staff' ORDER BY last_name ASC, given_name ASC";
 $staff_result = $conn->query($staff_sql);
-
-if(isset($_SESSION['success'])) {
-    echo "<script>alert('" . $_SESSION['success'] . "')</script>";
-    unset($_SESSION['success']);
-} else if(isset($_SESSION['fail'])) {
-    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-    unset($_SESSION['fail']);
-}
 ?>
 <!DOCTYPE html>
 <html>
@@ -156,6 +161,15 @@ if(isset($_SESSION['success'])) {
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
 <body>
+    <?php 
+    if(isset($_SESSION['success'])) {
+        echo "<script>alert('" . $_SESSION['success'] . "')</script>";
+        unset($_SESSION['success']);
+    } else if(isset($_SESSION['fail'])) {
+        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
+        unset($_SESSION['fail']);
+    }
+    ?>
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -196,6 +210,7 @@ if(isset($_SESSION['success'])) {
                             <tr>
                                 <th>Name</th>
                                 <th>Username</th>
+                                <th>Email</th>
                                 <th>Role</th>
                                 <th>Permissions</th>
                                 <th>Actions</th>
@@ -209,14 +224,17 @@ if(isset($_SESSION['success'])) {
                                     <tr>
                                         <td><?= htmlspecialchars($admin['last_name']) ?>, <?= htmlspecialchars($admin['given_name']) ?> <?= htmlspecialchars($admin['middle_name']) ?></td>
                                         <td><?= htmlspecialchars($admin['username']) ?></td>
+                                        <td><?= htmlspecialchars($admin['email'] ?? 'N/A') ?></td>
                                         <td><?= htmlspecialchars(ucfirst($admin['role'])) ?></td>
                                         <td class="perm-summary" style="color: #2a6b37; font-weight: bold;">
                                             Full Access
                                         </td>
                                         <td>
                                             <div class="action-buttons">
-                                                <button class="btn-sm btn-edit" onclick="openEditModal(<?= $admin['id'] ?>, '<?= htmlspecialchars($admin['username']) ?>', '<?= htmlspecialchars($admin['role']) ?>', '<?= htmlspecialchars($admin['given_name']) ?>', '<?= htmlspecialchars($admin['middle_name']) ?>', '<?= htmlspecialchars($admin['last_name']) ?>', '<?= htmlspecialchars($admin['permissions']) ?>', true)">Edit</button>
-                                                <button class="btn-sm btn-warning" onclick="openPasswordModal(<?= $admin['id'] ?>)">Change Password</button>
+                                                <button class="btn-sm btn-edit" onclick="openEditModal(<?= $admin['id'] ?>, '<?= htmlspecialchars($admin['username']) ?>', '<?= htmlspecialchars($admin['role']) ?>', '<?= htmlspecialchars($admin['given_name']) ?>', '<?= htmlspecialchars($admin['middle_name']) ?>', '<?= htmlspecialchars($admin['last_name']) ?>', '<?= htmlspecialchars($admin['email'] ?? '') ?>', '<?= htmlspecialchars($admin['permissions']) ?>', true)">Edit</button>
+                                                <?php if($is_current_user) : ?>
+                                                    <button class="btn-sm btn-warning" onclick="openPasswordModal(<?= $admin['id'] ?>)">Change Password</button>
+                                                <?php endif; ?>
                                                 <?php if(!$is_current_user) : ?>
                                                     <form action="" method="POST" style="display: inline;">
                                                         <input type="hidden" name="user_id" value="<?= $admin['id'] ?>">
@@ -228,7 +246,7 @@ if(isset($_SESSION['success'])) {
                                     </tr>
                                 <?php endwhile; ?>
                             <?php else : ?>
-                                <tr><td colspan="5" class="no-data">No admin accounts found.</td></tr>
+                                <tr><td colspan="6" class="no-data">No admin accounts found.</td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -256,24 +274,38 @@ if(isset($_SESSION['success'])) {
                             <?php if($staff_result->num_rows > 0) : ?>
                                 <?php while($staff = $staff_result->fetch_assoc()) : 
                                     $perms = json_decode($staff['permissions'], true) ?: [];
-                                    $perm_summary = [];
-                                    $pages = getPageDefinitions();
-                                    foreach($pages as $page_key => $page_label) {
-                                        if(isset($perms[$page_key]) && !empty($perms[$page_key])) {
-                                            $actions = array_map('ucfirst', $perms[$page_key]);
-                                            $perm_summary[] = $page_label . ': ' . implode(', ', $actions);
-                                        }
-                                    }
-                                    $perm_display = !empty($perm_summary) ? implode('<br>', $perm_summary) : 'None';
                                 ?>
                                     <tr>
                                         <td><?= htmlspecialchars($staff['last_name']) ?>, <?= htmlspecialchars($staff['given_name']) ?> <?= htmlspecialchars($staff['middle_name']) ?></td>
                                         <td><?= htmlspecialchars($staff['username']) ?></td>
                                         <td><?= htmlspecialchars(ucfirst($staff['role'])) ?></td>
-                                        <td class="perm-summary" title="<?= strip_tags($perm_display) ?>"><?= $perm_display ?></td>
+                                        <td class="perm-cell">
+                                            <div class="perm-list">
+                                                <?php 
+                                                $has_perm = false;
+                                                foreach (getPageDefinitions() as $page_key => $page_label): 
+                                                    if (!empty($perms[$page_key])): 
+                                                        $has_perm = true;
+                                                ?>
+                                                    <div class="perm-row">
+                                                        <span class="perm-page"><?= htmlspecialchars($page_label) ?></span>
+                                                        <div class="perm-badges">
+                                                            <?php foreach ($perms[$page_key] as $act): ?>
+                                                                <span class="badge badge-<?= strtolower($act) ?>"><?= ucfirst($act) ?></span>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                    </div>
+                                                <?php 
+                                                    endif; 
+                                                endforeach; 
+                                                if (!$has_perm): ?>
+                                                    <span class="badge badge-none">No Access</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
                                         <td>
                                             <div class="action-buttons">
-                                                <button class="btn-sm btn-edit" onclick="openEditModal(<?= $staff['id'] ?>, '<?= htmlspecialchars($staff['username']) ?>', '<?= htmlspecialchars($staff['role']) ?>', '<?= htmlspecialchars($staff['given_name']) ?>', '<?= htmlspecialchars($staff['middle_name']) ?>', '<?= htmlspecialchars($staff['last_name']) ?>', '<?= htmlspecialchars($staff['permissions']) ?>', false)">Edit</button>
+                                                <button class="btn-sm btn-edit" onclick="openEditModal(<?= $staff['id'] ?>, '<?= htmlspecialchars($staff['username']) ?>', '<?= htmlspecialchars($staff['role']) ?>', '<?= htmlspecialchars($staff['given_name']) ?>', '<?= htmlspecialchars($staff['middle_name']) ?>', '<?= htmlspecialchars($staff['last_name']) ?>', '', '<?= htmlspecialchars($staff['permissions']) ?>', false)">Edit</button>
                                                 <button class="btn-sm btn-warning" onclick="openPasswordModal(<?= $staff['id'] ?>)">Change Password</button>
                                                 <form action="" method="POST" style="display: inline;">
                                                     <input type="hidden" name="user_id" value="<?= $staff['id'] ?>">
@@ -317,19 +349,25 @@ if(isset($_SESSION['success'])) {
                     <input type="text" name="last_name" required>
                 </div>
                 <div class="form-group">
+                    <label>Role <span class="required">*</span></label>
+                    <select name="role" id="add_role" required>
+                        <option value="staff">Staff</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <!-- Admin Only Email Field -->
+                <div class="form-group" id="addEmailGroup" style="display: none;">
+                    <label>Email Address <span class="required">*</span></label>
+                    <input type="email" name="email" id="add_email" placeholder="example@pit.edu.ph">
+                    <small class="help-text">Required for Admin OTP account recovery.</small>
+                </div>
+                <div class="form-group">
                     <label>Username <span class="required">*</span></label>
                     <input type="text" name="username" required>
                 </div>
                 <div class="form-group">
                     <label>Password <span class="required">*</span></label>
                     <input type="password" name="password" required>
-                </div>
-                <div class="form-group">
-                    <label>Role <span class="required">*</span></label>
-                    <select name="role" id="add_role" required>
-                        <option value="staff">Staff</option>
-                        <option value="admin">Admin</option>
-                    </select>
                 </div>
 
                 <!-- Permissions Section (hidden for admin role) -->
@@ -377,6 +415,12 @@ if(isset($_SESSION['success'])) {
                 <div class="form-group">
                     <label>Last Name <span class="required">*</span></label>
                     <input type="text" name="last_name" id="edit_last_name" required>
+                </div>
+                <!-- Admin Only Email Field -->
+                <div class="form-group" id="editEmailGroup" style="display: none;">
+                    <label>Email Address <span class="required">*</span></label>
+                    <input type="email" name="email" id="edit_email" placeholder="example@pit.edu.ph">
+                    <small class="help-text">Used for Admin OTP account recovery.</small>
                 </div>
                 <div class="form-group">
                     <label>Role</label>
@@ -438,38 +482,38 @@ if(isset($_SESSION['success'])) {
         function openAddModal() {
             document.getElementById('addModal').style.display = 'flex';
             document.querySelector('#addModal form').reset();
-            // Reset checkboxes: only 'view' checked on all pages
             document.querySelectorAll('#addModal .view-checkbox').forEach(cb => {
                 cb.checked = true;
                 togglePagePermissions(cb, cb.dataset.page);
             });
-            // Show/hide permissions based on role
             toggleAddPermissions();
         }
 
-        function openEditModal(id, username, role, given_name, middle_name, last_name, permissions_json, isAdmin) {
+        function openEditModal(id, username, role, given_name, middle_name, last_name, email, permissions_json, isAdmin) {
             document.getElementById('edit_user_id').value = id;
             document.getElementById('edit_username').value = username;
             document.getElementById('edit_given_name').value = given_name;
             document.getElementById('edit_middle_name').value = middle_name || '';
             document.getElementById('edit_last_name').value = last_name;
+            document.getElementById('edit_email').value = email || '';
             document.getElementById('edit_role').value = role;
 
-            // Show/hide permissions section and admin message
             const permissionsSection = document.getElementById('editPermissionsSection');
             const adminMessage = document.getElementById('editAdminMessage');
             const modalTitle = document.getElementById('editModalTitle');
+            const editEmailGroup = document.getElementById('editEmailGroup');
 
             if (isAdmin) {
                 permissionsSection.style.display = 'none';
                 adminMessage.style.display = 'block';
+                editEmailGroup.style.display = 'block';
                 modalTitle.textContent = 'Edit Admin Account';
             } else {
                 permissionsSection.style.display = 'block';
                 adminMessage.style.display = 'none';
+                editEmailGroup.style.display = 'none';
                 modalTitle.textContent = 'Edit Staff Account';
 
-                // Load permissions for staff
                 try {
                     const perms = JSON.parse(permissions_json);
                     document.querySelectorAll('#editModal .view-checkbox').forEach(cb => {
@@ -539,13 +583,17 @@ if(isset($_SESSION['success'])) {
             const role = document.getElementById('add_role').value;
             const permissionsSection = document.getElementById('addPermissionsSection');
             const adminMessage = document.getElementById('addAdminMessage');
+            const addEmailGroup = document.getElementById('addEmailGroup');
+
             if (role === 'admin') {
                 permissionsSection.style.display = 'none';
                 adminMessage.style.display = 'block';
+                addEmailGroup.style.display = 'block';
             } else {
                 permissionsSection.style.display = 'block';
                 adminMessage.style.display = 'none';
-                // Ensure checkboxes are enabled
+                addEmailGroup.style.display = 'none';
+                document.getElementById('add_email').value = '';
                 document.querySelectorAll('#addModal .perm-checkbox').forEach(cb => {
                     cb.disabled = false;
                 });
@@ -554,13 +602,11 @@ if(isset($_SESSION['success'])) {
 
         // ─── EVENT LISTENERS ───
         document.addEventListener('DOMContentLoaded', function() {
-            // Initial toggle for add modal
             const roleSelect = document.getElementById('add_role');
             if (roleSelect) {
                 roleSelect.addEventListener('change', toggleAddPermissions);
             }
 
-            // Initialize all view checkboxes
             document.querySelectorAll('.view-checkbox').forEach(cb => {
                 togglePagePermissions(cb, cb.dataset.page);
             });
