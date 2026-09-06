@@ -16,7 +16,7 @@ function getPageDefinitions() {
 function getAvailableActions($page = null) {
     $all_actions = [
         'scholars' => ['add', 'edit', 'notes', 'GWA & units', 'archive'],
-        'scholarship_programs' => ['add', 'edit', 'status', 'archive'],
+        'scholarship_programs' => ['add', 'edit', 'archive'],
         'import_export' => ['import', 'export'],
         'announcements' => ['add', 'edit', 'status', 'delete'],
         'program_management' => ['add', 'edit', 'delete'],
