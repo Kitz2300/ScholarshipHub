@@ -91,7 +91,7 @@ img {
 
 .login-box h2 {
     color: #1e4628; /* Matches header */
-    font-size: 27px;
+    font-size: 25px;
     text-align: center;
 }
 
@@ -207,4 +207,29 @@ img {
     .header h1 {
         font-size: 22px;
     }
+}
+
+/* Label Header Flex Container for Forgot Password */
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.label-row label {
+    margin-bottom: 0;
+}
+
+.forgot-btn {
+    font-size: 14px;
+    color: #1e4628;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+
+.forgot-btn:hover {
+    text-decoration: underline;
+    color: #2a6b37;
 }

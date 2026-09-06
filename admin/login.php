@@ -1,8 +1,11 @@
 <?php 
 session_start();
 
-// if login fails alert user
-if(isset($_SESSION['fail'])) {
+// Success/fail messages
+if(isset($_SESSION['success'])) {
+    echo "<script>alert('" . $_SESSION['success'] . "')</script>";
+    unset($_SESSION['success']);
+} else if(isset($_SESSION['fail'])) {
     echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
     unset($_SESSION['fail']);
 }
@@ -32,7 +35,7 @@ if(isset($_SESSION['user_id']) && ($_SESSION['role'] == "admin" || $_SESSION['ro
 
         <!-- login form -->
         <div class="login-box">
-            <h2> Admin / Coordinator Login</h2>
+            <h2> Scholarship Coordinator Login</h2>
             <p class="subtitle">Enter your credentials to access the admin dashboard.</p>
 
             <form method="post" action="../functions/admin/admin_login_process.php">
@@ -42,7 +45,10 @@ if(isset($_SESSION['user_id']) && ($_SESSION['role'] == "admin" || $_SESSION['ro
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Password</label>
+                    <div class="label-row">
+                        <label for="password">Password</label>
+                        <a href="forgot_password.php" class="forgot-btn">Forgot Password?</a>
+                    </div>
                     <input type="password" id="password" name="password" placeholder="Enter your password" required>
                 </div>
 
