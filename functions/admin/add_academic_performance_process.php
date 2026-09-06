@@ -5,20 +5,20 @@ require_once __DIR__ . "/../../includes/conn.php";
 if (isset($_POST['add']) && isset($_POST['scholar_id'])) {
     $scholar_id = (int)$_POST['scholar_id'];
     $sem = trim($_POST['sem'] ?? '');
-    $gwa = (float)$_POST['gwa'] ?? 0.0;
-    $units = (float)$_POST['units'] ?? 0.0;
+    $gwa = (float)($_POST['gwa'] ?? 0.0);
+    $units = (float)($_POST['units'] ?? 0.0);
 
     // ========== VALIDATE INPUTS ==========
     if (empty($sem) || $units <= 0 || $gwa < 0) {
         $_SESSION['fail'] = "All fields are required and must be valid (GWA >= 0, Units > 0).";
-        header("Location: ../../admin/academic_performance.php?scholar_id=$scholar_id");
+        header("Location: ../../admin/scholar_profile.php?scholar_id=$scholar_id");
         exit();
     }
 
     // Optional: GWA range check (adjust max to your system)
     if ($gwa > 5.0) {
         $_SESSION['fail'] = "GWA cannot exceed 5.0.";
-        header("Location: ../../admin/academic_performance.php?scholar_id=$scholar_id");
+        header("Location: ../../admin/scholar_profile.php?scholar_id=$scholar_id");
         exit();
     }
 
@@ -32,14 +32,14 @@ if (isset($_POST['add']) && isset($_POST['scholar_id'])) {
     if ($row = $year_lvl_result->fetch_assoc()) {
         if (empty($row['year_level']) || empty($row['school_year'])) {
             $_SESSION['fail'] = "Scholar has no year level or School Year set.";
-            header("Location: ../../admin/academic_performance.php?scholar_id=$scholar_id");
+            header("Location: ../../admin/scholar_profile.php?scholar_id=$scholar_id");
             exit();
         }
         $year_lvl = $row['year_level'];
         $school_year = $row['school_year'];
     } else {
         $_SESSION['fail'] = "Scholar not found!";
-        header("Location: ../../admin/academic_performance.php?scholar_id=$scholar_id");
+        header("Location: ../../admin/scholar_profile.php?scholar_id=$scholar_id");
         exit();
     }
 
@@ -53,7 +53,7 @@ if (isset($_POST['add']) && isset($_POST['scholar_id'])) {
 
     if ($sem_result->num_rows > 0) {
         $_SESSION['fail'] = "A record for this semester and school year already exists.";
-        header("Location: ../../admin/academic_performance.php?scholar_id=$scholar_id");
+        header("Location: ../../admin/scholar_profile.php?scholar_id=$scholar_id");
         exit();
     }
 
@@ -64,12 +64,21 @@ if (isset($_POST['add']) && isset($_POST['scholar_id'])) {
     $stmt->bind_param('isddss', $scholar_id, $sem, $gwa, $units, $year_lvl, $school_year);
 
     if ($stmt->execute()) {
+        // ========== AUDIT TRAIL LOGGING ==========
+        $user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
+        $action = "Added academic performance record for Scholar ID $scholar_id ($sem, SY: $school_year, GWA: $gwa, Units: $units)";
+
+        $audit_sql = "INSERT INTO audit_trail (user_id, action) VALUES (?, ?)";
+        $audit_stmt = $conn->prepare($audit_sql);
+        $audit_stmt->bind_param('is', $user_id, $action);
+        $audit_stmt->execute();
+
         $_SESSION['success'] = "Academic record successfully added.";
     } else {
         $_SESSION['fail'] = "Failed to add academic record: " . $stmt->error;
     }
 
-    header("Location: ../../admin/academic_performance.php?scholar_id=$scholar_id");
+    header("Location: ../../admin/scholar_profile.php?scholar_id=$scholar_id");
     exit();
 }
 ?>
