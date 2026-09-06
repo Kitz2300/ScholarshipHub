@@ -540,7 +540,15 @@ unset($_SESSION['upload_error']);
                 <div class="history-section">
                     <h3>Import History</h3>
                     <?php 
-                    $history_sql = "SELECT imported_at, filename, scholarship_users.role FROM import_history LEFT JOIN scholarship_users ON import_history.user_id = scholarship_users.id ORDER BY imported_at DESC";
+                    $history_sql = "SELECT 
+                                    imported_at, 
+                                    filename, 
+                                    scholarship_users.role, 
+                                    CONCAT_WS(' ', scholarship_users.given_name, scholarship_users.middle_name, scholarship_users.last_name) AS name
+                                    FROM import_history 
+                                    LEFT JOIN 
+                                        scholarship_users ON import_history.user_id = scholarship_users.id 
+                                    ORDER BY imported_at DESC";
                     $history_stmt = $conn->prepare($history_sql);
                     ?>
                     <table>
@@ -548,7 +556,8 @@ unset($_SESSION['upload_error']);
                             <tr>
                                 <th>File Name</th>
                                 <th>Imported At</th>
-                                <th>User</th>
+                                <th>Name</th>
+                                <th>Role</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -559,6 +568,7 @@ unset($_SESSION['upload_error']);
                                         <tr>
                                             <td><?= htmlspecialchars($row['filename']) ?></td>
                                             <td><?= htmlspecialchars($row['imported_at']) ?></td>
+                                            <td><?= htmlspecialchars($row['name']) ?></td>
                                             <td><?= htmlspecialchars($row['role']) ?></td>
                                         </tr>
                                     <?php endwhile;
