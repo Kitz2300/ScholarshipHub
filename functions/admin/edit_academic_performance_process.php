@@ -62,6 +62,15 @@ if (isset($_POST['update'])) {
     $update_stmt->bind_param('sddi', $semester, $gwa, $units, $record_id);
 
     if ($update_stmt->execute()) {
+        // ========== AUDIT TRAIL LOGGING ==========
+        $user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
+        $action = "Updated academic performance record ID $record_id for Scholar ID $scholar_id ($semester, GWA: $gwa, Units: $units)";
+
+        $audit_sql = "INSERT INTO audit_trail (user_id, action) VALUES (?, ?)";
+        $audit_stmt = $conn->prepare($audit_sql);
+        $audit_stmt->bind_param("is", $user_id, $action);
+        $audit_stmt->execute();
+
         $_SESSION['success'] = "Academic record updated!";
     } else {
         $_SESSION['fail'] = "Failed to update: " . $update_stmt->error;
@@ -70,3 +79,4 @@ if (isset($_POST['update'])) {
     header("Location: ../../admin/academic_performance.php?scholar_id=$scholar_id");
     exit();
 }
+?>

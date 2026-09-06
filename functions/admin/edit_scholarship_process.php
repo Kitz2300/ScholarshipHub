@@ -56,6 +56,15 @@ if (!empty($name) && !empty($code) && !empty($description) && !empty($school_yea
     $update_scholar_stmt->bind_param('si', $school_year, $scholarship_id);
 
     if ($update_scholar_stmt->execute() && $update_stmt->execute()) {
+        // ========== AUDIT TRAIL LOGGING ==========
+        $user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
+        $action = "Updated scholarship program ID $scholarship_id: $name ($code)";
+
+        $audit_sql = "INSERT INTO audit_trail (user_id, action) VALUES (?, ?)";
+        $audit_stmt = $conn->prepare($audit_sql);
+        $audit_stmt->bind_param("is", $user_id, $action);
+        $audit_stmt->execute();
+
         $_SESSION['success'] = "Scholarship program successfully updated.";
         header("Location: ../../admin/scholarship_program.php");
         exit();

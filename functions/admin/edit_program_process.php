@@ -13,6 +13,15 @@ if(isset($_POST['edit_program'])) {
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("sii", $program_name, $college_id, $program_id);
         if($stmt->execute()) {
+            // ========== AUDIT TRAIL LOGGING ==========
+            $user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
+            $action = "Updated program ID $program_id: " . $program_name . " (College ID: " . $college_id . ")";
+
+            $audit_sql = "INSERT INTO audit_trail (user_id, action) VALUES (?, ?)";
+            $audit_stmt = $conn->prepare($audit_sql);
+            $audit_stmt->bind_param("is", $user_id, $action);
+            $audit_stmt->execute();
+
             $_SESSION['success'] = "Program updated successfully.";
         } else {
             $_SESSION['fail'] = "Filed to update program.";

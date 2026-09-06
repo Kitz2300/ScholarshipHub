@@ -15,6 +15,15 @@ if(isset($_POST['title'], $_POST['content'], $_POST['announcement_id'])) {
 
     // success/fail messages
     if($update_stmt->execute()) {
+        // ========== AUDIT TRAIL LOGGING ==========
+        $user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
+        $action = "Updated announcement ID $announcement_id: " . $title;
+
+        $audit_sql = "INSERT INTO audit_trail (user_id, action) VALUES (?, ?)";
+        $audit_stmt = $conn->prepare($audit_sql);
+        $audit_stmt->bind_param("is", $user_id, $action);
+        $audit_stmt->execute();
+
         $_SESSION['success'] = "Announcement Updated";
     } else {
         $_SESSION['fail'] = "Update Failed " . $update_stmt->error;

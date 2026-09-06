@@ -249,6 +249,15 @@ if(isset($_POST['update'])) {
     );
     
     if($scholar_stmt->execute()) {
+        // ========== AUDIT TRAIL LOGGING ==========
+        $user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
+        $action = "Updated profile for scholar: $first_name $last_name (Student ID: $student_id, Scholar ID: $id_num)";
+
+        $audit_sql = "INSERT INTO audit_trail (user_id, action) VALUES (?, ?)";
+        $audit_stmt = $conn->prepare($audit_sql);
+        $audit_stmt->bind_param("is", $user_id, $action);
+        $audit_stmt->execute();
+
         $_SESSION['success'] = "Scholar profile updated successfully.";
     } else {
         $_SESSION['fail'] = "Update Failed: " . $scholar_stmt->error;

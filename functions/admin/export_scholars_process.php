@@ -148,7 +148,6 @@ if($isPreview) {
             $notes = json_decode($row['_notes'], true);
             if(is_array($notes)) {
                 foreach($extra_cols as $extra_key) {
-                    // extra_key is like "extra_Remarks", we need the actual key
                     $actual_key = substr($extra_key, 6);
                     $row[$extra_key] = $notes[$actual_key] ?? '';
                 }
@@ -161,18 +160,15 @@ if($isPreview) {
         }
         $rows[] = $row;
     }
-    // Build the column list for preview (all selected in the order they appear in all_selected)
-    // But we need to respect the user's column_order if available.
+    
     $columns_for_preview = $all_selected;
     if(!empty($column_order)) {
-        // Reorder $all_selected according to $column_order
         $ordered = [];
         foreach($column_order as $col) {
             if(in_array($col, $all_selected)) {
                 $ordered[] = $col;
             }
         }
-        // Append any missing
         foreach($all_selected as $col) {
             if(!in_array($col, $ordered)) {
                 $ordered[] = $col;
@@ -190,7 +186,6 @@ if($isPreview) {
 }
 
 // ===== Otherwise, do full export =====
-// Determine final column order
 $final_cols = $all_selected;
 if(!empty($column_order)) {
     $ordered = [];
@@ -199,7 +194,6 @@ if(!empty($column_order)) {
             $ordered[] = $col;
         }
     }
-    // Append missing
     foreach($all_selected as $col) {
         if(!in_array($col, $ordered)) {
             $ordered[] = $col;
@@ -237,7 +231,6 @@ $col = 1;
 foreach($final_cols as $colName) {
     $cell = Coordinate::stringFromColumnIndex($col) . '1';
     if(strpos($colName, 'extra_') === 0) {
-        // Extra column: use the part after extra_ as header
         $headerText = substr($colName, 6);
     } else {
         $headerText = $display_headers[$colName] ?? ucwords(str_replace('_', ' ', $colName));
@@ -250,7 +243,6 @@ foreach($final_cols as $colName) {
 // Add data rows
 $rowNum = 2;
 while($row = $result->fetch_assoc()) {
-    // Decode notes for extra columns
     if($has_extra && isset($row['_notes'])) {
         $notes = json_decode($row['_notes'], true);
         if(is_array($notes)) {
@@ -299,6 +291,15 @@ $sheet->freezePane('A2');
 // Set filename and download
 $filename = !empty($_POST['filename']) ? $_POST['filename'] : 'scholars_export_' . date('Y-m-d');
 $fullFilename = $filename . '.xlsx';
+
+// ========== AUDIT TRAIL LOGGING ==========
+$user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
+$action = "Exported scholar data to Excel ($fullFilename) [Scholarship Program: $scholarship_program, Academic Program: $program]";
+
+$audit_sql = "INSERT INTO audit_trail (user_id, action) VALUES (?, ?)";
+$audit_stmt = $conn->prepare($audit_sql);
+$audit_stmt->bind_param("is", $user_id, $action);
+$audit_stmt->execute();
 
 $writer = new Xlsx($spreadsheet);
 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
