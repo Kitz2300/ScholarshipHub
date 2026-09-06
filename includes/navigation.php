@@ -36,7 +36,7 @@ $announcement_pages = [
 
 $management_pages = array_merge(
     $announcement_pages, 
-    ['program_management.php', 'account_management.php']
+    ['program_management.php', 'account_management.php', 'archive.php', 'audit_trail.php']
 );
 ?>
 
@@ -112,6 +112,13 @@ $management_pages = array_merge(
                     <?php if($_SESSION['role'] === 'admin') : ?>
                         <li>
                             <a href="archive.php" class="<?= isActive('archive.php', $current_page) ?>">Archives</a>
+                        </li>
+                    <?php endif; ?>
+
+                    <!-- Audit Trail -->
+                    <?php if($_SESSION['role'] === 'admin') : ?>
+                        <li>
+                            <a href="audit_trail.php" class="<?= isActive('audit_trail.php', $current_page) ?>">Audit Trail</a>
                         </li>
                     <?php endif; ?>
                 </ul>
