@@ -159,17 +159,11 @@ $staff_result = $conn->query($staff_sql);
     <title>Account Management - PIT ScholarshipHub</title>
     <link rel="stylesheet" href="../assets/css/account_management.css?v=<?= filemtime('../assets/css/account_management.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <link rel="stylesheet" href="../assets/css/modals.css">
 </head>
 <body>
-    <?php 
-    if(isset($_SESSION['success'])) {
-        echo "<script>alert('" . $_SESSION['success'] . "')</script>";
-        unset($_SESSION['success']);
-    } else if(isset($_SESSION['fail'])) {
-        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-        unset($_SESSION['fail']);
-    }
-    ?>
+    <!-- alert messages -->
+    <?php include __DIR__ . '/../includes/modal_alerts.php'; ?>
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -238,7 +232,7 @@ $staff_result = $conn->query($staff_sql);
                                                 <?php if(!$is_current_user) : ?>
                                                     <form action="" method="POST" style="display: inline;">
                                                         <input type="hidden" name="user_id" value="<?= $admin['id'] ?>">
-                                                        <button type="submit" name="delete_staff" class="btn-sm btn-delete" onclick="return confirm('Delete this admin account?')">Delete</button>
+                                                        <button type="submit" name="delete_staff" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Are you sure you want to delete this account?', 'Delete', true)">Delete</button>
                                                     </form>
                                                 <?php endif; ?>
                                             </div>

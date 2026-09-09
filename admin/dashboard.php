@@ -131,15 +131,11 @@ while($row = $status_result->fetch_assoc()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <link rel="stylesheet" href="../assets/css/modals.css">
 </head>
 <body>
-    <?php 
-    // fail session messages
-    if(isset($_SESSION['fail'])) {
-        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-        unset($_SESSION['fail']);
-    }
-    ?>
+    <!-- alert messages -->
+    <?php include __DIR__ . '/../includes/modal_alerts.php'; ?>
     <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href='login.php'</script>
@@ -157,7 +153,7 @@ while($row = $status_result->fetch_assoc()) {
                 <div class="header-right">
                     <span class="welcome-text">Welcome, <?= $_SESSION['role'] == 'admin' ? 'Admin!' : 'Staff!' ?></span>
                     <form action="../functions/logout.php" method="post" style="display: inline;">
-                        <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
+                        <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to log out?', 'Logout', true)">Logout</button>
                     </form>
                 </div>
             </div>
@@ -241,7 +237,7 @@ while($row = $status_result->fetch_assoc()) {
                                 <span class="stat-sub">Needs attention</span>
                             </div>
                             <div class="stat-info">
-                             <img class="warning-img" src="../assets/images/warning.png">
+                                <img class="warning-img" src="../assets/images/warning.png">
                             </div>
                         </div>
                     </a>
