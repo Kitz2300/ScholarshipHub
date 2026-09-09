@@ -5,11 +5,17 @@ $password = "";
 $servername = "localhost";
 $dbname = "scholarship_hub";
 
-// Create connection to MySQL database
+// Enable strict exception throwing for MySQLi
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 try {
     $conn = new mysqli($servername, $username, $password, $dbname);
+    $conn->set_charset("utf8mb4");
 } catch (Exception $e) {
-    die("Connection failed: " . $e->getMessage());
+    // Log the actual technical error internally for developer debugging
+    error_log("Database Connection Error: " . $e->getMessage());
+    
+    // Display a clean, generic message to the user
+    die("Unable to connect to the server at this time. Please try again later.");
 }
-
 ?>
