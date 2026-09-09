@@ -1,0 +1,90 @@
+/* SYSTEM MODAL OVERLAY */
+.sys-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+}
+
+.sys-modal.sys-show {
+    display: flex;
+}
+
+.sys-modal-content {
+    background: #ffffff;
+    border-radius: 10px;
+    max-width: 420px;
+    width: 90%;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: sysSlideDown 0.25s ease-out;
+}
+
+@keyframes sysSlideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.sys-modal-header {
+    padding: 15px 20px;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sys-header-success { background-color: #2a6b37; }
+.sys-header-danger  { background-color: #c0392b; }
+.sys-header-warning { background-color: #e67e22; }
+
+.sys-modal-header h3 {
+    margin: 0;
+    font-size: 17px;
+}
+
+.sys-modal-close {
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.sys-modal-close:hover { opacity: 1; }
+
+.sys-modal-body {
+    padding: 20px;
+    font-size: 14px;
+    color: #333333;
+    line-height: 1.5;
+}
+
+.sys-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 20px 18px;
+}
+
+.sys-btn {
+    border: none;
+    padding: 8px 18px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.sys-btn-primary { background: #2a6b37; color: #fff; }
+.sys-btn-primary:hover { background: #1e4628; }
+
+.sys-btn-danger { background: #e74c3c; color: #fff; }
+.sys-btn-danger:hover { background: #c0392b; }
+
+.sys-btn-secondary { background: #95a5a6; color: #fff; }
+.sys-btn-secondary:hover { background: #7f8c8d; }
