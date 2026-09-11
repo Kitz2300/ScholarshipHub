@@ -44,9 +44,8 @@ $file_name = "";
 $extra_cols = false;
 $num_extra_cols = 0;
 $selected_columns = [];
-// Get the user's skip count from POST, default to 3 if not set
 $user_skip = isset($_POST['headers']) ? (int)$_POST['headers'] : 3;
-$user_skip = max(0, $user_skip); // ensure non-negative
+$user_skip = max(0, $user_skip);
 
 // ─── Field order ───
 $column_order = [
@@ -111,7 +110,7 @@ function processRows($data_rows, $mapped_columns, $conn, $header_row_index) {
             $valid_rows[] = $rowData;
         } else {
             $errors_by_row[] = [
-                'row_number' => $row_idx + $header_row_index + 2,  // correct for skipped rows
+                'row_number' => $row_idx + $header_row_index + 2,
                 'row_error' => $rowErrors
             ];
         }
@@ -121,31 +120,24 @@ function processRows($data_rows, $mapped_columns, $conn, $header_row_index) {
 
 // ─── Handle form submission ───
 if(isset($_POST['select_columns'])) {
-    // Clear previous error
     unset($_SESSION['upload_error']);
 
-    // 1. Update session with selected columns
     if(isset($_POST['columns_present'])) {
         $_SESSION['selected_columns'] = $_POST['columns_present'];
     }
 
-    // 2. Determine which columns to use for mapping
     $selected_columns = isset($_SESSION['selected_columns']) 
         ? $_SESSION['selected_columns'] 
         : $default_checked;
 
-    // ─── Check if we have a new file upload ───
     $has_new_file = isset($_FILES['excel_file']) && $_FILES['excel_file']['error'] === UPLOAD_ERR_OK;
 
-    // If no new file, but we have session data, reuse it
     if (!$has_new_file && isset($_SESSION['data_rows']) && !empty($_SESSION['data_rows'])) {
-        // Reuse existing data
         $data_rows = $_SESSION['data_rows'];
-        $header_row_index = $_SESSION['header_row_index'] ?? 3; // fallback
+        $header_row_index = $_SESSION['header_row_index'] ?? 3;
         $scholarship_program_id = $_SESSION['scholarship_program_id'] ?? 0;
         $file_name = $_SESSION['file_name'] ?? '';
 
-        // Build mapping
         $mapped_columns = [];
         $excel_index = 1;
         foreach($column_order as $field) {
@@ -156,25 +148,23 @@ if(isset($_POST['select_columns'])) {
         }
         $_SESSION['mapped_columns'] = $mapped_columns;
 
-        // Process rows
         list($valid_rows, $errors_by_row) = processRows($data_rows, $mapped_columns, $conn, $header_row_index);
 
-        // ─── Determine max columns (ignoring trailing empty columns) ───
         $max_columns = 0;
         foreach($data_rows as $rowData) {
             if(empty(array_filter($rowData))) continue;
-            // Find the last non-empty cell in this row
             $last_non_empty = 0;
             foreach($rowData as $idx => $value) {
-                if(!empty(trim($value))) {
-                    $last_non_empty = $idx + 1; // convert to 1-based count
+                $v_str = trim((string)$value);
+                if(!empty($v_str) && strtolower($v_str) !== 'nan') {
+                    $last_non_empty = $idx + 1;
                 }
             }
             if($last_non_empty > $max_columns) {
                 $max_columns = $last_non_empty;
             }
         }
-        $mapped_count = count($mapped_columns) + 1; // +1 for SEQ
+        $mapped_count = count($mapped_columns) + 1;
         $extra_cols = ($max_columns > $mapped_count);
         $num_extra_cols = $extra_cols ? ($max_columns - $mapped_count) : 0;
         $sample_row = !empty($valid_rows) ? $valid_rows[0] : [];
@@ -186,12 +176,10 @@ if(isset($_POST['select_columns'])) {
         $_SESSION['sample_row'] = $sample_row;
         $_SESSION['import_processed'] = true;
 
-        // Redirect to clear POST and avoid resubmission
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
     }
 
-    // ─── New file upload ───
     if($has_new_file) {
         $excel_file = $_FILES['excel_file'];
         $file_name = $excel_file['name'];
@@ -201,7 +189,6 @@ if(isset($_POST['select_columns'])) {
             $_SESSION['upload_error'] = 'Please select a scholarship program.';
             $_SESSION['import_processed'] = false;
         } else {
-            // Validate file type
             $allowedMimeTypes = [
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 'application/vnd.ms-excel',
@@ -222,24 +209,40 @@ if(isset($_POST['select_columns'])) {
                 }
 
                 if(!isset($_SESSION['upload_error'])) {
+                    // Automatically pick the sheet with the most rows (Data Sheet)
                     $worksheet = $spreadsheet->getActiveSheet();
-                    $all_rows = $worksheet->toArray();
+                    foreach ($spreadsheet->getAllSheets() as $sheet) {
+                        if ($sheet->getHighestRow() > $worksheet->getHighestRow()) {
+                            $worksheet = $sheet;
+                        }
+                    }
 
-                    // ─── Use the user's input for skip count ───
-                    // $user_skip is already defined from POST
-                    // Last row to skip (0-based) = user_skip - 1
+                    $raw_all_rows = $worksheet->toArray();
+                    
+                    // Clean cell values (floats to string integers, nulls to empty string)
+                    $all_rows = [];
+                    foreach($raw_all_rows as $r_idx => $r_val) {
+                        $c_row = [];
+                        foreach($r_val as $c_val) {
+                            if ($c_val === null || $c_val === '') {
+                                $c_row[] = '';
+                            } elseif (is_float($c_val) && floor($c_val) == $c_val) {
+                                $c_row[] = (string)(int)$c_val;
+                            } else {
+                                $c_row[] = trim((string)$c_val);
+                            }
+                        }
+                        $all_rows[] = $c_row;
+                    }
+
                     $header_row_index = max(0, $user_skip - 1);
-
-                    // ─── Get data rows (starting at index = user_skip) ───
                     $data_rows = array_slice($all_rows, $user_skip);
 
-                    // ─── Store for later reuse ───
                     $_SESSION['data_rows'] = $data_rows;
-                    $_SESSION['header_row_index'] = $header_row_index; // used for error row numbering
+                    $_SESSION['header_row_index'] = $header_row_index;
                     $_SESSION['scholarship_program_id'] = $scholarship_program_id;
                     $_SESSION['file_name'] = $file_name;
 
-                    // ─── Build mapping using selected columns ───
                     $mapped_columns = [];
                     $excel_index = 1;
                     foreach($column_order as $field) {
@@ -250,17 +253,15 @@ if(isset($_POST['select_columns'])) {
                     }
                     $_SESSION['mapped_columns'] = $mapped_columns;
 
-                    // ─── Process rows ───
                     list($valid_rows, $errors_by_row) = processRows($data_rows, $mapped_columns, $conn, $header_row_index);
 
-                    // ─── Determine max columns (ignoring trailing empties) ───
                     $max_columns = 0;
                     foreach($data_rows as $rowData) {
                         if(empty(array_filter($rowData))) continue;
-                        // Find the last non-empty cell in this row
                         $last_non_empty = 0;
                         foreach($rowData as $idx => $value) {
-                            if(!empty(trim($value))) {
+                            $v_str = trim((string)$value);
+                            if(!empty($v_str) && strtolower($v_str) !== 'nan') {
                                 $last_non_empty = $idx + 1;
                             }
                         }
@@ -268,7 +269,7 @@ if(isset($_POST['select_columns'])) {
                             $max_columns = $last_non_empty;
                         }
                     }
-                    $mapped_count = count($mapped_columns) + 1; // +1 for SEQ
+                    $mapped_count = count($mapped_columns) + 1;
                     $extra_cols = ($max_columns > $mapped_count);
                     $num_extra_cols = $extra_cols ? ($max_columns - $mapped_count) : 0;
                     $sample_row = !empty($valid_rows) ? $valid_rows[0] : [];
@@ -280,7 +281,6 @@ if(isset($_POST['select_columns'])) {
                     $_SESSION['sample_row'] = $sample_row;
                     $_SESSION['import_processed'] = true;
 
-                    // Redirect to clear POST and avoid resubmission
                     header("Location: " . $_SERVER['PHP_SELF']);
                     exit();
                 }
@@ -288,20 +288,17 @@ if(isset($_POST['select_columns'])) {
         }
     }
 
-    // If we reach here, something went wrong (no file and no session data)
     if (!isset($_SESSION['upload_error'])) {
         $_SESSION['upload_error'] = 'No file uploaded or session data missing. Please upload a file again.';
     }
     $_SESSION['import_processed'] = false;
 }
 
-// ─── If user confirmed insertion ───
 if(isset($_POST['confirm'])) {
     header("Location: ../functions/admin/upload_data_insert.php");
     exit();
 }
 
-// ─── Show error message if any ───
 $upload_error = $_SESSION['upload_error'] ?? null;
 unset($_SESSION['upload_error']);
 ?>
@@ -313,10 +310,21 @@ unset($_SESSION['upload_error']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/upload_excel.css?v=<?= filemtime('../assets/css/upload_excel.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <link rel="stylesheet" href="../assets/css/modals.css">
 </head>
 <body>
-    <?php 
-    if(!isset($_SESSION['user_id']) && $_SESSION['role'] !== 'admin') : ?>
+    <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
+
+    <!-- Loading Modal -->
+    <div id="importLoadingModal" class="sys-modal">
+        <div class="sys-modal-content" style="text-align: center; padding: 35px 20px;">
+            <div class="sys-spinner"></div>
+            <h3 style="margin-top: 18px; color: #1e4628; font-size: 18px;">Processing Import Data...</h3>
+            <p style="color: #666; font-size: 13px; margin-top: 6px;">Please wait while the system validates and imports scholar records.</p>
+        </div>
+    </div>
+
+    <?php if(!isset($_SESSION['user_id']) && $_SESSION['role'] !== 'admin') : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href='login.php'</script>
     <?php else : ?>
@@ -333,7 +341,7 @@ unset($_SESSION['upload_error']);
                 <div class="header-right">
                     <span class="welcome-text">Welcome, Admin!</span>
                     <form action="../functions/logout.php" method="post" style="display: inline;">
-                        <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
+                        <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to log out?', 'Logout', 'danger')">Logout</button>
                     </form>
                 </div>
             </div>
@@ -344,9 +352,6 @@ unset($_SESSION['upload_error']);
             <div class="page-content">
                 <div class="page-header">
                     <h2>Upload Excel File</h2>
-                    <!-- <div class="page-actions">
-                        <a href="scholar_list.php" class="btn btn-secondary">← Back to Scholars</a>
-                    </div> -->
                 </div>
 
                 <?php if($upload_error): ?>
@@ -359,7 +364,7 @@ unset($_SESSION['upload_error']);
                 <!-- Step 1: Upload Form -->
                 <div class="upload-section">
                     <h3>Step 1: Upload Your Excel File</h3>
-                    <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" enctype="multipart/form-data" class="upload-form">
+                    <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" enctype="multipart/form-data" class="upload-form" onsubmit="showImportLoading()">
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="upload">Import Excel File <span class="required">*</span></label>
@@ -398,11 +403,9 @@ unset($_SESSION['upload_error']);
                         <li>Use the template provided by the scholarship office.
                             <a href="../assets/TEMPLATE.xlsx" download>Download Template</a>
                         </li>
-                        <!-- <li>Required Columns: Student ID, Last Name, Given Name, Sex, Birthdate, Program, Year Level</li> -->
                         <li>Make sure the file format is <strong>.xlsx</strong> or <strong>.xls</strong>.</li>
                         <li>After uploading, you will be able to select which columns are present in your file.</li>
                         <li><strong>Skip rows:</strong> Enter the number of top rows that contain headers. Data rows will start after that many rows.</li>
-                        <!-- <li><strong>Skip rows:</strong> Enter the number of top rows that contain headers or extra information. Data rows will start after that many rows.</li> -->
                     </ul>
                 </div>
 
@@ -412,7 +415,7 @@ unset($_SESSION['upload_error']);
                     <h3>Step 2: Select Columns Present in Your File</h3>
                     <p>Check only the columns that exist in your Excel file. They will be mapped in the order they appear (left to right).</p>
                     
-                    <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST">
+                    <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" onsubmit="showImportLoading()">
                         <div class="checkbox-grid">
                             <?php 
                             $selected = isset($_SESSION['selected_columns']) ? $_SESSION['selected_columns'] : $default_checked;
@@ -486,7 +489,7 @@ unset($_SESSION['upload_error']);
 
                         <!-- Confirmation Form -->
                         <div class="confirm-section">
-                            <form action="../functions/admin/upload_data_insert.php" method="POST">
+                            <form action="../functions/admin/upload_data_insert.php" method="POST" onsubmit="showImportLoading()">
                                 <?php if($extra_cols) : ?>
                                     <div class="extra-columns-section">
                                         <h4>Extra Columns Detected!</h4>
@@ -500,7 +503,7 @@ unset($_SESSION['upload_error']);
                                             </thead>
                                             <tbody>
                                                 <?php 
-                                                $mapped_count = count($_SESSION['mapped_columns'] ?? []) + 1; // +1 for SEQ
+                                                $mapped_count = count($_SESSION['mapped_columns'] ?? []) + 1;
                                                 for($i = $mapped_count; $i < $mapped_count + $num_extra_cols; $i++) : 
                                                     $sample_value = $sample_row[$i] ?? "";
                                                 ?>
@@ -528,7 +531,6 @@ unset($_SESSION['upload_error']);
                                     <?php if(count($_SESSION['valid_rows']) > 0) : ?>
                                         <button type="submit" name="confirm" class="btn btn-success">Add Scholar Records</button>
                                     <?php endif; ?>
-                                    <!-- Cancel button clears session -->
                                     <a href="?clear=1" class="btn btn-secondary">Cancel</a>
                                 </div>
                             </form>
@@ -551,39 +553,41 @@ unset($_SESSION['upload_error']);
                                     ORDER BY imported_at DESC";
                     $history_stmt = $conn->prepare($history_sql);
                     ?>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>File Name</th>
-                                <th>Imported At</th>
-                                <th>Name</th>
-                                <th>Role</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if($history_stmt->execute()) :
-                                $history_result = $history_stmt->get_result();
-                                if($history_result->num_rows > 0) :
-                                    while($row = $history_result->fetch_assoc()) : ?>
-                                        <tr>
-                                            <td><?= htmlspecialchars($row['filename']) ?></td>
-                                            <td><?= htmlspecialchars($row['imported_at']) ?></td>
-                                            <td><?= htmlspecialchars($row['name']) ?></td>
-                                            <td><?= htmlspecialchars($row['role']) ?></td>
-                                        </tr>
-                                    <?php endwhile;
-                                else:?>
-                                    <tr>
-                                        <td colspan="3" class="no-data">No import history found.</td>
-                                    </tr>
-                                <?php endif;
-                            else :?>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td colspan="3" class="no-data">Error loading import history.</td>
+                                    <th>File Name</th>
+                                    <th>Imported At</th>
+                                    <th>Name</th>
+                                    <th>Role</th>
                                 </tr>
-                            <?php endif;?>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <?php if($history_stmt->execute()) :
+                                    $history_result = $history_stmt->get_result();
+                                    if($history_result->num_rows > 0) :
+                                        while($row = $history_result->fetch_assoc()) : ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($row['filename']) ?></td>
+                                                <td><?= htmlspecialchars($row['imported_at']) ?></td>
+                                                <td><?= htmlspecialchars($row['name']) ?></td>
+                                                <td><?= htmlspecialchars($row['role']) ?></td>
+                                            </tr>
+                                        <?php endwhile;
+                                    else:?>
+                                        <tr>
+                                            <td colspan="4" class="no-data">No import history found.</td>
+                                        </tr>
+                                    <?php endif;
+                                else :?>
+                                    <tr>
+                                        <td colspan="4" class="no-data">Error loading import history.</td>
+                                    </tr>
+                                <?php endif;?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
             </div>
@@ -594,5 +598,11 @@ unset($_SESSION['upload_error']);
             </div>
         </div>
     <?php endif; ?> 
+
+    <script>
+    function showImportLoading() {
+        document.getElementById('importLoadingModal').classList.add('sys-show');
+    }
+    </script>
 </body>
 </html>
