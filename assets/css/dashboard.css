@@ -1,3 +1,42 @@
+/* ============================================================
+   GLOBAL & RESET STYLES
+   ============================================================ */
+:root {
+    /* Brand & Primary Colors */
+    --primary-dark: #1e4628;
+    --primary-header: rgba(26, 59, 34, 0.9);
+    --primary-green: #2a6b37;
+    --accent-green: #3fb524;
+    --dropdown-bg: #338043;
+
+    /* Stat Indicator Colors */
+    --stat-total: #3498db;
+    --stat-active: #2ecc71;
+    --stat-programs: #e67e22;
+    --stat-flagged: #e74c3c;
+
+    /* Text Colors */
+    --text-dark: #333333;
+    --text-muted: #555555;
+    --text-sub: #666666;
+    --text-light: #777777;
+    --text-white: #ffffff;
+
+    /* Glassmorphism & Background Colors */
+    --bg-glass-main: rgba(255, 255, 255, 0.85);
+    --bg-glass-card: rgba(255, 255, 255, 0.6);
+    --bg-glass-item: rgba(255, 255, 255, 0.5);
+    --bg-overlay: rgba(0, 0, 0, 0.15);
+    
+    /* Borders & Shadows */
+    --border-glass: 1px solid rgba(255, 255, 255, 0.3);
+    --border-glass-card: 1px solid rgba(255, 255, 255, 0.4);
+    --border-subtle: 1px solid rgba(0, 0, 0, 0.05);
+    --border-gray: 1px solid #dddddd;
+    --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,7 +45,7 @@
 
 body {
     font-family: Arial, sans-serif;
-    color: #333;
+    color: var(--text-dark);
     min-height: 100vh;
     position: relative;
     background-image: url('../images/background.png');
@@ -27,7 +66,7 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.15);
+    background: var(--bg-overlay);
     z-index: -1;
     pointer-events: none;
 }
@@ -40,12 +79,12 @@ body::before {
     width: 100%;
     margin: 0;
     padding: 0;
-    background: rgba(255, 255, 255, 0.85);
+    background: var(--bg-glass-main);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: var(--border-glass);
     border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-glass);
     overflow: hidden;
 }
 
@@ -53,9 +92,9 @@ body::before {
    HEADER
    ============================================================ */
 .header {
-    background: rgba(26, 59, 34, 0.9) !important;
+    background: var(--primary-header) !important;
     backdrop-filter: blur(10px);
-    color: #fff;
+    color: var(--text-white);
     padding: 15px 25px;
     display: flex;
     justify-content: space-between;
@@ -77,7 +116,7 @@ body::before {
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid rgba(255, 255, 255, 0.5);
-    background-color: rgba(255, 255, 255, 0.818);
+    background-color: rgba(255, 255, 255, 0.82);
 }
 
 .header-left h1 {
@@ -102,7 +141,7 @@ body::before {
 
 .logout-btn {
     background: rgba(255, 255, 255, 0.15);
-    color: #fff;
+    color: var(--text-white);
     border: 1px solid rgba(255, 255, 255, 0.3);
     padding: 6px 14px;
     border-radius: 4px;
@@ -121,7 +160,7 @@ body::before {
 .nav-bar {
     background: rgba(255, 255, 255, 0.4);
     padding: 10px 25px;
-    border-bottom: 2px solid #2a6b37;
+    border-bottom: 2px solid var(--primary-green);
 }
 
 .nav-bar ul {
@@ -145,12 +184,12 @@ body::before {
 }
 
 .nav-bar ul li a:hover {
-    color: #1e4628;
+    color: var(--primary-dark);
 }
 
 .nav-bar ul li a.active {
-    color: #1e4628;
-    border-bottom-color: #1e4628;
+    color: var(--primary-dark);
+    border-bottom-color: var(--primary-dark);
     font-weight: bold;
 }
 
@@ -164,11 +203,11 @@ body::before {
     position: absolute;
     top: 100%;
     left: 0;
-    background: #338043;
+    background: var(--dropdown-bg);
     min-width: 200px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-radius: 4px;
-    border: 1px solid #ddd;
+    border: var(--border-gray);
     padding: 8px 0;
     z-index: 999;
 }
@@ -187,7 +226,7 @@ body::before {
 .nav-bar ul li .dropdown-menu li a {
     display: block;
     padding: 8px 16px;
-    color: #ffffff;
+    color: var(--text-white);
     text-decoration: none;
     border-bottom: none;
     font-size: 16px;
@@ -195,7 +234,7 @@ body::before {
 
 .nav-bar ul li .dropdown-menu li a:hover {
     background: #f0f4f8;
-    color: #1e4628;
+    color: var(--primary-dark);
 }
 
 .nav-bar ul li:hover .dropdown-menu {
@@ -215,12 +254,12 @@ body::before {
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: var(--bg-glass-card);
+    border: var(--border-glass-card);
     padding: 20px 25px;
     border-radius: 8px;
     margin-bottom: 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--shadow-card);
 }
 
 .welcome-card .welcome-text {
@@ -228,12 +267,12 @@ body::before {
 }
 
 .welcome-card .welcome-text h2 {
-    color: #1e4628;
+    color: var(--primary-dark);
     margin: 0;
 }
 
 .welcome-card .welcome-text p {
-    color: #555;
+    color: var(--text-muted);
     margin: 5px 0 0 0;
 }
 
@@ -243,31 +282,31 @@ body::before {
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
-    background: rgba(255, 255, 255, 0.5);
+    background: var(--bg-glass-item);
     padding: 8px 15px;
     border-radius: 6px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: var(--border-subtle);
 }
 
 .school-year-selector label {
     font-weight: bold;
     font-size: 15px;
-    color: #333;
+    color: var(--text-dark);
     margin: 0;
     white-space: nowrap;
 }
 
 .school-year-selector select {
     padding: 5px 10px;
-    border: 1px solid #ddd;
+    border: var(--border-gray);
     border-radius: 4px;
     font-size: 15px;
-    background: #fff;
+    background: var(--text-white);
     cursor: pointer;
 }
 
 .school-year-selector select:focus {
-    border-color: #3fb524;
+    border-color: var(--accent-green);
     outline: none;
     box-shadow: 0 0 0 3px rgba(63, 181, 36, 0.15);
 }
@@ -286,7 +325,7 @@ body::before {
     font-size: 15px;
     cursor: pointer;
     text-decoration: none;
-    color: #fff;
+    color: var(--text-white);
     transition: background 0.3s, transform 0.2s;
 }
 
@@ -309,11 +348,11 @@ body::before {
 }
 
 .stat-card {
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: var(--bg-glass-card);
+    border: var(--border-glass-card);
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--shadow-card);
     display: flex;
     align-items: center;
     gap: 15px;
@@ -329,19 +368,19 @@ body::before {
 
 .stat-card .stat-info h3 {
     font-size: 19px;
-    color: #555;
+    color: var(--text-muted);
     font-weight: normal;
 }
 
 .stat-card .stat-info .stat-number {
     font-size: 28px;
     font-weight: bold;
-    color: #1e4628;
+    color: var(--primary-dark);
 }
 
 .stat-card .stat-info {
     font-size: 12px;
-    color: #777;
+    color: var(--text-light);
 }
 
 .stat-sub {
@@ -349,38 +388,39 @@ body::before {
 }
 
 .stat-card.total {
-    border-left-color: #3498db;
+    border-left-color: var(--stat-total);
 }
 .stat-card.active {
-    border-left-color: #2ecc71;
+    border-left-color: var(--stat-active);
 }
 .stat-card.programs {
-    border-left-color: #e67e22;
+    border-left-color: var(--stat-programs);
 }
 .stat-card.flagged {
-    border-left-color: #e74c3c;
+    border-left-color: var(--stat-flagged);
 }
 
 .warning-img {
-    max-width:60px;
+    max-width: 60px;
 }
+
 /* Section Cards */
 .section-card {
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: var(--bg-glass-card);
+    border: var(--border-glass-card);
     padding: 20px 25px;
     border-radius: 8px;
     margin-bottom: 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--shadow-card);
 }
 
 .section-card h3 {
-    color: #1e4628;
+    color: var(--primary-dark);
     margin-bottom: 15px;
     font-size: 18px;
 }
 
-/* Program List (Progress Bars) */
+/* Program List (Option 1: Distribution Bar - Track Removed) */
 .program-list {
     display: flex;
     flex-direction: column;
@@ -392,7 +432,7 @@ body::before {
     align-items: center;
     gap: 12px;
     padding: 6px 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: var(--border-subtle);
 }
 
 .program-item:last-child {
@@ -403,7 +443,7 @@ body::before {
     width: 220px;
     flex-shrink: 0;
     font-size: 14px;
-    color: #333;
+    color: var(--text-dark);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -417,43 +457,29 @@ body::before {
 .program-bar {
     position: relative;
     width: 100%;
-    height: 24px;
-    background: #e9ecef;
-    border-radius: 12px;
-    overflow: hidden;
+    height: 22px;
+    background: transparent; /* Track background removed for distribution style */
+    border-radius: 11px;
 }
 
 .program-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #2a6b37, #3fb524);
-    border-radius: 12px;
+    background: linear-gradient(90deg, var(--primary-green), var(--accent-green));
+    border-radius: 11px;
     transition: width 0.8s ease;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    /* justify-content: center; */
-    /* min-width: 30px; */
-    min-width: 0px;
-    /* padding-right: 8px; */
-    padding: 0 4px;
+    justify-content: center;
+    min-width: 42px;
+    padding: 0 6px;
+    box-shadow: 0 2px 4px rgba(42, 107, 55, 0.15);
 }
 
 .program-bar-label {
-    color: #fff;
-    font-size: 12px;
+    color: var(--text-white);
+    font-size: 11px;
     font-weight: bold;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    white-space: nowrap;
-}
-
-.program-bar-label-outside {
-    position: absolute;
-    right: -40px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 12px;
-    font-weight: bold;
-    color: #555;
     white-space: nowrap;
 }
 
@@ -463,7 +489,7 @@ body::before {
     text-align: right;
     font-weight: bold;
     font-size: 14px;
-    color: #1e4628;
+    color: var(--primary-dark);
 }
 
 /* Status Grid */
@@ -479,7 +505,7 @@ body::before {
 }
 
 .status-item {
-    background: rgba(255, 255, 255, 0.5);
+    background: var(--bg-glass-item);
     border: 1px solid rgba(51, 50, 50, 0.3);
     padding: 12px 16px;
     border-radius: 6px;
@@ -502,13 +528,7 @@ body::before {
 .status-count {
     font-weight: bold;
     font-size: 20px;
-    color: #1e4628;
-}
-
-/* Chart */
-#programChart {
-    max-height: 300px;
-    width: 100% !important;
+    color: var(--primary-dark);
 }
 
 /* ============================================================
@@ -517,9 +537,9 @@ body::before {
 .footer {
     text-align: center;
     padding: 15px 25px;
-    color: #666;
+    color: var(--text-sub);
     font-size: 13px;
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    border-top: var(--border-subtle);
     background: rgba(255, 255, 255, 0.3);
 }
 
