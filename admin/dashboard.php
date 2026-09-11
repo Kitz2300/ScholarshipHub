@@ -22,14 +22,14 @@ if (!empty($available_years) && !in_array($selected_year, $available_years)) {
     exit();
 }
 
-// sql query for total count of scholars
+// SQL query for total count of scholars
 $scholars_sql = "SELECT id, COUNT(*) AS scholar_count FROM scholar_info WHERE scholar_info.is_archived = 0 AND school_year = ?";
 $scholars_stmt = $conn->prepare($scholars_sql);
 $scholars_stmt->bind_param('s', $selected_year);
 $scholars_stmt->execute();
 $scholars_result = $scholars_stmt->get_result();
 
-// sql query for total count of scholar per scholarship program
+// SQL query for total count of scholars per scholarship program
 $scholarship_sql = "SELECT 
                         scholarship_program.id AS program_id,
                         scholarship_program.name AS program_name,
@@ -55,7 +55,7 @@ $scholarship_stmt->bind_param('ss', $selected_year, $selected_year);
 $scholarship_stmt->execute();
 $scholarship_result = $scholarship_stmt->get_result();
 
-// sql query for total count of scholars per status (Enrolled, Not Enrolled, Graduated, Dropped, Transferred, Leave of Abscence)
+// SQL query for total count of scholars per status
 $status_sql = " SELECT 
                     statuses.academic_status, 
                     COALESCE(COUNT(scholar_info.id), 0) AS status_count
@@ -80,7 +80,7 @@ $status_stmt->bind_param('s', $selected_year);
 $status_stmt->execute();
 $status_result = $status_stmt->get_result();
 
-// ─── Flagged Scholars Count ───
+// Flagged Scholars Count
 $flagged_sql = "SELECT COUNT(DISTINCT si.id) AS flagged_count
                 FROM scholar_info si
                 INNER JOIN scholarship_program sp ON si.scholarship_program_id = sp.id
@@ -129,12 +129,12 @@ while($row = $status_result->fetch_assoc()) {
 <head>
     <title>Admin Dashboard - PIT ScholarshipHub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css?v=<?= filemtime('../assets/css/dashboard.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
     <link rel="stylesheet" href="../assets/css/modals.css">
 </head>
 <body>
-    <!-- alert messages -->
+    <!-- Alert Messages -->
     <?php include __DIR__ . '/../includes/modal_alerts.php'; ?>
     <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <script>alert('You are not logged in')</script>
@@ -237,21 +237,21 @@ while($row = $status_result->fetch_assoc()) {
                                 <span class="stat-sub">Needs attention</span>
                             </div>
                             <div class="stat-info">
-                                <img class="warning-img" src="../assets/images/warning.png">
+                                <img class="warning-img" src="../assets/images/warning.png" alt="Warning">
                             </div>
                         </div>
                     </a>
                 </div>
 
-                <!-- Scholarship Programs Breakdown Progress Bar -->
+                <!-- Scholars per Scholarship Program (Option 1: Clean Distribution Bar) -->
                 <div class="section-card">
                     <h3>Scholars per Scholarship Program</h3>
                     <div class="program-list">
                         <?php if(!empty($scholarship_data)) : ?>
                             <?php foreach($scholarship_data as $program) : 
                                 $percentage = ($total_scholars > 0) ? round(($program['scholar_count'] / $total_scholars) * 100) : 0;
-                                // Ensure a minimum width so the label always fits
-                                $bar_width = ($percentage > 0) ? max($percentage, 2) : 0; // even 1% becomes at least 8%
+                                // Minimum width of 6% guarantees '1%' text fits cleanly
+                                $bar_width = ($percentage > 0) ? max($percentage, 6) : 0;
                             ?>
                                 <div class="program-item">
                                     <div class="program-name" title="<?= htmlspecialchars($program['program_name']) ?>">
@@ -276,20 +276,6 @@ while($row = $status_result->fetch_assoc()) {
                         <?php endif; ?>
                     </div>
                 </div>
-
-                <!-- Scholarship Programs Breakdown Graph -->
-                <!-- <div class="section-card">
-                    <h3>Scholars per Scholarship Program</h3>
-                    <?php if(!empty($scholarship_data)) : ?>
-                        <canvas id="programChart" 
-                                data-labels='<?= json_encode(array_column($scholarship_data, 'program_name'), JSON_HEX_APOS) ?>' 
-                                data-values='<?= json_encode(array_column($scholarship_data, 'scholar_count')) ?>'>
-                        </canvas>
-                    <?php else : ?>
-                        <p id="no-chart-data">No scholarship programs found.</p>
-                    <?php endif; ?>
-                </div> -->
-
 
                 <!-- Status Breakdown -->
                 <div class="section-card">
