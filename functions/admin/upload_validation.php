@@ -1,6 +1,33 @@
 <?php
 require_once __DIR__ . "/../../includes/address_helper.php";
 
+// Helper: normalize date values from Excel into YYYY-MM-DD
+function normalizeBirthdate($value) {
+    if (empty($value)) return '';
+    $value = trim((string)$value);
+    
+    // Strip time component if present (e.g. "2004-09-20 00:00:00")
+    if (strpos($value, ' ') !== false) {
+        $value = explode(' ', $value)[0];
+    }
+    
+    // Convert Excel serial numeric timestamp if present
+    if (is_numeric($value) && (float)$value > 1000) {
+        try {
+            if (class_exists('\PhpOffice\PhpSpreadsheet\Shared\Date')) {
+                $dt = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value);
+                return $dt->format('Y-m-d');
+            }
+        } catch (\Exception $e) {}
+    }
+    
+    $timestamp = strtotime($value);
+    if ($timestamp !== false && $timestamp > 0) {
+        return date('Y-m-d', $timestamp);
+    }
+    return $value;
+}
+
 // ─── Core Validation Functions ───
 
 function validateStudentId($id, $conn) {
@@ -21,6 +48,7 @@ function validateStudentId($id, $conn) {
     if ($result->num_rows > 0) {
         $errors[] = "Student ID '$id' already exists in the database.";
     }
+    $stmt->close();
     return $errors;
 }
 
@@ -38,9 +66,7 @@ function validateName($fieldName, $value) {
 
 function validateExtName($value) {
     $errors = [];
-    if(empty($value)) {
-        return $errors;
-    }
+    if(empty($value)) return $errors;
     if(!preg_match('/^[A-Za-zñÑ\s\.]+$/', $value)) {
         $errors[] = "Extension Name contains invalid characters. Use only letters, spaces, or periods.";
     }
@@ -49,9 +75,7 @@ function validateExtName($value) {
 
 function validateParentName($fieldName, $value) {
     $errors = [];
-    if(empty($value)) {
-        return $errors;
-    }
+    if(empty($value)) return $errors;
     if(!preg_match('/^[A-Za-zñÑ\s\-\.\']+$/', $value)) {
         $errors[] = "$fieldName contains invalid characters. Use only letters, spaces, or hyphens.";
     }
@@ -78,12 +102,15 @@ function validateSex($value) {
     return $errors;
 }
 
-function validateBirthdate($value) {
+function validateBirthdate(&$value) {
     $errors = [];
     if (empty($value)) {
         $errors[] = "Birthdate is required.";
         return $errors;
     }
+    
+    $value = normalizeBirthdate($value);
+    
     $date = DateTime::createFromFormat('Y-m-d', $value);
     if (!$date || $date->format('Y-m-d') !== $value) {
         $errors[] = "Birthdate must be in YYYY-MM-DD format.";
@@ -109,6 +136,7 @@ function validateProgram($value, $conn) {
     if($result->num_rows == 0) {
         $errors[] = "The program '$value' does not exist in this school";
     }
+    $stmt->close();
     return $errors;
 }
 
@@ -138,9 +166,7 @@ function validateStreet($value) {
 
 function validateTownCity($value) {
     $errors = [];
-    if(empty($value)) {
-        return $errors;
-    }
+    if(empty($value)) return $errors;
     if (!preg_match('/^[A-Za-zñÑ\s\.\,\'\-]+$/', $value)) {
         $errors[] = "Town/City contains invalid characters.";
     }
@@ -149,9 +175,7 @@ function validateTownCity($value) {
 
 function validateProvince($value) {
     $errors = [];
-    if(empty($value)) {
-        return $errors;
-    }
+    if(empty($value)) return $errors;
     if (!preg_match('/^[A-Za-zñÑ\s\.\,\']+$/', $value)) {
         $errors[] = "Province contains invalid characters.";
     }
@@ -160,10 +184,8 @@ function validateProvince($value) {
 
 function validateZipcode($value) {
     $errors = [];
-    if(empty($value)) {
-        return $errors;
-    }
-    if(!ctype_digit($value)) {
+    if(empty($value)) return $errors;
+    if(!ctype_digit((string)$value)) {
         $errors[] = "Zipcode must contain only digits.";
     }
     return $errors;
@@ -171,11 +193,9 @@ function validateZipcode($value) {
 
 function validateDisability($value) {
     $errors = [];
-    if(empty($value)) {
-        return $errors;
-    }
+    if(empty($value)) return $errors;
     if(!preg_match('/^[A-Za-z0-9\s\-\.\,\(\)\/]+$/', $value)) {
-        $errors[] = "Disability contains invalid characters. Use only letters, spaces, commas, periods, parentheses, or hyphens.";
+        $errors[] = "Disability contains invalid characters.";
     }
     return $errors;
 }
@@ -183,10 +203,7 @@ function validateDisability($value) {
 function validateEmail($value) {
     $errors = [];
     $value = str_replace(' ', '', trim($value));
-    
-    if(empty($value)) {
-        return $errors;
-    }
+    if(empty($value)) return $errors;
     if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "Email format is invalid.";
     }   
@@ -195,10 +212,8 @@ function validateEmail($value) {
 
 function validateContactNumber($value) {
     $errors = [];
-    if(empty($value)) {
-        return $errors;
-    }
-    if (!ctype_digit($value)) {
+    if(empty($value)) return $errors;
+    if (!ctype_digit((string)$value)) {
         $errors[] = "Contact Number must contain only digits.";
         return $errors;
     }
@@ -207,21 +222,16 @@ function validateContactNumber($value) {
 
 function validateIPgroup($value) {
     $errors = [];
-    if(empty($value)) {
-        return $errors;
-    }
+    if(empty($value)) return $errors;
     if(!preg_match('/^[A-Za-z0-9\s\-\.\,\(\)\/]+$/', $value)) {
-        $errors[] = "IP Group contains invalid characters. Use only letters, spaces, commas, periods, parentheses, or hyphens.";
+        $errors[] = "IP Group contains invalid characters.";
     }
     return $errors;
 }
 
-// ─── New optional field validations ───
 function validatePhilsysId($value) {
     $errors = [];
-    if(empty($value)) {
-        return $errors;
-    }
+    if(empty($value)) return $errors;
     if(!preg_match('/^[A-Za-z0-9\-]+$/', $value)) {
         $errors[] = "PHILSYS ID contains invalid characters.";
     }
@@ -230,10 +240,8 @@ function validatePhilsysId($value) {
 
 function validateLrn($value) {
     $errors = [];
-    if(empty($value)) {
-        return $errors;
-    }
-    if(!ctype_digit($value)) {
+    if(empty($value)) return $errors;
+    if(!ctype_digit((string)$value)) {
         $errors[] = "LRN must contain only digits.";
     }
     return $errors;
@@ -241,9 +249,7 @@ function validateLrn($value) {
 
 function validateFourPsId($value) {
     $errors = [];
-    if(empty($value)) {
-        return $errors;
-    }
+    if(empty($value)) return $errors;
     if(!preg_match('/^[A-Za-z0-9\-\/]+$/', $value)) {
         $errors[] = "4P's ID contains invalid characters.";
     }
@@ -251,16 +257,14 @@ function validateFourPsId($value) {
 }
 
 // ─── Main validation using dynamic mapping ───
-function validateFullRow($rowData, $conn, $mapped_columns) {
+function validateFullRow(&$rowData, $conn, $mapped_columns) {
     $allErrors = [];
     
-    // Build the data array using the mapping
     $data = [];
     foreach($mapped_columns as $field => $index) {
         $data[$field] = $rowData[$index] ?? '';
     }
     
-    // ─── Required validations ───
     if(isset($data['student_id'])) {
         $errors = validateStudentId($data['student_id'], $conn);
         if(!empty($errors)) $allErrors['student_id'] = $errors;
@@ -287,8 +291,14 @@ function validateFullRow($rowData, $conn, $mapped_columns) {
     }
     
     if(isset($data['birthdate'])) {
-        $errors = validateBirthdate($data['birthdate']);
-        if(!empty($errors)) $allErrors['birthdate'] = $errors;
+        $birth_val = $data['birthdate'];
+        $errors = validateBirthdate($birth_val);
+        if(!empty($errors)) {
+            $allErrors['birthdate'] = $errors;
+        } else {
+            // Write back normalized YYYY-MM-DD format to rowData
+            $rowData[$mapped_columns['birthdate']] = $birth_val;
+        }
     }
     
     if(isset($data['program'])) {
@@ -306,7 +316,6 @@ function validateFullRow($rowData, $conn, $mapped_columns) {
         if(!empty($errors)) $allErrors['street'] = $errors;
     }
     
-    // ─── Optional validations ───
     if(isset($data['ext_name']) && !empty($data['ext_name'])) {
         $errors = validateExtName($data['ext_name']);
         if(!empty($errors)) $allErrors['ext_name'] = $errors;
@@ -377,7 +386,6 @@ function validateFullRow($rowData, $conn, $mapped_columns) {
         if(!empty($errors)) $allErrors['four_ps_id'] = $errors;
     }
 
-    // ─── Address lookup validations ───
     if(isset($data['province']) && !empty($data['province'])) {
         $province_data = getProvinceId($conn, $data['province']);
         if (!$province_data) {
@@ -392,10 +400,5 @@ function validateFullRow($rowData, $conn, $mapped_columns) {
         }
     }
 
-    // Remove fields that have no errors
-    $allErrors = array_filter($allErrors, function($fieldErrors) {
-        return !empty($fieldErrors);
-    });
-    
-    return $allErrors;
+    return array_filter($allErrors);
 }
