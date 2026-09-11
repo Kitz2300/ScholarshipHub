@@ -17,16 +17,13 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/export_scholars.css?v=<?= filemtime('../assets/css/export_scholars.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <link rel="stylesheet" href="../assets/css/modals.css">
     <!-- SortableJS for drag & drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
 </head>
 <body>
-    <?php 
-    if(isset($_SESSION['fail'])) {
-        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-        unset($_SESSION['fail']);
-    }
-    ?>
+    <!-- alert messages -->
+    <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== "admin") : ?>
         <script>alert('You are not logged in')</script>
         <?php $_SESSION = []; ?>
@@ -45,7 +42,7 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                 <div class="header-right">
                     <span class="welcome-text">Welcome, Admin!</span>
                     <form action="../functions/logout.php" method="post" style="display: inline;">
-                        <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
+                        <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to log out?', 'Logout', 'danger')">Logout</button>
                     </form>
                 </div>
             </div>
@@ -56,9 +53,6 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
             <div class="page-content">
                 <div class="page-header">
                     <h2>Export Scholar Records</h2>
-                    <!-- <div class="page-actions">
-                        <a href="scholar_list.php" class="btn btn-secondary">← Back to Scholars</a>
-                    </div> -->
                 </div>
 
                 <!-- Export Form -->
@@ -178,7 +172,7 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                         </div>
                     </div>
 
-                    <!-- 🔹 Preview & Rearrange button – now stretched full width with spacing -->
+                    <!-- Preview & Rearrange button -->
                     <div class="form-actions" style="margin-top:20px; margin-bottom:30px; display:block;">
                         <button type="button" id="proceed-btn" class="btn btn-success" style="width:100%; padding: 20px 16px">Preview & Rearrange</button>
                     </div>
@@ -186,7 +180,7 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                     <!-- Preview & Export Area -->
                     <div class="form-section" id="preview-section" style="display:none;">
                         <h3>Step 4: Preview & Rearrange Columns</h3>
-                        <p>Drag column headers to reorder. The order in the preview will be used in the exported file.</p>
+                        <p><strong>Drag column headers to reorder. The order in the preview will be used in the exported file.</strong></p>
                         <div class="table-wrapper">
                             <table id="preview-table">
                                 <thead id="preview-headers"></thead>
@@ -194,7 +188,7 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                             </table>
                         </div>
                         <div class="form-actions" style="margin-top:15px;">
-                            <button type="button" id="export-btn" class="btn btn-success">Export & Download Now</button>
+                            <button type="submit" id="export-btn" class="btn btn-success" onclick="return confirmAction(event, 'Are you sure you want to export and download the selected scholar records?', 'Export & Download', 'primary')">Export & Download Now</button>
                             <button type="button" id="refresh-preview" class="btn btn-secondary">Reset</button>
                             <a href="export_scholars.php" class="btn btn-cancel">Cancel</a>
                         </div>

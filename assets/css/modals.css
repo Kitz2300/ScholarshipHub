@@ -38,20 +38,25 @@
     align-items: center;
 }
 
-.sys-header-success { background-color: #2a6b37; }
+/* MODAL HEADER THEMES */
+.sys-header-primary { background-color: #2a6b37; }
+.sys-header-success { background-color: #2ecc71; }
 .sys-header-danger  { background-color: #c0392b; }
 .sys-header-warning { background-color: #e67e22; }
+.sys-header-archive { background-color: #d35400; }
 
 .sys-modal-header h3 {
     margin: 0;
     font-size: 17px;
+    color: #ffffff;
 }
 
 .sys-modal-close {
     font-size: 22px;
     font-weight: bold;
     cursor: pointer;
-    opacity: 0.8;
+    color: #ffffff;
+    opacity: 0.85;
 }
 
 .sys-modal-close:hover { opacity: 1; }
@@ -70,6 +75,7 @@
     padding: 12px 20px 18px;
 }
 
+/* BUTTON THEMES */
 .sys-btn {
     border: none;
     padding: 8px 18px;
@@ -85,6 +91,11 @@
 
 .sys-btn-danger { background: #e74c3c; color: #fff; }
 .sys-btn-danger:hover { background: #c0392b; }
+
+/* ARCHIVE MODAL STYLES */
+.sys-header-archive { background-color: rgb(71, 120, 211); }
+.sys-btn-archive    { background-color: rgb(77, 120, 201); color: #ffffff; }
+.sys-btn-archive:hover { background-color: rgb(52, 84, 144); }
 
 .sys-btn-secondary { background: #95a5a6; color: #fff; }
 .sys-btn-secondary:hover { background: #7f8c8d; }

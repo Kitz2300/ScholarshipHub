@@ -58,18 +58,11 @@ $programs_result = $conn->query($programs_sql);
     <title>Program & College Management - PIT ScholarshipHub</title>
     <link rel="stylesheet" href="../assets/css/program_management.css?v=<?= filemtime('../assets/css/program_management.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <link rel="stylesheet" href="../assets/css/modals.css">
 </head>
 <body>
-    <?php 
-    // Success/fail messages
-    if(isset($_SESSION['success'])) {
-        echo "<script>alert('" . $_SESSION['success'] . "')</script>";
-        unset($_SESSION['success']);
-    } else if(isset($_SESSION['fail'])) {
-        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-        unset($_SESSION['fail']);
-    }
-    ?>
+    <!-- alert messages -->
+    <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <?php 
     if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <script>alert('You are not logged in')</script>
@@ -87,8 +80,8 @@ $programs_result = $conn->query($programs_sql);
             </div>
             <div class="header-right">
                 <span class="welcome-text">Welcome, Admin!</span>
-                <form action="../functions/logout.php" method="post">
-                    <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
+                <form action="../functions/logout.php" method="post" style="display: inline;">
+                    <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to log out?', 'Logout', true)">Logout</button>
                 </form>
             </div>
         </div>
@@ -136,7 +129,7 @@ $programs_result = $conn->query($programs_sql);
                                                 <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                     <input type="hidden" name="college_id" value="<?= $college['id'] ?>">
                                                     <?php if(hasPermission($conn, $_SESSION['user_id'], 'program_management', 'delete')) : ?>
-                                                        <button type="submit" name="delete_college" class="btn-sm btn-delete" onclick="return confirm('Delete this college?')">Delete</button>
+                                                        <button type="submit" name="delete_college" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Delete this college?', 'Delete', true)">Delete</button>
                                                     <?php endif; ?>
                                                 </form>
                                             </div>
@@ -188,7 +181,7 @@ $programs_result = $conn->query($programs_sql);
                                                 <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                     <input type="hidden" name="program_id" value="<?= $program['program_id'] ?>">
                                                     <?php if(hasPermission($conn, $_SESSION['user_id'], 'program_management', 'delete')) : ?>
-                                                        <button type="submit" name="delete_program" class="btn-sm btn-delete" onclick="return confirm('Delete this program?')">Delete</button>
+                                                        <button type="submit" name="delete_program" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Delete this program?', 'Delete', true)">Delete</button>
                                                     <?php endif; ?>
                                                 </form>
                                             </div>

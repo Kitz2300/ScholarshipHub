@@ -25,7 +25,7 @@ unset($_SESSION['success'], $_SESSION['fail']);
 <!-- 2. ACTION CONFIRMATION MODAL -->
 <div id="sysConfirmModal" class="sys-modal">
     <div class="sys-modal-content">
-        <div class="sys-modal-header sys-header-warning">
+        <div class="sys-modal-header" id="sysConfirmHeader">
             <h3 id="sysConfirmTitle">Confirm Action</h3>
             <span class="sys-modal-close" onclick="closeSysConfirmModal(false)">&times;</span>
         </div>
@@ -34,7 +34,7 @@ unset($_SESSION['success'], $_SESSION['fail']);
         </div>
         <div class="sys-modal-actions">
             <button type="button" class="sys-btn sys-btn-secondary" onclick="closeSysConfirmModal(false)">Cancel</button>
-            <button type="button" id="sysConfirmBtn" class="sys-btn sys-btn-danger">Proceed</button>
+            <button type="button" id="sysConfirmBtn" class="sys-btn sys-btn-primary">Proceed</button>
         </div>
     </div>
 </div>
@@ -42,7 +42,6 @@ unset($_SESSION['success'], $_SESSION['fail']);
 <script>
 let pendingFormSubmission = null;
 
-// Notification Modal Handler
 function closeSysMsgModal() {
     document.getElementById('sysMsgModal').classList.remove('sys-show');
 }
@@ -60,18 +59,26 @@ function showNotification(message, isSuccess = true) {
     modal.classList.add('sys-show');
 }
 
-// Confirmation Modal Handler
-function confirmAction(event, message = 'Are you sure you want to continue?', confirmBtnText = 'Proceed', isDanger = true) {
+function confirmAction(event, message = 'Are you sure you want to continue?', confirmBtnText = 'Proceed', modalType = 'danger') {
     event.preventDefault();
     pendingFormSubmission = event.target.closest('form');
 
     const modal = document.getElementById('sysConfirmModal');
+    const header = document.getElementById('sysConfirmHeader');
     const body = document.getElementById('sysConfirmMessage');
     const confirmBtn = document.getElementById('sysConfirmBtn');
 
     body.textContent = message;
     confirmBtn.textContent = confirmBtnText;
-    confirmBtn.className = 'sys-btn ' + (isDanger ? 'sys-btn-danger' : 'sys-btn-primary');
+
+    // Support legacy boolean argument or direct string types ('danger', 'archive', 'primary')
+    let type = modalType;
+    if (typeof modalType === 'boolean') {
+        type = modalType ? 'danger' : 'primary';
+    }
+
+    header.className = 'sys-modal-header sys-header-' + type;
+    confirmBtn.className = 'sys-btn sys-btn-' + type;
 
     modal.classList.add('sys-show');
     return false;
@@ -91,7 +98,6 @@ document.getElementById('sysConfirmBtn').addEventListener('click', function() {
     closeSysConfirmModal(true);
 });
 
-// Automatically trigger notification modals on page load if session alerts exist
 document.addEventListener('DOMContentLoaded', function() {
     <?php if ($success_msg): ?>
         showNotification(<?= json_encode($success_msg) ?>, true);

@@ -47,7 +47,9 @@ if (isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
     $archive_stmt->bind_param('i', $scholarship_id);
     $archive_scholars_stmt->bind_param('i', $scholarship_id);
 
-    if (!$archive_stmt->execute() || !$archive_scholars_stmt->execute()) {
+    if ($archive_stmt->execute() && $archive_scholars_stmt->execute()) {
+        $_SESSION['success'] = "Program status updated successfully.";
+    } else {
         $_SESSION['fail'] = "Failed to archive records.";
     }
     
@@ -82,18 +84,11 @@ $scholarships_result = $scholarships_stmt->get_result();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/scholarship_program.css?v=<?= filemtime('../assets/css/scholarship_program.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <link rel="stylesheet" href="../assets/css/modals.css">
 </head>
 <body>
-    <?php 
-    if (isset($_SESSION['success'])) {
-        echo "<script>alert('" . htmlspecialchars($_SESSION['success'], ENT_QUOTES) . "')</script>";
-        unset($_SESSION['success']);
-    } else if (isset($_SESSION['fail'])) {
-        echo "<script>alert('" . htmlspecialchars($_SESSION['fail'], ENT_QUOTES) . "')</script>";
-        unset($_SESSION['fail']);
-    }
-    ?>
-
+    <!-- alert messages -->
+    <?php include __DIR__ . '/../includes/modal_alerts.php'; ?>
     <?php if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href='../portal.php'</script>
@@ -111,7 +106,7 @@ $scholarships_result = $scholarships_stmt->get_result();
                 <div class="header-right">
                     <span class="welcome-text">Welcome, Admin!</span>
                     <form action="../functions/logout.php" method="post" style="display: inline;">
-                        <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
+                        <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to log out?', 'Logout', 'danger')">Logout</button>
                     </form>
                 </div>
             </div>
@@ -210,11 +205,14 @@ $scholarships_result = $scholarships_stmt->get_result();
                                     
                                     <?php if (hasPermission($conn, $_SESSION['user_id'], 'scholarship_programs', 'archive')) : ?>
                                         <form action="scholarship_program.php" method="POST" style="display: inline;">
+                                            <!-- Added hidden input so JS form.submit() includes $_POST['archive'] -->
+                                            <input type="hidden" name="archive" value="1"/>
                                             <input type="hidden" name="scholarship_program_id" value="<?= $row['id'] ?>"/>
+                                            
                                             <?php if (!$is_archived) : ?>
-                                                <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirm('Archiving Scholarship Programs also archives its list of scholars. Proceed?')">Archive</button>
+                                                <button type="submit" class="btn-sm btn-archive" onclick="return confirmAction(event, 'Archiving Scholarship Programs also archives its list of scholars. Proceed?', 'Archive', 'archive')">Archive</button>
                                             <?php else : ?>
-                                                <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirm('Unarchiving Scholarship Programs also unarchives its list of scholars. Proceed?')">Unarchive</button>
+                                                <button type="submit" class="btn-sm btn-archive" onclick="return confirmAction(event, 'Unarchiving Scholarship Programs also unarchives its list of scholars. Proceed?', 'Unarchive', 'primary')">Unarchive</button>
                                             <?php endif; ?>
                                         </form>
                                     <?php endif; ?>

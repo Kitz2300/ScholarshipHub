@@ -13,7 +13,7 @@ if (isset($_POST['update'])) {
     // Validate required fields
     if (empty($semester) || $units <= 0 || $gwa < 0) {
         $_SESSION['fail'] = "All fields are required and must be valid!";
-        header("Location: ../../admin/academic_performance.php?scholar_id=$scholar_id");
+        header("Location: ../../admin/scholar_profile.php?scholar_id=$scholar_id");
         exit();
     }
 
@@ -25,7 +25,7 @@ if (isset($_POST['update'])) {
     $verify_result = $verify_stmt->get_result();
     if ($verify_result->num_rows === 0) {
         $_SESSION['fail'] = "Invalid academic record.";
-        header("Location: ../../admin/academic_performance.php?scholar_id=$scholar_id");
+        header("Location: ../../admin/scholar_profile.php?scholar_id=$scholar_id");
         exit();
     }
 
@@ -39,7 +39,7 @@ if (isset($_POST['update'])) {
         $school_year = $row['school_year'];
     } else {
         $_SESSION['fail'] = "Scholar not found.";
-        header("Location: ../../admin/academic_performance.php?scholar_id=$scholar_id");
+        header("Location: ../../admin/scholar_profile.php?scholar_id=$scholar_id");
         exit();
     }
 
@@ -52,7 +52,7 @@ if (isset($_POST['update'])) {
     $sem_result = $sem_stmt->get_result();
     if ($sem_result->num_rows > 0) {
         $_SESSION['fail'] = "A record for this semester and school year already exists.";
-        header("Location: ../../admin/academic_performance.php?scholar_id=$scholar_id");
+        header("Location: ../../admin/scholar_profile.php?scholar_id=$scholar_id");
         exit();
     }
 
@@ -76,7 +76,7 @@ if (isset($_POST['update'])) {
         $_SESSION['fail'] = "Failed to update: " . $update_stmt->error;
     }
 
-    header("Location: ../../admin/academic_performance.php?scholar_id=$scholar_id");
+    header("Location: ../../admin/scholar_profile.php?scholar_id=$scholar_id");
     exit();
 }
 ?>
