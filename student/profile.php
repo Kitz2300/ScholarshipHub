@@ -3,7 +3,7 @@ include __DIR__ . '/../includes/conn.php';
 session_start();
 
 // ─── CHECK STUDENT AUTHORIZATION ───
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student') {
     header("Location: login.php");
     exit();
 }
@@ -84,6 +84,9 @@ if ($row = $scholar_result->fetch_assoc()) {
     $mother_given = $row['mother_given_name'];
     $mother_middle = $row['mother_middle_name'];
     
+    // Flag to check if password has been changed
+    $is_password_changed = (int) ($row['is_password_changed'] ?? $row['password_changed'] ?? 0);
+
     $philsys_id = trim($row['philsys_id'] ?? '');
     $lrn = trim($row['lrn'] ?? '');
     $four_ps_id = trim($row['four_ps_id'] ?? '');
@@ -140,18 +143,11 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
     <title>My Profile - PIT ScholarshipHub</title>
     <link rel="stylesheet" href="../assets/css/profile.css?v=<?= filemtime('../assets/css/profile.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <link rel="stylesheet" href="../assets/css/modals.css">
 </head>
 <body>
-    <?php 
-    if (isset($_SESSION['success'])) {
-        echo "<script>alert('" . htmlspecialchars($_SESSION['success'], ENT_QUOTES) . "')</script>";
-        unset($_SESSION['success']);
-    } else if (isset($_SESSION['fail'])) {
-        echo "<script>alert('" . htmlspecialchars($_SESSION['fail'], ENT_QUOTES) . "')</script>";
-        unset($_SESSION['fail']);
-    }
-    ?>
-
+    <!-- alert messages -->
+    <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -400,16 +396,25 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
         </div>
     </div>
 
-    <!-- Change Password Modal -->
-    <div id="passwordModal" class="modal">
+    <!-- Change Password Modal (Automatically forced if password has not been changed yet) -->
+    <div id="passwordModal" class="modal <?= $is_password_changed === 0 ? 'show' : '' ?>">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Change Password</h3>
-                <span class="modal-close" onclick="closeModal('passwordModal')">&times;</span>
+                <h3><?= $is_password_changed === 0 ? '🔒 Password Change Required' : 'Change Password' ?></h3>
+                <?php if ($is_password_changed === 1): ?>
+                    <span class="modal-close" onclick="closeModal('passwordModal')">&times;</span>
+                <?php endif; ?>
             </div>
-            <form action="../functions/student/change_password_process.php" method="POST">
-                <div class="form-group">
-                    <label for="current_password">Current Password <span class="required">*</span></label>
+
+            <?php if ($is_password_changed === 0): ?>
+                <div style="background: #fff3cd; color: #856404; padding: 12px 15px; border-radius: 4px; font-size: 13px; margin: 15px 15px 0 15px; border: 1px solid #ffeeba;">
+                    <strong>First-Time Login Notice:</strong> For security reasons, you must change your initial password before accessing your account dashboard.
+                </div>
+            <?php endif; ?>
+
+            <form action="../functions/student/change_password_process.php" method="POST" onsubmit="return validatePasswordChange(event)">
+                <div class="form-group" style="padding-top: 15px;">
+                    <label for="current_password">Current / Temporary Password <span class="required">*</span></label>
                     <input type="password" name="current_password" id="current_password" required>
                 </div>
                 <div class="form-group">
@@ -421,10 +426,34 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                     <input type="password" name="confirm_password" id="confirm_password" minlength="8" required>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('passwordModal')">Cancel</button>
-                    <button type="submit" name="change_password" class="btn btn-success">Update Password</button>
+                    <?php if ($is_password_changed === 1): ?>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('passwordModal')">Cancel</button>
+                    <?php endif; ?>
+                    <button type="submit" name="change_password" class="btn btn-success" style="<?= $is_password_changed === 0 ? 'width: 100%;' : '' ?>">Update Password</button>
                 </div>
             </form>
+
+            <script>
+            function validatePasswordChange(event) {
+                const currentPass = document.getElementById('current_password').value;
+                const newPass = document.getElementById('new_password').value;
+                const confirmPass = document.getElementById('confirm_password').value;
+
+                if (currentPass === newPass) {
+                    alert("New password cannot be the same as your current password.");
+                    event.preventDefault();
+                    return false;
+                }
+
+                if (newPass !== confirmPass) {
+                    alert("New password and confirmation password do not match.");
+                    event.preventDefault();
+                    return false;
+                }
+
+                return true;
+            }
+            </script>
         </div>
     </div>
 
@@ -450,12 +479,30 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
     </div>
 
     <script>
-    function openPasswordModal() { document.getElementById('passwordModal').classList.add('show'); }
-    function openPhotoModal() { document.getElementById('photoModal').classList.add('show'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+    const isPasswordChanged = <?= $is_password_changed ?>;
+
+    function openPasswordModal() { 
+        document.getElementById('passwordModal').classList.add('show'); 
+    }
+    
+    function openPhotoModal() { 
+        document.getElementById('photoModal').classList.add('show'); 
+    }
+    
+    function closeModal(id) { 
+        // Prevent closing password modal if first-time password change is required
+        if (id === 'passwordModal' && isPasswordChanged === 0) {
+            return;
+        }
+        document.getElementById(id).classList.remove('show'); 
+    }
 
     window.onclick = function(event) {
+        // Prevent closing modals by clicking outside if forced password change is pending
         if (event.target.classList.contains('modal')) {
+            if (event.target.id === 'passwordModal' && isPasswordChanged === 0) {
+                return;
+            }
             event.target.classList.remove('show');
         }
     };
