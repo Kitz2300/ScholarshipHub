@@ -13,13 +13,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
     $new_password = $_POST['new_password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
+    // Fetch existing password hash to check for password reuse
+    $check_sql = "SELECT password FROM scholarship_users WHERE id = ? AND role = 'admin'";
+    $check_stmt = $conn->prepare($check_sql);
+    $check_stmt->bind_param("i", $admin_id);
+    $check_stmt->execute();
+    $user = $check_stmt->get_result()->fetch_assoc();
+    $check_stmt->close();
+
     if (empty($new_password) || strlen($new_password) < 8) {
         $error = "Password must be at least 8 characters long.";
     } elseif ($new_password !== $confirm_password) {
         $error = "Passwords do not match.";
+    } elseif ($user && password_verify($new_password, $user['password'])) {
+        $error = "New password cannot be the same as your old password.";
     } else {
         $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
 
+        // Update password and clear OTP parameters
         $sql = "UPDATE scholarship_users 
                 SET password = ?, reset_otp = NULL, otp_expiry = NULL 
                 WHERE id = ? AND role = 'admin'";
@@ -60,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
             <?php if (isset($error)): ?>
                 <div class="alert-danger"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
-            <form action="" method="POST">
+            <form action="" method="POST" onsubmit="return validatePasswordReset(event)">
                 <div class="form-group">
                     <label for="new_password">New Password</label>
                     <input type="password" id="new_password" name="new_password" minlength="8" required autofocus placeholder="Minimum 8 characters">
@@ -73,5 +84,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
             </form>
         </div>
     </div>
+
+    <script>
+    function validatePasswordReset(event) {
+        const newPass = document.getElementById('new_password').value;
+        const confirmPass = document.getElementById('confirm_password').value;
+
+        if (newPass !== confirmPass) {
+            alert("New password and confirmation password do not match.");
+            event.preventDefault();
+            return false;
+        }
+        return true;
+    }
+    </script>
 </body>
 </html>
