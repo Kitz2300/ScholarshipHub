@@ -8,26 +8,24 @@ if($_SESSION['role'] !== 'admin') {
 }
 
 // ─── Process archive, search, filter, pagination ───
-// This is the logic that was previously in includes/scholar_list.php
-// We moved it here so that headers can be sent before any HTML output.
 
 require_once __DIR__ . '/../includes/school_year_helper.php';
 
 $selected_year = getSelectedSchoolYear();
 $available_years = getAvailableSchoolYears($conn);
 
-// ─── Archive scholar process ───
+// ─── Archive / Unarchive scholar process ───
 if(isset($_POST['archive'])) {
     if(!empty($_POST['scholar_id'])) {
-        $scholar_id = $_POST['scholar_id'];
-        $archive_sql = "UPDATE scholar_info SET is_archived = 1 WHERE id = ?";
+        $scholar_id = (int)$_POST['scholar_id'];
+        $archive_sql = "UPDATE scholar_info SET is_archived = NOT is_archived WHERE id = ?";
         $archive_stmt = $conn->prepare($archive_sql);
         $archive_stmt->bind_param("i", $scholar_id);
 
         if($archive_stmt->execute()) {
-            $_SESSION['success'] = "Scholar archived!";
+            $_SESSION['success'] = "Scholar status updated successfully!";
         } else {
-            $_SESSION['fail'] = "Failed to archive scholar.";
+            $_SESSION['fail'] = "Failed to update scholar status.";
         }
 
         header("Location: " . $_SERVER['PHP_SELF']);
@@ -49,6 +47,7 @@ $scholarship_filter = isset($_GET['scholarship_filter']) ? (int)$_GET['scholarsh
 $academic_status = isset($_GET['academic_status']) ? $_GET['academic_status'] : "Enrolled";
 $flagged_filter = isset($_GET['flagged_filter']) ? (int)$_GET['flagged_filter'] : 0;
 $school_year_filter = isset($_GET['school_year_filter']) ? $_GET['school_year_filter'] : null;
+$archive_filter = isset($_GET['archive_filter']) ? $_GET['archive_filter'] : '0';
 
 // ─── Default school year to latest available ───
 if($school_year_filter === null && !empty($available_years)) {
@@ -59,6 +58,15 @@ if($school_year_filter === null && !empty($available_years)) {
 $where_condition = [];
 $params = [];
 $types = "";
+
+// ─── Archive filter condition ───
+if ($archive_filter === '1') {
+    $where_condition[] = "scholar_info.is_archived = 1";
+} elseif ($archive_filter === 'all') {
+    // Show both active and archived scholars
+} else { // Default: '0' for Active only
+    $where_condition[] = "scholar_info.is_archived = 0";
+}
 
 // ─── Search (only when search_btn is clicked) ───
 if(isset($_GET['search_btn']) && !empty($searched)) {
@@ -80,7 +88,6 @@ if(isset($_GET['search_btn']) && !empty($searched)) {
 
 // ─── Filters (only when filter is clicked) ───
 if(isset($_GET['filter'])) {
-    // Re‑apply search if a search term exists
     if(!empty($searched)) {
         $where_condition[] = "(scholar_info.student_id LIKE ? 
                               OR scholar_info.given_name LIKE ? 
@@ -161,8 +168,7 @@ $count_sql = "SELECT
               INNER JOIN scholarship_program sp ON scholar_info.scholarship_program_id = sp.id 
               INNER JOIN program ON scholar_info.program_id = program.id
               INNER JOIN college ON program.college_id = college.id
-              WHERE scholar_info.is_archived = 0 
-                AND sp.is_archived = 0 
+              WHERE sp.is_archived = 0 
                 AND sp.is_active = 1 
                 $where_sql";
 
@@ -187,6 +193,7 @@ $scholar_sql = "SELECT
                 scholar_info.ext_name,
                 scholar_info.year_level,
                 scholar_info.academic_status,
+                scholar_info.is_archived,
                 sp.name AS scholarship_name, 
                 p.name AS program_name,
                 sp.min_gwa_req,
@@ -202,11 +209,10 @@ $scholar_sql = "SELECT
                 INNER JOIN college c ON p.college_id = c.id
                 LEFT JOIN (
                     SELECT scholar_id, gwa, school_year, semester,
-                           ROW_NUMBER() OVER (PARTITION BY scholar_id ORDER BY school_year DESC, semester DESC) AS rn
+                           ROW_NUMBER() OVER (PARTITION BY scholar_id ORDER BY school_year DESC, CAST(semester AS UNSIGNED) DESC) AS rn
                     FROM academic_performance
                 ) ap ON ap.scholar_id = scholar_info.id AND ap.rn = 1
-                WHERE scholar_info.is_archived = 0 
-                    AND sp.is_archived = 0 
+                WHERE sp.is_archived = 0 
                     AND sp.is_active = 1  
                     $where_sql
                 ORDER BY scholar_info.id DESC
@@ -254,12 +260,13 @@ unset($clear_filters_params['college_filter']);
 unset($clear_filters_params['scholarship_filter']);
 unset($clear_filters_params['academic_status']);
 unset($clear_filters_params['flagged_filter']);
+unset($clear_filters_params['archive_filter']);
 $clear_filters_url = !empty($clear_filters_params) 
     ? $_SERVER['PHP_SELF'] . '?' . http_build_query($clear_filters_params) 
     : $_SERVER['PHP_SELF'];
 
 $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filter != 0 || 
-                ($academic_status != "" && $academic_status != 'Enrolled') || $flagged_filter == 1);
+                ($academic_status != "" && $academic_status != 'Enrolled') || $flagged_filter == 1 || $archive_filter !== '0');
 ?>
 
 <!DOCTYPE html>
@@ -267,20 +274,13 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
 <head>
     <title>Scholar List - PIT ScholarshipHub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/css/scholar_list.css">
+    <link rel="stylesheet" href="../assets/css/scholar_list.css?v=<?= filemtime('../assets/css/scholar_list.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <link rel="stylesheet" href="../assets/css/modals.css">
 </head>
 <body>
-    <?php 
-    // success/fail session messages
-    if(isset($_SESSION['success'])) {
-        echo "<script>alert('" . $_SESSION['success'] . "')</script>";
-        unset($_SESSION['success']);
-    } else if(isset($_SESSION['fail'])) {
-        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-        unset($_SESSION['fail']);
-    }
-    ?>
+    <!-- Alert Messages -->
+    <?php include __DIR__ . '/../includes/modal_alerts.php'; ?>
     <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href='../portal.php'</script>
@@ -298,7 +298,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                 <div class="header-right">
                     <span class="welcome-text">Welcome, Admin!</span>
                     <form action="../functions/logout.php" method="post" style="display: inline;">
-                        <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
+                        <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to log out?', 'Logout', true)">Logout</button>
                     </form>
                 </div>
             </div>
@@ -311,7 +311,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                     <h2>Scholar List</h2>
                 </div>
 
-                <!-- ─── Search & Filter (moved from includes/scholar_list.php) ─── -->
+                <!-- Search & Filter -->
                 <script src="../assets/js/toggle_filter.js"></script>
                 <div class="search-filter">
                     <form action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" method="GET">
@@ -323,7 +323,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                             <?php endif; ?>
                             <button type="button" class="btn btn-sm btn-info toggle-filters">Filters ▼</button>
                         </div>
-                        <div class="filter-row<?= ( $course_filter != 0 || $college_filter != 0 || $scholarship_filter != 0 || ($academic_status != "" && $academic_status != 'Enrolled') || $flagged_filter == 1) ? ' open' : '' ?>" id="filter-row">
+                        <div class="filter-row<?= $has_filters ? ' open' : '' ?>" id="filter-row">
                             <select name="course_filter" style="max-width: 240px;">
                                 <option value="0" <?= $course_filter == 0 ? 'selected' : '' ?>>All Courses</option>
                                 <?php 
@@ -363,6 +363,11 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                 <option value="0" <?= $flagged_filter == 0 ? 'selected' : '' ?>>All Scholars</option>
                                 <option value="1" <?= $flagged_filter == 1 ? 'selected' : '' ?>>Flagged Only</option>
                             </select>
+                            <select name="archive_filter">
+                                <option value="0" <?= $archive_filter === '0' ? 'selected' : '' ?>>Active Scholars</option>
+                                <option value="1" <?= $archive_filter === '1' ? 'selected' : '' ?>>Archived Scholars</option>
+                                <option value="all" <?= $archive_filter === 'all' ? 'selected' : '' ?>>All Scholars</option>
+                            </select>
                             <select name="school_year_filter">
                                 <?php foreach($available_years as $year) : ?>
                                     <option value="<?= $year ?>" <?= $school_year_filter == $year ? "selected" : "" ?>>
@@ -382,6 +387,9 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                 <div class="table-header">
                     <div class="records-info">
                         Showing <?= $offset + 1 ?> - <?= min($offset + $records_per_page, $total_records) ?> of <?= $total_records ?> scholars
+                        <span class="flagged-legend-badge">
+                            <span class="legend-color-box"></span> Flagged Scholar (GWA below requirement)
+                        </span>
                     </div>
                     <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'add')) : ?>
                         <a href="add_scholar.php" class="btn btn-success btn-sm">+ Add New Scholar</a>
@@ -419,6 +427,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                 } else {
                                     $year_lvl = "Not specified";
                                 }
+                                $is_archived = (int)$row['is_archived'] === 1;
                             ?>
                                 <tr class="data-row-<?= $row['is_flagged'] ?>">
                                     <td><?= htmlspecialchars($row['student_id']) ?></td>
@@ -431,9 +440,14 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                         <div class="action-buttons">
                                             <a href="scholar_profile.php?scholar_id=<?= $row['id'] ?>" class="btn-sm btn-view">View</a>
                                             <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
+                                                <input type="hidden" name="archive" value="1">
                                                 <input type="hidden" name="scholar_id" value="<?= $row['id'] ?>">
                                                 <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'archive')) : ?>
-                                                    <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirm('Archive scholar?')">Archive</button>
+                                                    <?php if(!$is_archived) : ?>
+                                                        <button type="submit" class="btn-sm btn-archive" onclick="return confirmAction(event, 'Are you sure you want to archive this scholar?', 'Archive', 'archive')">Archive</button>
+                                                    <?php else : ?>
+                                                        <button type="submit" class="btn-sm btn-archive" onclick="return confirmAction(event, 'Are you sure you want to unarchive this scholar?', 'Unarchive', 'primary')">Unarchive</button>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
                                             </form>
                                         </div>
@@ -453,17 +467,17 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                 <?php if($total_pages > 1) : ?>
                     <div class="pagination">
                         <?php if($page > 1) : ?>
-                            <a href="?page=<?= $page - 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>&school_year_filter=<?= urlencode($school_year_filter) ?>&academic_status=<?= urlencode($academic_status) ?>&flagged_filter=<?= $flagged_filter ?>">Previous</a>
+                            <a href="?page=<?= $page - 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>&school_year_filter=<?= urlencode($school_year_filter) ?>&academic_status=<?= urlencode($academic_status) ?>&flagged_filter=<?= $flagged_filter ?>&archive_filter=<?= urlencode($archive_filter) ?>">Previous</a>
                         <?php endif; ?>
                         <?php for($i = 1; $i <= $total_pages; $i++) : ?>
                             <?php if($i == $page) : ?>
                                 <strong><?= $i ?></strong>
                             <?php else : ?>
-                                <a href="?page=<?= $i ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>&school_year_filter=<?= urlencode($school_year_filter) ?>&academic_status=<?= urlencode($academic_status) ?>&flagged_filter=<?= $flagged_filter ?>"><?= $i ?></a>
+                                <a href="?page=<?= $i ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>&school_year_filter=<?= urlencode($school_year_filter) ?>&academic_status=<?= urlencode($academic_status) ?>&flagged_filter=<?= $flagged_filter ?>&archive_filter=<?= urlencode($archive_filter) ?>"><?= $i ?></a>
                             <?php endif; ?>
                         <?php endfor; ?>
                         <?php if($page < $total_pages) : ?>
-                            <a href="?page=<?= $page + 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>&school_year_filter=<?= urlencode($school_year_filter) ?>&academic_status=<?= urlencode($academic_status) ?>&flagged_filter=<?= $flagged_filter ?>">Next</a>
+                            <a href="?page=<?= $page + 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>&school_year_filter=<?= urlencode($school_year_filter) ?>&academic_status=<?= urlencode($academic_status) ?>&flagged_filter=<?= $flagged_filter ?>&archive_filter=<?= urlencode($archive_filter) ?>">Next</a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
