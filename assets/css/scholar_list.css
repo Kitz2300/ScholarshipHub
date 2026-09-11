@@ -403,13 +403,38 @@ table tbody tr:nth-child(even):hover {
     background: rgba(0, 0, 0, 0.05);
 }
 
-/* Highlighted/Flagged Rows */
-.data-row-1 {
-    background: rgb(249, 121, 121);
+/* Highlighted/Flagged Rows - Increased Specificity */
+table tbody tr.data-row-1,
+table tbody tr.data-row-1:nth-child(even) {
+    background: rgb(249, 121, 121) !important;
 }
 
-.data-row-1:hover {
-    background: rgb(241, 88, 88);
+table tbody tr.data-row-1:hover,
+table tbody tr.data-row-1:nth-child(even):hover {
+    background: rgb(241, 88, 88) !important;
+}
+
+/* Flagged Scholar Legend Badge */
+.flagged-legend-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    margin-left: 15px;
+    padding: 3px 10px;
+    background: rgba(249, 121, 121, 0.2);
+    border: 1px solid rgb(249, 121, 121);
+    border-radius: 4px;
+    color: #721c24;
+    font-weight: bold;
+}
+
+.legend-color-box {
+    width: 12px;
+    height: 12px;
+    background-color: rgb(249, 121, 121);
+    border-radius: 2px;
+    display: inline-block;
 }
 
 /* ============================================================
