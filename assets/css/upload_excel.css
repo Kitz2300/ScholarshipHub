@@ -23,8 +23,6 @@ body {
     justify-content: center;
     padding: 10px;
     box-sizing: border-box;
-    padding: 10px;
-    box-sizing: border-box;
 }
 
 /* Dark overlay to ensure text stands out */
@@ -423,11 +421,28 @@ body::before {
 /* ========== ERROR TABLE ========== */
 .error-table-wrapper {
     margin-top: 15px;
+    overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 6px;
 }
 
 .error-table-wrapper h4 {
     color: #e74c3c;
     margin-bottom: 10px;
+}
+
+.error-table-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.error-table-wrapper thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .error-table-wrapper th {
@@ -455,6 +470,47 @@ body::before {
     margin-bottom: 10px;
 }
 
+.extra-columns-section .table-wrapper {
+    overflow-x: auto;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.extra-columns-section table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.extra-columns-section thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.extra-columns-section thead th {
+    background: #1e4628;
+    color: #fff;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.extra-columns-section tbody td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    vertical-align: middle;
+}
+
+.extra-columns-section tbody tr {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.extra-columns-section tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.4);
+}
+
 .extra-columns-section input[type="text"] {
     padding: 6px 10px;
     border: 1px solid rgba(0,0,0,0.1);
@@ -479,10 +535,18 @@ body::before {
 }
 
 /* ========== TABLE ========== */
+.table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 500px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.05);  
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 16px;
 }
 
 table thead th {
@@ -534,6 +598,20 @@ table tbody tr:nth-child(even):hover {
     margin-bottom: 15px;
 }
 
+.history-section .table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 400px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.history-section table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
 /* ========== FOOTER ========== */
 .footer {
     text-align: center;
@@ -542,6 +620,62 @@ table tbody tr:nth-child(even):hover {
     font-size: 13px;
     border-top: 1px solid rgba(0, 0, 0, 0.05);
     background: rgba(255, 255, 255, 0.3);
+}
+
+/* ========== COLUMN SELECTION SECTION ========== */
+.column-selection-section {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.column-selection-section h3 {
+    color: #1e4628;
+    font-size: 17px;
+    border-bottom: 2px solid #2a6b37;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.column-selection-section p {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px 15px;
+    margin-bottom: 15px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #2a6b37;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.checkbox-group label {
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.checkbox-group label:hover {
+    color: #1e4628;
 }
 
 /* ========== RESPONSIVE ========== */
@@ -609,155 +743,24 @@ table tbody tr:nth-child(even):hover {
     .summary-section {
         padding: 15px;
     }
-}
 
-/* ========== COLUMN SELECTION SECTION ========== */
-.column-selection-section {
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
-
-.column-selection-section h3 {
-    color: #1e4628;
-    font-size: 17px;
-    border-bottom: 2px solid #2a6b37;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-}
-
-.column-selection-section p {
-    font-size: 14px;
-    color: #555;
-    margin-bottom: 15px;
-}
-
-.checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px 15px;
-    margin-bottom: 15px;
-}
-
-.checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.checkbox-group input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    accent-color: #2a6b37;
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-.checkbox-group label {
-    font-size: 14px;
-    color: #333;
-    cursor: pointer;
-    font-weight: normal;
-}
-
-.checkbox-group label:hover {
-    color: #1e4628;
-}
-
-/* Responsive adjustment */
-@media (max-width: 480px) {
     .checkbox-grid {
         grid-template-columns: 1fr 1fr;
     }
 }
 
-/* ─── Scrollable Table Wrappers ─── */
-.error-table-wrapper {
-    margin-top: 15px;
-    overflow-x: auto;
-    max-height: 400px;
-    overflow-y: auto;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: 6px;
+/* ========== LOADING MODAL SPINNER ========== */
+.sys-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(26, 59, 34, 0.15);
+    border-top-color: #1e4628;
+    border-radius: 50%;
+    animation: sysSpin 0.9s linear infinite;
+    margin: 0 auto;
 }
 
-.error-table-wrapper table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-}
-
-.error-table-wrapper thead {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.extra-columns-section {
-    margin: 15px 0;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
-
-.extra-columns-section .table-wrapper {
-    overflow-x: auto;
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    border-radius: 4px;
-}
-
-.extra-columns-section table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-}
-
-.extra-columns-section thead {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.extra-columns-section thead th {
-    background: #1e4628;
-    color: #fff;
-    padding: 8px 12px;
-    text-align: left;
-}
-
-.extra-columns-section tbody td {
-    padding: 8px 12px;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    vertical-align: middle;
-}
-
-.extra-columns-section tbody tr {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.extra-columns-section tbody tr:nth-child(even) {
-    background: rgba(255, 255, 255, 0.4);
-}
-
-.extra-columns-section input[type="text"] {
-    padding: 6px 10px;
-    border: 1px solid rgba(0,0,0,0.1);
-    border-radius: 4px;
-    font-size: 13px;
-    width: 100%;
-    min-width: 150px;
-    background: rgba(255, 255, 255, 0.8);
-}
-
-.extra-columns-section input[type="text"]:focus {
-    border-color: #1e4628;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(26, 59, 34, 0.15);
+@keyframes sysSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
