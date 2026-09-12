@@ -5,15 +5,10 @@
     <title>Scholar Login - PIT ScholarshipHub</title>
     <link rel="stylesheet" href="../assets/css/login.css">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <link rel="stylesheet" href="../assets/css/modals.css">
 </head>
 <body>
-    <?php 
-    // if login fails alert user
-    if(isset($_SESSION['fail'])) {
-        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-        unset($_SESSION['fail']);
-    }
-    ?>
+    <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <div class="container">
         <!-- header -->
         <div class="header">

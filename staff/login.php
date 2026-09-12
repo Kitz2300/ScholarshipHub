@@ -6,8 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/login.css">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <link rel="stylesheet" href="../assets/css/modals.css">
 </head>
 <body>
+    <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <div class="container">
         <!-- header -->
         <div class="header">
@@ -20,14 +22,6 @@
         <div class="login-box">
             <h2>Staff Login</h2>
             <p class="subtitle">Enter your credentials to access the staff dashboard.</p>
-
-            <?php 
-            // if login fails alert user
-            if(isset($_SESSION['fail'])) {
-                echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-                unset($_SESSION['fail']);
-            }
-            ?>
 
             <form method="post" action="../functions/staff/staff_login_process.php">
                 <div class="form-group">

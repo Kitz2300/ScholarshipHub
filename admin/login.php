@@ -1,15 +1,6 @@
 <?php 
 session_start();
 
-// Success/fail messages
-if(isset($_SESSION['success'])) {
-    echo "<script>alert('" . $_SESSION['success'] . "')</script>";
-    unset($_SESSION['success']);
-} else if(isset($_SESSION['fail'])) {
-    echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-    unset($_SESSION['fail']);
-}
-
 if(isset($_SESSION['user_id']) && ($_SESSION['role'] == "admin" || $_SESSION['role'] == "staff")) {
     header("Location: dashboard.php");
     exit();
@@ -23,8 +14,10 @@ if(isset($_SESSION['user_id']) && ($_SESSION['role'] == "admin" || $_SESSION['ro
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/login.css">
     <link rel="icon" href="../assets/images/PIT LOGO.png">
+    <link rel="stylesheet" href="../assets/css/modals.css">
 </head>
 <body>
+    <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <div class="container">
         <!-- header -->
         <div class="header">
