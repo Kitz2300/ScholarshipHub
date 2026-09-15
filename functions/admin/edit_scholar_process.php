@@ -13,9 +13,11 @@ if(isset($_POST['update'])) {
                         'father_last', 'father_first', 'father_middle', 
                         'mother_last', 'mother_first', 'mother_middle'];
     
-    // Check if LOA Date is required when status is Leave of Absence
+    // Check if LOA Fields are required when status is Leave of Absence
     if (isset($_POST['academic_status']) && $_POST['academic_status'] === 'Leave of Absence') {
         $required_fields[] = 'loa_date';
+        $required_fields[] = 'loa_semester';
+        $required_fields[] = 'loa_school_year';
     }
 
     $missing_fields = [];
@@ -94,8 +96,10 @@ if(isset($_POST['update'])) {
     $scholarship_program_id = (int) $_POST['scholarship_program'];
     $academic_status = trim($_POST['academic_status']);
     
-    // Set LOA Date if status is Leave of Absence, otherwise set NULL
-    $loa_date = ($academic_status === 'Leave of Absence' && !empty($_POST['loa_date'])) ? $_POST['loa_date'] : NULL;
+    // Set LOA Fields if status is Leave of Absence, otherwise set NULL
+    $loa_date = ($academic_status === 'Leave of Absence' && !empty($_POST['loa_date'])) ? trim($_POST['loa_date']) : NULL;
+    $loa_semester = ($academic_status === 'Leave of Absence' && !empty($_POST['loa_semester'])) ? trim($_POST['loa_semester']) : NULL;
+    $loa_school_year = ($academic_status === 'Leave of Absence' && !empty($_POST['loa_school_year'])) ? trim($_POST['loa_school_year']) : NULL;
 
     $school_year_sql = "SELECT school_year FROM scholarship_program WHERE id = ?";
     $school_year_stmt = $conn->prepare($school_year_sql);
@@ -177,6 +181,8 @@ if(isset($_POST['update'])) {
                     year_level = ?, 
                     academic_status = ?,
                     loa_date = ?,
+                    loa_semester = ?,
+                    loa_school_year = ?,
                     father_last_name = ?, 
                     father_given_name = ?, 
                     father_middle_name = ?, 
@@ -205,10 +211,11 @@ if(isset($_POST['update'])) {
     
     $scholar_stmt = $conn->prepare($scholar_sql);
     
-    // 36 parameters + 1 WHERE parameter = 37 total
-    // Types: sssssisiiissssssssssiiiisssssssssssssi
+    // Exactly 39 parameters matching 39 bound variables
+    $types = "sssssisiiissssssssssssiiiissssssssssssi";
+    
     $scholar_stmt->bind_param(
-        "sssssisiiiss" . "ssssss" . "ss" . "iiii" . "ssssssssssss" . "i", 
+        $types, 
         $student_id, 
         $last_name, 
         $first_name, 
@@ -221,6 +228,8 @@ if(isset($_POST['update'])) {
         $year_lvl, 
         $academic_status,
         $loa_date,
+        $loa_semester,
+        $loa_school_year,
         $father_last_name, 
         $father_first_name, 
         $father_middle_name, 

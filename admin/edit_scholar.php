@@ -31,6 +31,8 @@ $program = 0;
 $year_lvl = 0;
 $academic_status = "";
 $loa_date = "";
+$loa_semester = "";
+$loa_school_year = "";
 $address = "";
 $zipcode = "";
 $disability = "";
@@ -72,6 +74,8 @@ if($row = $scholar_result->fetch_assoc()) {
     
     // Format strictly as YYYY-MM-DD
     $loa_date = (!empty($row['loa_date']) && $row['loa_date'] !== '0000-00-00') ? date('Y-m-d', strtotime($row['loa_date'])) : '';
+    $loa_semester = $row['loa_semester'] ?? '';
+    $loa_school_year = $row['loa_school_year'] ?? '';
     
     $address = $row['permanent_address'];
     $zipcode = $row['zipcode'];
@@ -110,16 +114,12 @@ if($row = $scholar_result->fetch_assoc()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
     <link rel="stylesheet" href="../assets/css/form.css">
+    <link rel="stylesheet" href="../assets/css/modals.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../assets/js/address.js"></script>
 </head>
 <body>
-    <?php 
-    if(isset($_SESSION['fail'])) {
-        echo "<script>alert('" . htmlspecialchars($_SESSION['fail'], ENT_QUOTES) . "')</script>";
-        unset($_SESSION['fail']);
-    }
-    ?>
+    <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
         <script>alert('You are not logged in')</script>
         <script>window.location.href='login.php'</script>
@@ -193,7 +193,7 @@ if($row = $scholar_result->fetch_assoc()) {
                             </div>
                             <div class="form-group">
                                 <label for="student_id">Student ID <span class="required">*</span></label>
-                                <input type="text" name="student_id" id="student_id" value="<?= htmlspecialchars($id_num) ?>" placeholder="12-3456-789" pattern="[0-9]{2}-[0-9]{4}-[0-9]{3}" required>
+                                <input type="text" name="student_id" id="student_id" value="<?= htmlspecialchars($id_num) ?>" placeholder="12-3456-789" pattern="[0-9]{2}-[0-9]{4}-[0-9]{3}" title="e.g. 12-3456-789" required>
                             </div>
                             <div class="form-group">
                                 <label for="student_contact">Contact Number <span class="required">*</span></label>
@@ -411,9 +411,11 @@ if($row = $scholar_result->fetch_assoc()) {
                                     <option value="Leave of Absence" <?= ($academic_status == "Leave of Absence") ? 'selected' : '' ?>>Leave of Absence</option>
                                 </select>
                             </div>
+                        </div>
 
-                            <!-- LOA Date Field with Clean Hidden Picker -->
-                            <div class="form-group" id="loa_date_container" style="display: <?= ($academic_status == "Leave of Absence") ? 'flex' : 'none' ?>;">
+                        <!-- Extended LOA Fields Container -->
+                        <div class="form-row" id="loa_fields_container" style="display: <?= ($academic_status == "Leave of Absence") ? 'flex' : 'none' ?>;">
+                            <div class="form-group">
                                 <label for="loa_date">LOA Filed Date (YYYY-MM-DD) <span class="required">*</span></label>
                                 <div style="display: flex; gap: 6px; align-items: center; position: relative;">
                                     <input type="text" name="loa_date" id="loa_date" value="<?= htmlspecialchars($loa_date) ?>" placeholder="YYYY-MM-DD" pattern="\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" style="flex: 1;">
@@ -421,6 +423,29 @@ if($row = $scholar_result->fetch_assoc()) {
                                     <button type="button" class="btn btn-primary" id="btn_loa_today" style="padding: 8px 12px; font-size: 14px; white-space: nowrap;">Today</button>
                                     <input type="date" id="loa_date_picker" value="<?= htmlspecialchars($loa_date) ?>" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;">
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="loa_semester">LOA Semester <span class="required">*</span></label>
+                                <select name="loa_semester" id="loa_semester">
+                                    <option value="" disabled <?= empty($loa_semester) ? 'selected' : '' ?>>Select Semester</option>
+                                    <option value="1st Semester" <?= ($loa_semester == '1st Semester') ? 'selected' : '' ?>>1st Semester</option>
+                                    <option value="2nd Semester" <?= ($loa_semester == '2nd Semester') ? 'selected' : '' ?>>2nd Semester</option>
+                                    <option value="Summer" <?= ($loa_semester == 'Summer') ? 'selected' : '' ?>>Summer</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="loa_school_year">LOA School Year <span class="required">*</span></label>
+                                <select name="loa_school_year" id="loa_school_year">
+                                    <option value="" disabled <?= empty($loa_school_year) ? 'selected' : '' ?>>Select School Year</option>
+                                    <?php 
+                                    $current_y = (int)date('Y');
+                                    for ($y = $current_y - 5; $y <= $current_y + 5; $y++) : 
+                                        $sy_option = $y . '-' . ($y + 1);
+                                        $selected_sy = ($loa_school_year == $sy_option) ? 'selected' : '';
+                                    ?>
+                                        <option value="<?= $sy_option ?>" <?= $selected_sy ?>><?= $sy_option ?></option>
+                                    <?php endfor; ?>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -474,88 +499,7 @@ if($row = $scholar_result->fetch_assoc()) {
             </div>
         </div>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const statusSelect = document.getElementById('academic_status');
-                const loaContainer = document.getElementById('loa_date_container');
-                
-                const birthTextInput = document.getElementById('birth_date');
-                const birthPickerInput = document.getElementById('birth_date_picker');
-                const btnBirthPicker = document.getElementById('btn_birth_picker');
-
-                const loaTextInput = document.getElementById('loa_date');
-                const loaPickerInput = document.getElementById('loa_date_picker');
-                const btnLoaPicker = document.getElementById('btn_loa_picker');
-
-                // Get Today's Date in YYYY-MM-DD
-                const today = new Date();
-                const yyyy = today.getFullYear();
-                const mm = String(today.getMonth() + 1).padStart(2, '0');
-                const dd = String(today.getDate()).padStart(2, '0');
-                const todayStr = `${yyyy}-${mm}-${dd}`;
-
-                // Trigger Native Pickers On Icon Button Click
-                btnBirthPicker.addEventListener('click', function() {
-                    if (birthPickerInput.showPicker) {
-                        birthPickerInput.showPicker();
-                    } else {
-                        birthPickerInput.focus();
-                    }
-                });
-
-                btnLoaPicker.addEventListener('click', function() {
-                    if (loaPickerInput.showPicker) {
-                        loaPickerInput.showPicker();
-                    } else {
-                        loaPickerInput.focus();
-                    }
-                });
-
-                // Sync Picker Selection to Text Input (YYYY-MM-DD)
-                birthPickerInput.addEventListener('change', function() {
-                    if (this.value) {
-                        birthTextInput.value = this.value;
-                    }
-                });
-                birthTextInput.addEventListener('change', function() {
-                    if (this.value) {
-                        birthPickerInput.value = this.value;
-                    }
-                });
-
-                loaPickerInput.addEventListener('change', function() {
-                    if (this.value) {
-                        loaTextInput.value = this.value;
-                    }
-                });
-                loaTextInput.addEventListener('change', function() {
-                    if (this.value) {
-                        loaPickerInput.value = this.value;
-                    }
-                });
-
-                // Toggle LOA Field Requirement
-                function toggleLoaInput() {
-                    if (statusSelect.value === 'Leave of Absence') {
-                        loaContainer.style.display = 'flex';
-                        loaTextInput.required = true;
-                    } else {
-                        loaContainer.style.display = 'none';
-                        loaTextInput.required = false;
-                        loaTextInput.value = '';
-                        loaPickerInput.value = '';
-                    }
-                }
-
-                statusSelect.addEventListener('change', toggleLoaInput);
-
-                // Quick "Today" Button Action
-                document.getElementById('btn_loa_today').addEventListener('click', function() {
-                    loaTextInput.value = todayStr;
-                    loaPickerInput.value = todayStr;
-                });
-            });
-        </script>
+        <script src="../assets/js/add_scholar.js"></script>
     <?php endif; ?>
 </body>
 </html>

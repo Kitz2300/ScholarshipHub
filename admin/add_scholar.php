@@ -352,9 +352,11 @@ $barangays_result = $stmt->get_result();
                                     <option value="Leave of Absence">Leave of Absence</option>
                                 </select>
                             </div>
+                        </div>
 
-                            <!-- LOA Date Field with Clean Hidden Picker -->
-                            <div class="form-group" id="loa_date_container" style="display: none;">
+                        <!-- Extended LOA Fields Container -->
+                        <div class="form-row" id="loa_fields_container" style="display: none;">
+                            <div class="form-group">
                                 <label for="loa_date">LOA Filed Date (YYYY-MM-DD) <span class="required">*</span></label>
                                 <div style="display: flex; gap: 6px; align-items: center; position: relative;">
                                     <input type="text" name="loa_date" id="loa_date" placeholder="YYYY-MM-DD" pattern="\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" style="flex: 1;">
@@ -362,6 +364,29 @@ $barangays_result = $stmt->get_result();
                                     <button type="button" class="btn btn-primary" id="btn_loa_today" style="padding: 8px 12px; font-size: 14px; white-space: nowrap;">Today</button>
                                     <input type="date" id="loa_date_picker" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;">
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="loa_semester">LOA Semester <span class="required">*</span></label>
+                                <select name="loa_semester" id="loa_semester">
+                                    <option value="" selected disabled>Select Semester</option>
+                                    <option value="1st Semester">1st Semester</option>
+                                    <option value="2nd Semester">2nd Semester</option>
+                                    <option value="Summer">3rd Semesters</option>
+                                    <option value="Summer">Summer</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="loa_school_year">LOA School Year <span class="required">*</span></label>
+                                <select name="loa_school_year" id="loa_school_year">
+                                    <option value="" selected disabled>Select School Year</option>
+                                    <?php 
+                                    $current_y = (int)date('Y');
+                                    for ($y = $current_y - 5; $y <= $current_y + 5; $y++) : 
+                                        $sy_option = $y . '-' . ($y + 1);
+                                    ?>
+                                        <option value="<?= $sy_option ?>"><?= $sy_option ?></option>
+                                    <?php endfor; ?>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -414,89 +439,7 @@ $barangays_result = $stmt->get_result();
                 © 2026 PIT ScholarshipHub. All rights reserved.
             </div>
         </div>
-
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const statusSelect = document.getElementById('academic_status');
-                const loaContainer = document.getElementById('loa_date_container');
-                
-                const birthTextInput = document.getElementById('birth_date');
-                const birthPickerInput = document.getElementById('birth_date_picker');
-                const btnBirthPicker = document.getElementById('btn_birth_picker');
-
-                const loaTextInput = document.getElementById('loa_date');
-                const loaPickerInput = document.getElementById('loa_date_picker');
-                const btnLoaPicker = document.getElementById('btn_loa_picker');
-
-                // Get Today's Date in YYYY-MM-DD
-                const today = new Date();
-                const yyyy = today.getFullYear();
-                const mm = String(today.getMonth() + 1).padStart(2, '0');
-                const dd = String(today.getDate()).padStart(2, '0');
-                const todayStr = `${yyyy}-${mm}-${dd}`;
-
-                // Trigger Native Pickers On Icon Button Click
-                btnBirthPicker.addEventListener('click', function() {
-                    if (birthPickerInput.showPicker) {
-                        birthPickerInput.showPicker();
-                    } else {
-                        birthPickerInput.focus();
-                    }
-                });
-
-                btnLoaPicker.addEventListener('click', function() {
-                    if (loaPickerInput.showPicker) {
-                        loaPickerInput.showPicker();
-                    } else {
-                        loaPickerInput.focus();
-                    }
-                });
-
-                // Sync Picker Selection to Text Input (YYYY-MM-DD)
-                birthPickerInput.addEventListener('change', function() {
-                    if (this.value) {
-                        birthTextInput.value = this.value;
-                    }
-                });
-                birthTextInput.addEventListener('change', function() {
-                    if (this.value) {
-                        birthPickerInput.value = this.value;
-                    }
-                });
-
-                loaPickerInput.addEventListener('change', function() {
-                    if (this.value) {
-                        loaTextInput.value = this.value;
-                    }
-                });
-                loaTextInput.addEventListener('change', function() {
-                    if (this.value) {
-                        loaPickerInput.value = this.value;
-                    }
-                });
-
-                // Toggle LOA Field Requirement
-                function toggleLoaInput() {
-                    if (statusSelect.value === 'Leave of Absence') {
-                        loaContainer.style.display = 'flex';
-                        loaTextInput.required = true;
-                    } else {
-                        loaContainer.style.display = 'none';
-                        loaTextInput.required = false;
-                        loaTextInput.value = '';
-                        loaPickerInput.value = '';
-                    }
-                }
-
-                statusSelect.addEventListener('change', toggleLoaInput);
-
-                // Quick "Today" Button Action
-                document.getElementById('btn_loa_today').addEventListener('click', function() {
-                    loaTextInput.value = todayStr;
-                    loaPickerInput.value = todayStr;
-                });
-            });
-        </script>
+        <script src="../assets/js/add_scholar.js"></script>
     <?php endif; ?>
 </body>
 </html>

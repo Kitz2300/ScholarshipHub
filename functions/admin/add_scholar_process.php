@@ -17,6 +17,8 @@ if (isset($_POST['add'])) {
 
     if (isset($_POST['academic_status']) && $_POST['academic_status'] === 'Leave of Absence') {
         $required_fields[] = 'loa_date';
+        $required_fields[] = 'loa_semester';
+        $required_fields[] = 'loa_school_year';
     }
 
     $missing_fields = [];
@@ -82,6 +84,8 @@ if (isset($_POST['add'])) {
     $academic_status = trim($_POST['academic_status']);
 
     $loa_date = ($academic_status === 'Leave of Absence' && !empty($_POST['loa_date'])) ? trim($_POST['loa_date']) : NULL;
+    $loa_semester = ($academic_status === 'Leave of Absence' && !empty($_POST['loa_semester'])) ? trim($_POST['loa_semester']) : NULL;
+    $loa_school_year = ($academic_status === 'Leave of Absence' && !empty($_POST['loa_school_year'])) ? trim($_POST['loa_school_year']) : NULL;
 
     $school_year_sql = "SELECT school_year FROM scholarship_program WHERE id = ?";
     $school_year_stmt = $conn->prepare($school_year_sql);
@@ -144,7 +148,7 @@ if (isset($_POST['add'])) {
     $scholar_sql = "INSERT INTO scholar_info(
         student_id, last_name, given_name, ext_name, middle_name, 
         sex, birthdate, scholarship_program_id, program_id, year_level, 
-        academic_status, loa_date,
+        academic_status, loa_date, loa_semester, loa_school_year,
         father_last_name, father_given_name, father_middle_name, 
         mother_last_name, mother_given_name, mother_middle_name, 
         street, barangay_id, city_id, province_id, region_id, 
@@ -155,7 +159,7 @@ if (isset($_POST['add'])) {
     ) VALUES(
         ?, ?, ?, ?, ?, 
         ?, ?, ?, ?, ?, 
-        ?, ?, 
+        ?, ?, ?, ?,
         ?, ?, ?, 
         ?, ?, ?, 
         ?, ?, ?, ?, ?,
@@ -166,12 +170,15 @@ if (isset($_POST['add'])) {
     )";
     
     $scholar_stmt = $conn->prepare($scholar_sql);
-    $types = "sssssisiiisssssssssiiiisssssssssssss";
+    
+    // Exactly 38 type specifiers matching the 38 parameters
+    $types = "sssssisiiisssssssssssiiiisssssssssssss";
+    
     $scholar_stmt->bind_param(
         $types,
         $student_id, $last_name, $first_name, $ext_name, $middle_name,
         $sex, $birth_date, $scholarship_program_id, $program_id, $year_lvl,
-        $academic_status, $loa_date,
+        $academic_status, $loa_date, $loa_semester, $loa_school_year,
         $father_last_name, $father_first_name, $father_middle_name,
         $mother_last_name, $mother_first_name, $mother_middle_name,
         $street, $barangay_id, $city_id, $province_id, $region_id,
