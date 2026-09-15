@@ -306,7 +306,7 @@ unset($_SESSION['upload_error']);
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Import Excel - PIT ScholarshipHub</title>
+    <title>Import Scholar Records - PIT ScholarshipHub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/upload_excel.css?v=<?= filemtime('../assets/css/upload_excel.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
@@ -351,7 +351,7 @@ unset($_SESSION['upload_error']);
             <!-- Page Content -->
             <div class="page-content">
                 <div class="page-header">
-                    <h2>Upload Excel File</h2>
+                    <h2>Import Scholar Records</h2>
                 </div>
 
                 <?php if($upload_error): ?>
@@ -367,7 +367,7 @@ unset($_SESSION['upload_error']);
                     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" enctype="multipart/form-data" class="upload-form" onsubmit="showImportLoading()">
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="upload">Import Excel File <span class="required">*</span></label>
+                                <label for="upload">Upload Excel File <span class="required">*</span></label>
                                 <input type="file" name="excel_file" accept=".xls, .xlsx" id="upload" required/>
                             </div>
                             <div class="form-group">
@@ -391,7 +391,7 @@ unset($_SESSION['upload_error']);
                             </div>
                         </div>
                         <div class="form-actions">
-                            <button type="submit" name="select_columns" class="btn btn-success">Next: Select Columns</button>
+                            <button type="submit" name="select_columns" class="btn btn-success">Next</button>
                         </div>
                     </form>
                 </div>
