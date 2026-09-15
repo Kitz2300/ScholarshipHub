@@ -243,11 +243,11 @@ body::before {
 /* Buttons */
 .btn {
     display: inline-block;
-    padding: 8px 16px;
+    padding: 8px 20px;
     border: none;
     border-radius: 4px;
     text-decoration: none;
-    font-size: 13px;
+    font-size: 16px;
     cursor: pointer;
     transition: background 0.3s, transform 0.2s;
     color: #fff;
@@ -260,7 +260,7 @@ body::before {
 .btn-secondary { background: #95a5a6; }
 .btn-secondary:hover { background: #7f8c8d; }
 
-.btn-success { background: #2ecc71; }
+.btn-success { background: #2ecc71;}
 .btn-success:hover { background: #27ae60; }
 
 .btn-sm {

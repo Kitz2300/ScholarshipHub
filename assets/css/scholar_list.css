@@ -1,5 +1,5 @@
 /* ============================================================
-   DESIGN TOKENS & GLOBAL RESETS
+   DESIGN TOKENS & CSS VARIABLES
    ============================================================ */
 :root {
     --primary-dark: #1e4628;
@@ -32,6 +32,9 @@
     --btn-dark-hover: rgba(0, 0, 0, 0.7);
 }
 
+/* ============================================================
+   GLOBAL RESETS & BODY
+   ============================================================ */
 * {
     margin: 0;
     padding: 0;
@@ -54,7 +57,6 @@ body {
     padding: 10px;
 }
 
-/* Dark overlay */
 body::before {
     content: '';
     position: fixed;
@@ -224,7 +226,7 @@ body::before {
 }
 
 /* ============================================================
-   PAGE CONTENT & HEADER
+   PAGE CONTENT & LAYOUT
    ============================================================ */
 .page-content {
     background: var(--glass-bg-sub);
@@ -303,13 +305,6 @@ body::before {
     outline: none;
 }
 
-.search-filter .filter-label {
-    font-weight: bold;
-    font-size: 13px;
-    color: #444;
-    margin-right: 5px;
-}
-
 .toggle-filters {
     margin-left: auto;
     background: #6c757d;
@@ -334,8 +329,40 @@ body::before {
     display: flex;
 }
 
+/* Separate Checkboxes Row */
+.filter-checkboxes {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    width: 100%;
+    margin-top: 6px;
+    padding-top: 6px;
+}
+
+.checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    color: var(--text-dark);
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-label:hover {
+    color: var(--primary-dark);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--primary-dark);
+}
+
 /* ============================================================
-   TABLE & WRAPPER
+   TABLE & DATA DISPLAY
    ============================================================ */
 .records-info {
     font-size: 16px;
@@ -403,7 +430,7 @@ table tbody tr:nth-child(even):hover {
     background: rgba(0, 0, 0, 0.05);
 }
 
-/* Highlighted/Flagged Rows - Increased Specificity */
+/* Highlighted/Flagged Rows */
 table tbody tr.data-row-1,
 table tbody tr.data-row-1:nth-child(even) {
     background: rgb(249, 121, 121) !important;
@@ -546,7 +573,7 @@ table tbody tr.data-row-1:nth-child(even):hover {
 }
 
 /* ============================================================
-   RESPONSIVE
+   RESPONSIVE MEDIA QUERIES
    ============================================================ */
 @media (max-width: 768px) {
     .container {
@@ -571,6 +598,12 @@ table tbody tr.data-row-1:nth-child(even):hover {
     .filter-row {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    .filter-checkboxes {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
     }
 
     .search-filter input[type="search"],
