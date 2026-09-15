@@ -112,7 +112,7 @@ if(isset($_GET['filter'])) {
     }
     
     if($college_filter > 0) {
-        $where_condition[] = "program.college_id = ?";
+        $where_condition[] = "p.college_id = ?";
         $params[] = $college_filter;
         $types .= "i";
     }
@@ -154,7 +154,7 @@ if(isset($_GET['filter'])) {
 
 // ─── Apply academic status filter (always, if set) ───
 if (!empty($academic_status)) {
-    $where_condition[] = "academic_status = ?";
+    $where_condition[] = "scholar_info.academic_status = ?";
     $params[] = $academic_status;
     $types .= "s";
 }
@@ -166,8 +166,8 @@ $count_sql = "SELECT
               COUNT(*) AS total
               FROM scholar_info
               INNER JOIN scholarship_program sp ON scholar_info.scholarship_program_id = sp.id 
-              INNER JOIN program ON scholar_info.program_id = program.id
-              INNER JOIN college ON program.college_id = college.id
+              INNER JOIN program p ON scholar_info.program_id = p.id
+              INNER JOIN college c ON p.college_id = c.id
               WHERE sp.is_archived = 0 
                 AND sp.is_active = 1 
                 $where_sql";
@@ -325,7 +325,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                         </div>
                         <div class="filter-row<?= $has_filters ? ' open' : '' ?>" id="filter-row">
                             <select name="course_filter" style="max-width: 240px;">
-                                <option value="0" <?= $course_filter == 0 ? 'selected' : '' ?>>All Courses</option>
+                                <option value="0" <?= $course_filter == 0 ? 'selected' : '' ?>>All Programs</option>
                                 <?php 
                                 $course_result->data_seek(0);
                                 while($row = $course_result->fetch_assoc()) {
@@ -359,15 +359,6 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                 <option value="Dropped" <?= $academic_status == "Dropped" ? 'selected' : '' ?>>Dropped</option>
                                 <option value="Leave of Absence" <?= $academic_status == "Leave of Absence" ? 'selected' : '' ?>>Leave of Absence</option>
                             </select>
-                            <select name="flagged_filter">
-                                <option value="0" <?= $flagged_filter == 0 ? 'selected' : '' ?>>All Scholars</option>
-                                <option value="1" <?= $flagged_filter == 1 ? 'selected' : '' ?>>Flagged Only</option>
-                            </select>
-                            <select name="archive_filter">
-                                <option value="0" <?= $archive_filter === '0' ? 'selected' : '' ?>>Active Scholars</option>
-                                <option value="1" <?= $archive_filter === '1' ? 'selected' : '' ?>>Archived Scholars</option>
-                                <option value="all" <?= $archive_filter === 'all' ? 'selected' : '' ?>>All Scholars</option>
-                            </select>
                             <select name="school_year_filter">
                                 <?php foreach($available_years as $year) : ?>
                                     <option value="<?= $year ?>" <?= $school_year_filter == $year ? "selected" : "" ?>>
@@ -375,10 +366,23 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <button type="submit" name="filter" class="btn btn-sm btn-info">Apply Filter</button>
-                            <?php if($has_filters) : ?>
-                                <a href="<?= htmlspecialchars($clear_filters_url) ?>" class="btn btn-sm clear-link">Clear Filters</a>
-                            <?php endif; ?>
+
+                            <!-- Distinct Checkboxes Row Below Dropdowns -->
+                            <div class="filter-checkboxes">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="flagged_filter" value="1" <?= $flagged_filter == 1 ? 'checked' : '' ?>>
+                                    Flagged Scholars Only
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="archive_filter" value="1" <?= $archive_filter === '1' ? 'checked' : '' ?>>
+                                    Archived Scholars Only
+                                </label>
+                                <button type="submit" name="filter" class="btn btn-sm btn-info">Apply Filter</button>
+                                <?php if($has_filters) : ?>
+                                    <a href="<?= htmlspecialchars($clear_filters_url) ?>" class="btn btn-sm clear-link">Clear Filters</a>
+                                <?php endif; ?>
+                            </div>
+
                         </div>
                     </form>
                 </div>
