@@ -108,6 +108,9 @@ $program = "";
 $year_lvl = "";
 $college = "";
 $academic_status = "";
+$loa_date = "";
+$loa_semester = "";
+$loa_school_year = "";
 $school_year = "";
 $address = "";
 $zipcode = "";
@@ -156,6 +159,9 @@ if($row = $scholar_result->fetch_assoc()) {
     $year = $row['year_level'] ?? 0;
     $college = $row['college_name'];
     $academic_status = $row['academic_status'];
+    $loa_date = $row['loa_date'] ?? '';
+    $loa_semester = $row['loa_semester'] ?? '';
+    $loa_school_year = $row['loa_school_year'] ?? '';
     $school_year = $row['school_year'];
     $address = $row['permanent_address'];
     $zipcode = $row['zipcode'];
@@ -416,6 +422,22 @@ while($c_row = $chart_res->fetch_assoc()) {
                             <span class="info-label">Academic Status</span>
                             <span class="info-value"><?= htmlspecialchars($academic_status) ?></span>
                         </div>
+                        
+                        <!-- LOA Details (Displayed if Academic Status is Leave of Absence) -->
+                        <?php if($academic_status === 'Leave of Absence') : ?>
+                            <div class="info-row">
+                                <span class="info-label">LOA Filed Date</span>
+                                <span class="info-value"><?= !empty($loa_date) ? htmlspecialchars($loa_date) : 'N/A' ?></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">LOA Semester</span>
+                                <span class="info-value"><?= !empty($loa_semester) ? htmlspecialchars($loa_semester) : 'N/A' ?></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">LOA School Year</span>
+                                <span class="info-value"><?= !empty($loa_school_year) ? htmlspecialchars($loa_school_year) : 'N/A' ?></span>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
