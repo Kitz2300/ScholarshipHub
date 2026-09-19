@@ -108,7 +108,6 @@ $program = "";
 $year_lvl = "";
 $college = "";
 $academic_status = "";
-$loa_date = "";
 $loa_semester = "";
 $loa_school_year = "";
 $school_year = "";
@@ -118,12 +117,15 @@ $disability = "";
 $contact_num = "";
 $email = "";
 $ip_group = "";
+$is_child_of_solo_parent = 0;
 $father_last = "";
 $father_given = "";
 $father_middle = "";
+$father_contact = "";
 $mother_last = "";
 $mother_given = "";
 $mother_middle = "";
+$mother_contact = "";
 
 $philsys_id = "";
 $lrn = "";
@@ -159,7 +161,6 @@ if($row = $scholar_result->fetch_assoc()) {
     $year = $row['year_level'] ?? 0;
     $college = $row['college_name'];
     $academic_status = $row['academic_status'];
-    $loa_date = $row['loa_date'] ?? '';
     $loa_semester = $row['loa_semester'] ?? '';
     $loa_school_year = $row['loa_school_year'] ?? '';
     $school_year = $row['school_year'];
@@ -169,12 +170,15 @@ if($row = $scholar_result->fetch_assoc()) {
     $contact_num = $row['contact_num'];
     $email = $row['email'];
     $ip_group = empty($row['ip_group']) ? "Not Applicable" : $row['ip_group'];
+    $is_child_of_solo_parent = (int) ($row['is_child_of_solo_parent'] ?? 0);
     $father_last = $row['father_last_name'];
     $father_given = $row['father_given_name'];
     $father_middle = $row['father_middle_name'];
+    $father_contact = trim($row['father_contact'] ?? '');
     $mother_last = $row['mother_last_name'];
     $mother_given = $row['mother_given_name'];
     $mother_middle = $row['mother_middle_name'];
+    $mother_contact = trim($row['mother_contact'] ?? '');
     
     $philsys_id = trim($row['philsys_id'] ?? '');
     $lrn = trim($row['lrn'] ?? '');
@@ -244,10 +248,18 @@ if($row = $scholar_result->fetch_assoc()) {
     exit();
 }
 
-// ─── Fetch Chronological Academic Data for Chart ───
+// ─── Fetch Chronological Academic Data for Chart (Summer is latest) ───
 $chart_labels = [];
 $chart_gwa = [];
-$chart_sql = "SELECT * FROM academic_performance WHERE scholar_id = ? ORDER BY school_year ASC, semester ASC";
+$chart_sql = "SELECT * FROM academic_performance 
+              WHERE scholar_id = ? 
+              ORDER BY school_year ASC, 
+                       CASE 
+                           WHEN semester = '1st Semester' THEN 1
+                           WHEN semester = '2nd Semester' THEN 2
+                           WHEN semester = 'Summer' THEN 3
+                           ELSE 4
+                       END ASC, id ASC";
 $chart_stmt = $conn->prepare($chart_sql);
 $chart_stmt->bind_param('i', $scholar_id);
 $chart_stmt->execute();
@@ -387,6 +399,10 @@ while($c_row = $chart_res->fetch_assoc()) {
                             <span class="info-label">IP Group</span>
                             <span class="info-value"><?= htmlspecialchars($ip_group) ?></span>
                         </div>
+                        <div class="info-row">
+                            <span class="info-label">Child of Solo Parent</span>
+                            <span class="info-value"><?= $is_child_of_solo_parent === 1 ? 'Yes' : 'No' ?></span>
+                        </div>
                     </div>
                 </div>
 
@@ -426,10 +442,6 @@ while($c_row = $chart_res->fetch_assoc()) {
                         <!-- LOA Details (Displayed if Academic Status is Leave of Absence) -->
                         <?php if($academic_status === 'Leave of Absence') : ?>
                             <div class="info-row">
-                                <span class="info-label">LOA Filed Date</span>
-                                <span class="info-value"><?= !empty($loa_date) ? htmlspecialchars($loa_date) : 'N/A' ?></span>
-                            </div>
-                            <div class="info-row">
                                 <span class="info-label">LOA Semester</span>
                                 <span class="info-value"><?= !empty($loa_semester) ? htmlspecialchars($loa_semester) : 'N/A' ?></span>
                             </div>
@@ -468,7 +480,15 @@ while($c_row = $chart_res->fetch_assoc()) {
                     <!-- Academic Performance Table -->
                     <div class="academic-table-wrapper">
                         <?php 
-                        $academic_sql = "SELECT * FROM academic_performance WHERE scholar_id = ? ORDER BY school_year DESC, semester DESC";
+                        $academic_sql = "SELECT * FROM academic_performance 
+                                        WHERE scholar_id = ? 
+                                        ORDER BY school_year DESC, 
+                                                 CASE 
+                                                     WHEN semester = 'Summer' THEN 3
+                                                     WHEN semester = '2nd Semester' THEN 2
+                                                     WHEN semester = '1st Semester' THEN 1
+                                                     ELSE 0
+                                                 END DESC, id DESC";
                         $academic_stmt = $conn->prepare($academic_sql);
                         $academic_stmt->bind_param('i', $scholar_id);
                         $academic_stmt->execute();
@@ -619,6 +639,10 @@ while($c_row = $chart_res->fetch_assoc()) {
                                     <span class="info-value" style="color: red;">Not Provided</span>
                                 <?php endif; ?>
                             </div>
+                            <div class="info-row">
+                                <span class="info-label">Father's Contact</span>
+                                <span class="info-value"><?= !empty($father_contact) ? htmlspecialchars($father_contact) : 'N/A' ?></span>
+                            </div>
                         </div>
                     </div>
                     <div class="family-section">
@@ -630,6 +654,10 @@ while($c_row = $chart_res->fetch_assoc()) {
                                 <?php else : ?>
                                     <span class="info-value" style="color: red;">Not Provided</span>
                                 <?php endif; ?>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Mother's Contact</span>
+                                <span class="info-value"><?= !empty($mother_contact) ? htmlspecialchars($mother_contact) : 'N/A' ?></span>
                             </div>
                         </div>
                     </div>
@@ -717,7 +745,7 @@ while($c_row = $chart_res->fetch_assoc()) {
                             <option value="" selected disabled>--Select Semester--</option>
                             <option value="1st Semester">1st Semester</option>
                             <option value="2nd Semester">2nd Semester</option>
-                            <option value="3rd Semester">3rd Semester</option>
+                            <option value="Summer">Summer</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -751,7 +779,7 @@ while($c_row = $chart_res->fetch_assoc()) {
                         <select name="sem" id="edit_sem" required>
                             <option value="1st Semester">1st Semester</option>
                             <option value="2nd Semester">2nd Semester</option>
-                            <option value="3rd Semester">3rd Semester</option>
+                            <option value="Summer">Summer</option>
                         </select>
                     </div>
                     <div class="form-group">
