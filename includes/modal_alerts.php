@@ -61,6 +61,11 @@ function showNotification(message, isSuccess = true) {
 
 function confirmAction(event, message = 'Are you sure you want to continue?', confirmBtnText = 'Proceed', modalType = 'danger') {
     event.preventDefault();
+    event.stopPropagation();
+    if (event.stopImmediatePropagation) {
+        event.stopImmediatePropagation();
+    }
+    
     pendingFormSubmission = event.target.closest('form');
 
     const modal = document.getElementById('sysConfirmModal');
