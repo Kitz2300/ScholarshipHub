@@ -17,50 +17,67 @@ function makeLinksClickable($text) {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        <title>Scholarship Portal</title>
+        <meta charset="UTF-8">
+        <title>Scholarship Portal - PIT ScholarshipHub</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="assets/css/portal.css">
         <link rel="icon" href="assets/images/PIT LOGO.png">
     </head>
     <body>
         <div class="container">
-            <!-- header -->
-            <div class="header">
-                <img src="assets/images/PIT LOGO.png" alt="PIT Logo">
-                <p>Palompon Institute of Technology</p>
-                <h1>PIT ScholarshipHub</h1>
-            </div>
+            <!-- hero & header section -->
+            <div class="portal-hero">
+                <div class="header">
+                    <div class="header-logo-wrapper">
+                        <img src="assets/images/PIT LOGO.png" alt="PIT Logo">
+                    </div>
+                    <p>Palompon Institute of Technology</p>
+                    <h1>PIT ScholarshipHub</h1>
+                </div>
 
-            <!-- welcome -->
-            <div class="welcome">
-                <h2>Welcome to PIT ScholarshipHub</h2>
-                <p>A centralized platform for managing student scholarship records.</p>
+                <div class="welcome">
+                    <h2>Welcome to PIT ScholarshipHub</h2>
+                    <p>A centralized platform for managing student scholarship records.</p>
+                </div>
             </div>
 
             <!-- role cards -->
             <div class="role-cards">
                 <a href="admin/login.php" class="role-card admin">
-                    <img src="assets/images/admin-icon.png" alt="Admin Icon">
+                    <div class="icon-badge">
+                        <img src="assets/images/admin-icon.png" alt="Admin Icon">
+                    </div>
                     <div class="role-name">Scholarship Coordinator</div>
-                    <div class="role-desc">Manage scholars, imports, exports</div>
+                    <div class="role-desc">Manage scholars, imports, and system exports</div>
+                    <div class="role-action-btn">Log In as Coordinator &rarr;</div>
                 </a>
+
                 <a href="staff/login.php" class="role-card staff">
-                    <img src="assets/images/staff-icon.png" alt="Staff Icon">
+                    <div class="icon-badge">
+                        <img src="assets/images/staff-icon.png" alt="Staff Icon">
+                    </div>
                     <div class="role-name">Staff</div>
-                    <div class="role-desc">View and edit scholar records</div>
+                    <div class="role-desc">View and update scholar records and details</div>
+                    <div class="role-action-btn">Log In as Staff &rarr;</div>
                 </a>
+
                 <a href="student/login.php" class="role-card student">
-                    <img src="assets/images/student-icon.png" alt="Student Icon">
+                    <div class="icon-badge">
+                        <img src="assets/images/student-icon.png" alt="Student Icon">
+                    </div>
                     <div class="role-name">Scholar / Student</div>
-                    <div class="role-desc">View your scholarship information</div>
+                    <div class="role-desc">View your active scholarship status and profile</div>
+                    <div class="role-action-btn">Log In as Scholar &rarr;</div>
                 </a>
             </div>
 
-            <!-- announcements -->
+            <!-- announcements section -->
             <div class="announcements">
-                <h2>Announcements</h2>
+                <div class="announcements-header">
+                    <h2>Announcements</h2>
+                </div>
                 
                 <?php 
                 $announcement_sql = "SELECT title, content, CAST(created_at AS DATE) AS created_at_date FROM announcements WHERE is_active = 1 ORDER BY created_at DESC LIMIT 5";
@@ -83,7 +100,7 @@ function makeLinksClickable($text) {
                                      onclick="selectAnnouncement(<?= $index ?>)" 
                                      id="title-item-<?= $index ?>">
                                     <div class="title-text"><?= htmlspecialchars($item['title']) ?></div>
-                                    <div class="title-date">Posted: <?= htmlspecialchars($item['created_at_date']) ?></div>
+                                    <div class="title-date">Posted: <?= date('M d, Y', strtotime($item['created_at_date'])) ?></div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -94,7 +111,7 @@ function makeLinksClickable($text) {
                                 <div class="announcement-detail <?= $index === 0 ? 'active' : '' ?>" 
                                      id="content-item-<?= $index ?>">
                                     <h3><?= htmlspecialchars($item['title']) ?></h3>
-                                    <span class="detail-date">Date Posted: <?= htmlspecialchars($item['created_at_date']) ?></span>
+                                    <span class="detail-date-badge">Date Posted: <?= date('F d, Y', strtotime($item['created_at_date'])) ?></span>
                                     <hr class="detail-divider">
                                     <div class="detail-content"><?= makeLinksClickable($item['content']) ?></div>
                                 </div>
@@ -102,7 +119,7 @@ function makeLinksClickable($text) {
                         </div>
                     </div>
                 <?php else : ?>
-                    <p class="no-data">No announcements available at this time.</p>
+                    <p class="no-data">No active announcements available at this time.</p>
                 <?php endif; ?>
             </div>
         </div>
