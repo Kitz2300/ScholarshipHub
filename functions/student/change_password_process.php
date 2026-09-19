@@ -66,6 +66,6 @@ if (isset($_POST['change_password'])) {
     }
 
     $stmt->close();
-    header("Location: ../../pages/profile.php");
+    header("Location: ../../student/profile.php");
     exit();
 }
