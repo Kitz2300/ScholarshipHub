@@ -187,6 +187,10 @@ $barangays_result = $stmt->get_result();
                                     <option value="Cognitive Impairment"></option>
                                 </datalist>
                             </div>
+                        </div>
+
+                        <!-- IP Group Aligned with Checkbox -->
+                        <div class="form-row">
                             <div class="form-group">
                                 <label for="ip_group">IP Group</label>
                                 <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa, Maranao, B'laan, Teduray" list="ip-group-list" />
@@ -198,6 +202,11 @@ $barangays_result = $stmt->get_result();
                                     <option value="B'laan"></option>
                                     <option value="Teduray"></option>
                                 </datalist>
+                            </div>
+                            
+                            <div class="form-group checkbox-group" style="display: flex; align-items: center; gap: 8px; padding-top: 25px;">
+                                <input type="checkbox" name="is_child_of_solo_parent" id="is_child_of_solo_parent" value="1" style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
+                                <label for="is_child_of_solo_parent" style="cursor: pointer; font-weight: bold; margin-bottom: 0;">Child of a Solo Parent</label>
                             </div>
                         </div>
                     </div>
@@ -357,21 +366,11 @@ $barangays_result = $stmt->get_result();
                         <!-- Extended LOA Fields Container -->
                         <div class="form-row" id="loa_fields_container" style="display: none;">
                             <div class="form-group">
-                                <label for="loa_date">LOA Filed Date (YYYY-MM-DD) <span class="required">*</span></label>
-                                <div style="display: flex; gap: 6px; align-items: center; position: relative;">
-                                    <input type="text" name="loa_date" id="loa_date" placeholder="YYYY-MM-DD" pattern="\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" style="flex: 1;">
-                                    <button type="button" id="btn_loa_picker" class="btn btn-secondary" style="padding: 8px 12px; font-size: 16px; cursor: pointer; background: #ffff; border: 1px solid black;" title="Select LOA Date">📅</button>
-                                    <button type="button" class="btn btn-primary" id="btn_loa_today" style="padding: 8px 12px; font-size: 14px; white-space: nowrap;">Today</button>
-                                    <input type="date" id="loa_date_picker" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;">
-                                </div>
-                            </div>
-                            <div class="form-group">
                                 <label for="loa_semester">LOA Semester <span class="required">*</span></label>
                                 <select name="loa_semester" id="loa_semester">
                                     <option value="" selected disabled>Select Semester</option>
                                     <option value="1st Semester">1st Semester</option>
                                     <option value="2nd Semester">2nd Semester</option>
-                                    <option value="Summer">3rd Semesters</option>
                                     <option value="Summer">Summer</option>
                                 </select>
                             </div>
@@ -408,6 +407,10 @@ $barangays_result = $stmt->get_result();
                                 <label for="father_middle">Father's Middle Name <span class="required">*</span></label>
                                 <input type="text" name="father_middle" id="father_middle" placeholder="Middle Name" required>
                             </div>
+                            <div class="form-group">
+                                <label for="father_contact">Father's Contact Number</label>
+                                <input type="text" name="father_contact" id="father_contact" placeholder="09171234567" pattern="09[0-9]{9}">
+                            </div>
                         </div>
 
                         <div class="form-row">
@@ -422,6 +425,10 @@ $barangays_result = $stmt->get_result();
                             <div class="form-group">
                                 <label for="mother_middle">Mother's Maiden Middle Name <span class="required">*</span></label>
                                 <input type="text" name="mother_middle" id="mother_middle" placeholder="Middle Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="mother_contact">Mother's Contact Number</label>
+                                <input type="text" name="mother_contact" id="mother_contact" placeholder="09171234567" pattern="09[0-9]{9}">
                             </div>
                         </div>
                     </div>
@@ -439,6 +446,7 @@ $barangays_result = $stmt->get_result();
                 © 2026 PIT ScholarshipHub. All rights reserved.
             </div>
         </div>
+
         <script src="../assets/js/add_scholar.js"></script>
     <?php endif; ?>
 </body>

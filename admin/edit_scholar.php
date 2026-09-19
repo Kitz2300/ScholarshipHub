@@ -30,7 +30,6 @@ $scholarship_program = 0;
 $program = 0;
 $year_lvl = 0;
 $academic_status = "";
-$loa_date = "";
 $loa_semester = "";
 $loa_school_year = "";
 $address = "";
@@ -39,12 +38,15 @@ $disability = "";
 $contact_num = "";
 $email = "";
 $ip_group = "";
+$is_child_of_solo_parent = 0;
 $father_last = "";
 $father_given = "";
 $father_middle = "";
+$father_contact = "";
 $mother_last = "";
 $mother_given = "";
 $mother_middle = "";
+$mother_contact = "";
 $street = "";
 $barangay_id = 0;
 $city_id = 0;
@@ -72,8 +74,6 @@ if($row = $scholar_result->fetch_assoc()) {
     $year_lvl = $row['year_level'];
     $academic_status = $row['academic_status'];
     
-    // Format strictly as YYYY-MM-DD
-    $loa_date = (!empty($row['loa_date']) && $row['loa_date'] !== '0000-00-00') ? date('Y-m-d', strtotime($row['loa_date'])) : '';
     $loa_semester = $row['loa_semester'] ?? '';
     $loa_school_year = $row['loa_school_year'] ?? '';
     
@@ -83,12 +83,15 @@ if($row = $scholar_result->fetch_assoc()) {
     $contact_num = $row['contact_num'];
     $email = $row['email'];
     $ip_group = $row['ip_group'];
+    $is_child_of_solo_parent = (int) ($row['is_child_of_solo_parent'] ?? 0);
     $father_last = $row['father_last_name'];
     $father_given = $row['father_given_name'];
     $father_middle = $row['father_middle_name'];
+    $father_contact = $row['father_contact'] ?? '';
     $mother_last = $row['mother_last_name'];
     $mother_given = $row['mother_given_name'];
     $mother_middle = $row['mother_middle_name'];
+    $mother_contact = $row['mother_contact'] ?? '';
     $street = $row['street'] ?? '';
     $barangay_id = $row['barangay_id'] ?? 0;
     $city_id = $row['city_id'] ?? 0;
@@ -246,6 +249,10 @@ if($row = $scholar_result->fetch_assoc()) {
                                     <option value="Cognitive Impairment"></option>
                                 </datalist>
                             </div>
+                        </div>
+
+                        <!-- IP Group Aligned with Checkbox -->
+                        <div class="form-row">
                             <div class="form-group">
                                 <label for="ip_group">IP Group</label>
                                 <input type="text" name="ip_group" id="ip_group" placeholder="e.g., Ifugao, Tagbanwa" value="<?= htmlspecialchars($ip_group) ?>" list="ip-group-list"/>
@@ -257,6 +264,11 @@ if($row = $scholar_result->fetch_assoc()) {
                                     <option value="B'laan"></option>
                                     <option value="Teduray"></option>
                                 </datalist>
+                            </div>
+                            
+                            <div class="form-group checkbox-group" style="display: flex; align-items: center; gap: 8px; padding-top: 25px;">
+                                <input type="checkbox" name="is_child_of_solo_parent" id="is_child_of_solo_parent" value="1" <?= $is_child_of_solo_parent === 1 ? 'checked' : '' ?> style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
+                                <label for="is_child_of_solo_parent" style="cursor: pointer; font-weight: bold; margin-bottom: 0;">Child of a Solo Parent</label>
                             </div>
                         </div>
                     </div>
@@ -416,15 +428,6 @@ if($row = $scholar_result->fetch_assoc()) {
                         <!-- Extended LOA Fields Container -->
                         <div class="form-row" id="loa_fields_container" style="display: <?= ($academic_status == "Leave of Absence") ? 'flex' : 'none' ?>;">
                             <div class="form-group">
-                                <label for="loa_date">LOA Filed Date (YYYY-MM-DD) <span class="required">*</span></label>
-                                <div style="display: flex; gap: 6px; align-items: center; position: relative;">
-                                    <input type="text" name="loa_date" id="loa_date" value="<?= htmlspecialchars($loa_date) ?>" placeholder="YYYY-MM-DD" pattern="\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])" style="flex: 1;">
-                                    <button type="button" id="btn_loa_picker" class="btn btn-secondary" style="padding: 8px 12px; font-size: 16px; cursor: pointer;" title="Select LOA Date">📅</button>
-                                    <button type="button" class="btn btn-primary" id="btn_loa_today" style="padding: 8px 12px; font-size: 14px; white-space: nowrap;">Today</button>
-                                    <input type="date" id="loa_date_picker" value="<?= htmlspecialchars($loa_date) ?>" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;">
-                                </div>
-                            </div>
-                            <div class="form-group">
                                 <label for="loa_semester">LOA Semester <span class="required">*</span></label>
                                 <select name="loa_semester" id="loa_semester">
                                     <option value="" disabled <?= empty($loa_semester) ? 'selected' : '' ?>>Select Semester</option>
@@ -467,6 +470,10 @@ if($row = $scholar_result->fetch_assoc()) {
                                 <label for="father_middle">Father's Middle Name <span class="required">*</span></label>
                                 <input type="text" name="father_middle" id="father_middle" value="<?= htmlspecialchars($father_middle) ?>" required>
                             </div>
+                            <div class="form-group">
+                                <label for="father_contact">Father's Contact Number</label>
+                                <input type="text" name="father_contact" id="father_contact" value="<?= htmlspecialchars($father_contact) ?>" placeholder="09171234567" pattern="09[0-9]{9}">
+                            </div>
                         </div>
 
                         <div class="form-row">
@@ -481,6 +488,10 @@ if($row = $scholar_result->fetch_assoc()) {
                             <div class="form-group">
                                 <label for="mother_middle">Mother's Maiden Middle Name <span class="required">*</span></label>
                                 <input type="text" name="mother_middle" id="mother_middle" value="<?= htmlspecialchars($mother_middle) ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="mother_contact">Mother's Contact Number</label>
+                                <input type="text" name="mother_contact" id="mother_contact" value="<?= htmlspecialchars($mother_contact) ?>" placeholder="09171234567" pattern="09[0-9]{9}">
                             </div>
                         </div>
                     </div>
