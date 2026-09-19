@@ -44,7 +44,10 @@ $searched = isset($_GET['search']) ? trim($_GET['search']) : "";
 $course_filter = isset($_GET['course_filter']) ? (int)$_GET['course_filter'] : 0;
 $college_filter = isset($_GET['college_filter']) ? (int)$_GET['college_filter'] : 0;
 $scholarship_filter = isset($_GET['scholarship_filter']) ? (int)$_GET['scholarship_filter'] : 0;
+
+// Default academic status to "Enrolled" if not provided
 $academic_status = isset($_GET['academic_status']) ? $_GET['academic_status'] : "Enrolled";
+
 $flagged_filter = isset($_GET['flagged_filter']) ? (int)$_GET['flagged_filter'] : 0;
 $school_year_filter = isset($_GET['school_year_filter']) ? $_GET['school_year_filter'] : null;
 $archive_filter = isset($_GET['archive_filter']) ? $_GET['archive_filter'] : '0';
@@ -68,8 +71,8 @@ if ($archive_filter === '1') {
     $where_condition[] = "scholar_info.is_archived = 0";
 }
 
-// ─── Search (only when search_btn is clicked) ───
-if(isset($_GET['search_btn']) && !empty($searched)) {
+// ─── Search condition ───
+if(!empty($searched)) {
     $where_condition[] = "(scholar_info.student_id LIKE ? 
                           OR scholar_info.given_name LIKE ? 
                           OR scholar_info.last_name LIKE ? 
@@ -86,88 +89,70 @@ if(isset($_GET['search_btn']) && !empty($searched)) {
     $types .= "sssssssss";
 }
 
-// ─── Filters (only when filter is clicked) ───
-if(isset($_GET['filter'])) {
-    if(!empty($searched)) {
-        $where_condition[] = "(scholar_info.student_id LIKE ? 
-                              OR scholar_info.given_name LIKE ? 
-                              OR scholar_info.last_name LIKE ? 
-                              OR CONCAT_WS(', ', scholar_info.last_name, scholar_info.given_name, scholar_info.middle_name) LIKE ?
-                              OR CONCAT_WS(', ', scholar_info.last_name, scholar_info.given_name) LIKE ?
-                              OR CONCAT_WS(' ', scholar_info.last_name, scholar_info.given_name, scholar_info.middle_name) LIKE ?
-                              OR CONCAT_WS(' ', scholar_info.last_name, scholar_info.given_name) LIKE ?
-                              OR CONCAT(scholar_info.last_name, ', ', scholar_info.given_name, ' ', scholar_info.middle_name) LIKE ?
-                              OR CONCAT(scholar_info.last_name, ', ', scholar_info.given_name) LIKE ?)";
-        $like = "%$searched%";
-        for($i = 0; $i < 9; $i++) {
-            $params[] = $like;
-        }
-        $types .= "sssssssss";
-    }
-    
-    if($course_filter > 0) {
-        $where_condition[] = "scholar_info.program_id = ?";
-        $params[] = $course_filter;
-        $types .= "i";
-    }
-    
-    if($college_filter > 0) {
-        $where_condition[] = "p.college_id = ?";
-        $params[] = $college_filter;
-        $types .= "i";
-    }
-    
-    if($scholarship_filter > 0) {
-        $where_condition[] = "scholar_info.scholarship_program_id = ?";
-        $params[] = $scholarship_filter;
-        $types .= "i";
-    }
-
-    // ─── Flagged filter ───
-    if ($flagged_filter == 1) {
-        $where_condition[] = "sp.min_gwa_req > 0";
-        $where_condition[] = "EXISTS (
-            SELECT 1 
-            FROM academic_performance ap
-            WHERE ap.scholar_id = scholar_info.id
-            AND ap.school_year = (
-                SELECT MAX(school_year) 
-                FROM academic_performance ap2 
-                WHERE ap2.scholar_id = scholar_info.id
-            )
-            AND ap.semester = (
-                SELECT MAX(semester) 
-                FROM academic_performance ap3 
-                WHERE ap3.scholar_id = scholar_info.id 
-                AND ap3.school_year = ap.school_year
-            )
-            AND ap.gwa > sp.min_gwa_req
-        )";
-    }
-
-    if($school_year_filter != null) {
-        $where_condition[] = "scholar_info.school_year = ?";
-        $params[] = $school_year_filter;
-        $types .= "s";
-    }
+// ─── Course / Program Filter ───
+if($course_filter > 0) {
+    $where_condition[] = "scholar_info.program_id = ?";
+    $params[] = $course_filter;
+    $types .= "i";
 }
 
-// ─── Apply academic status filter (always, if set) ───
+// ─── College Filter ───
+if($college_filter > 0) {
+    $where_condition[] = "p.college_id = ?";
+    $params[] = $college_filter;
+    $types .= "i";
+}
+
+// ─── Scholarship Program Filter ───
+if($scholarship_filter > 0) {
+    $where_condition[] = "scholar_info.scholarship_program_id = ?";
+    $params[] = $scholarship_filter;
+    $types .= "i";
+}
+
+// ─── Academic Status Filter (Default: Enrolled) ───
 if (!empty($academic_status)) {
     $where_condition[] = "scholar_info.academic_status = ?";
     $params[] = $academic_status;
     $types .= "s";
 }
 
+// ─── Flagged Scholars Filter ───
+if ($flagged_filter == 1) {
+    $where_condition[] = "sp.min_gwa_req > 0";
+    $where_condition[] = "ap.gwa IS NOT NULL";
+    $where_condition[] = "ap.gwa > sp.min_gwa_req";
+}
+
+// ─── School Year Filter ───
+if(!empty($school_year_filter)) {
+    $where_condition[] = "scholar_info.school_year = ?";
+    $params[] = $school_year_filter;
+    $types .= "s";
+}
+
 $where_sql = !empty($where_condition) ? " AND " . implode(" AND ", $where_condition) : "";
 
 // ─── Count total records ───
-$count_sql = "SELECT 
-              COUNT(*) AS total
+$count_sql = "SELECT COUNT(*) AS total
               FROM scholar_info
               INNER JOIN scholarship_program sp ON scholar_info.scholarship_program_id = sp.id 
               INNER JOIN program p ON scholar_info.program_id = p.id
               INNER JOIN college c ON p.college_id = c.id
+              LEFT JOIN (
+                  SELECT scholar_id, gwa,
+                         ROW_NUMBER() OVER (
+                             PARTITION BY scholar_id 
+                             ORDER BY school_year DESC, 
+                                      CASE 
+                                          WHEN semester = 'Summer' THEN 3
+                                          WHEN semester = '2nd Semester' THEN 2
+                                          WHEN semester = '1st Semester' THEN 1
+                                          ELSE 0
+                                      END DESC, id DESC
+                         ) AS rn
+                  FROM academic_performance
+              ) ap ON ap.scholar_id = scholar_info.id AND ap.rn = 1
               WHERE sp.is_archived = 0 
                 AND sp.is_active = 1 
                 $where_sql";
@@ -178,10 +163,11 @@ $count_stmt->execute();
 $total_records = $count_stmt->get_result()->fetch_assoc()['total'];
 $total_pages = ceil($total_records / $records_per_page);
 
-// ─── Add pagination parameters ───
-$params[] = $records_per_page;
-$params[] = $offset;
-$types .= "ii";
+// ─── Prepare params for main query ───
+$scholar_params = $params;
+$scholar_types = $types . "ii";
+$scholar_params[] = $records_per_page;
+$scholar_params[] = $offset;
 
 // ─── Fetch scholars ───
 $scholar_sql = "SELECT 
@@ -196,6 +182,7 @@ $scholar_sql = "SELECT
                 scholar_info.is_archived,
                 sp.name AS scholarship_name, 
                 p.name AS program_name,
+                c.college_code AS college_name,
                 sp.min_gwa_req,
                 ap.gwa AS latest_gwa,
                 CASE 
@@ -208,8 +195,17 @@ $scholar_sql = "SELECT
                 INNER JOIN program p ON scholar_info.program_id = p.id
                 INNER JOIN college c ON p.college_id = c.id
                 LEFT JOIN (
-                    SELECT scholar_id, gwa, school_year, semester,
-                           ROW_NUMBER() OVER (PARTITION BY scholar_id ORDER BY school_year DESC, CAST(semester AS UNSIGNED) DESC) AS rn
+                    SELECT scholar_id, gwa,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY scholar_id 
+                               ORDER BY school_year DESC, 
+                                        CASE 
+                                            WHEN semester = 'Summer' THEN 3
+                                            WHEN semester = '2nd Semester' THEN 2
+                                            WHEN semester = '1st Semester' THEN 1
+                                            ELSE 0
+                                        END DESC, id DESC
+                           ) AS rn
                     FROM academic_performance
                 ) ap ON ap.scholar_id = scholar_info.id AND ap.rn = 1
                 WHERE sp.is_archived = 0 
@@ -219,7 +215,7 @@ $scholar_sql = "SELECT
                 LIMIT ? OFFSET ?";
 
 $scholar_stmt = $conn->prepare($scholar_sql);
-if(!empty($params)) $scholar_stmt->bind_param($types, ...$params);
+if(!empty($scholar_params)) $scholar_stmt->bind_param($scholar_types, ...$scholar_params);
 $scholar_stmt->execute();
 $result = $scholar_stmt->get_result();
 
@@ -390,7 +386,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                 <!-- Table Header: Records Info + Add Button -->
                 <div class="table-header">
                     <div class="records-info">
-                        Showing <?= $offset + 1 ?> - <?= min($offset + $records_per_page, $total_records) ?> of <?= $total_records ?> scholars
+                        Showing <?= $total_records > 0 ? $offset + 1 : 0 ?> - <?= min($offset + $records_per_page, $total_records) ?> of <?= $total_records ?> scholars
                         <span class="flagged-legend-badge">
                             <span class="legend-color-box"></span> Flagged Scholar (GWA below requirement)
                         </span>
@@ -409,6 +405,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                 <th>Name</th>
                                 <th>Year Level</th>
                                 <th>Program</th>
+                                <th>College</th>
                                 <th>Scholarship Program</th>
                                 <th>Academic Status</th>
                                 <th>Actions</th>
@@ -438,6 +435,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                     <td><?= htmlspecialchars($row['last_name']) ?>, <?= htmlspecialchars($row['given_name']) ?> <?= htmlspecialchars($row['middle_name']) ?> <?= htmlspecialchars($ext_name) ?></td>
                                     <td><?= htmlspecialchars($year_lvl) ?></td>
                                     <td><?= htmlspecialchars($row['program_name']) ?></td>
+                                    <td><?= htmlspecialchars($row['college_name']) ?></td>
                                     <td><?= htmlspecialchars($row['scholarship_name']) ?></td>
                                     <td><?= htmlspecialchars($row['academic_status']) ?></td>
                                     <td>
@@ -460,7 +458,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                             <?php endwhile; ?>
                         <?php else : ?>
                             <tr>
-                                <td colspan="7" class="no-data">No scholars found.</td>
+                                <td colspan="8" class="no-data">No scholars found.</td>
                             </tr>
                         <?php endif; ?>
                         </tbody>
