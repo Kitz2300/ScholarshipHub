@@ -18,6 +18,12 @@ if (isset($_POST['add_provider'])) {
     $name = trim($_POST['name']);
     $code = trim($_POST['code']);
     $provider_type = trim($_POST['provider_type']);
+    
+    // Override provider_type with custom input if 'Other' is selected
+    if ($provider_type === 'Other' && !empty($_POST['provider_type_other'])) {
+        $provider_type = trim($_POST['provider_type_other']);
+    }
+
     $contact_person = trim($_POST['contact_person']);
     $email = trim($_POST['email']);
     $contact_num = trim($_POST['contact_num']);
@@ -113,11 +119,17 @@ if (isset($_POST['add_provider'])) {
                                 <select id="provider_type" name="provider_type" required>
                                     <option value="" disabled selected>-- Select Type --</option>
                                     <option value="Government">Government</option>
-                                    <option value="Private/Corporate">Private / Corporate</option>
+                                    <option value="Private">Private</option>
                                     <option value="Institutional">Institutional / University</option>
-                                    <option value="NGO/Non-Profit">NGO / Non-Profit</option>
+                                    <option value="NGO">Non Government Organization (NGO)</option>
                                     <option value="Alumni">Alumni Association</option>
+                                    <option value="Other">Other</option>
                                 </select>
+                            </div>
+
+                            <div class="form-group half-width" id="other_type_container" style="display: none;">
+                                <label for="provider_type_other">Specify Other Type <span class="required">*</span></label>
+                                <input type="text" id="provider_type_other" name="provider_type_other" placeholder="e.g., Community Service Grant">
                             </div>
                         </div>
                     </div>
@@ -155,6 +167,28 @@ if (isset($_POST['add_provider'])) {
                 © 2026 PIT ScholarshipHub. All rights reserved.
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const ptTypeSelect = document.getElementById("provider_type");
+                const otherTypeContainer = document.getElementById("other_type_container");
+                const otherTypeInput = document.getElementById("provider_type_other");
+
+                function toggleOtherTypeInput() {
+                    if (ptTypeSelect.value === 'Other') {
+                        otherTypeContainer.style.display = 'flex';
+                        otherTypeInput.required = true;
+                    } else {
+                        otherTypeContainer.style.display = 'none';
+                        otherTypeInput.required = false;
+                        otherTypeInput.value = '';
+                    }
+                }
+
+                ptTypeSelect.addEventListener('change', toggleOtherTypeInput);
+                toggleOtherTypeInput(); // Run on page load
+            });
+        </script>
     <?php endif; ?>
 </body>
 </html>

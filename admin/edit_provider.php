@@ -26,6 +26,12 @@ if (isset($_POST['update_provider'])) {
     $name = trim($_POST['name']);
     $code = trim($_POST['code']);
     $provider_type = trim($_POST['provider_type']);
+    
+    // Override provider_type with custom input if 'Other' is selected
+    if ($provider_type === 'Other' && !empty($_POST['provider_type_other'])) {
+        $provider_type = trim($_POST['provider_type_other']);
+    }
+
     $contact_person = trim($_POST['contact_person']);
     $email = trim($_POST['email']);
     $contact_num = trim($_POST['contact_num']);
@@ -61,6 +67,11 @@ if ($result->num_rows === 0) {
 }
 
 $provider = $result->fetch_assoc();
+
+// Determine if the saved provider_type is a custom value ("Other")
+$standard_types = ['Government', 'Private', 'Institutional', 'NGO', 'Alumni'];
+$current_type = $provider['provider_type'];
+$is_other_type = !in_array($current_type, $standard_types);
 ?>
 
 <!DOCTYPE html>
@@ -133,12 +144,19 @@ $provider = $result->fetch_assoc();
                             <div class="form-group half-width">
                                 <label for="provider_type">Provider Type <span class="required">*</span></label>
                                 <select id="provider_type" name="provider_type" required>
-                                    <option value="Government" <?= $provider['provider_type'] === 'Government' ? 'selected' : '' ?>>Government</option>
-                                    <option value="Private/Corporate" <?= $provider['provider_type'] === 'Private/Corporate' ? 'selected' : '' ?>>Private / Corporate</option>
-                                    <option value="Institutional" <?= $provider['provider_type'] === 'Institutional' ? 'selected' : '' ?>>Institutional / University</option>
-                                    <option value="NGO/Non-Profit" <?= $provider['provider_type'] === 'NGO/Non-Profit' ? 'selected' : '' ?>>NGO / Non-Profit</option>
-                                    <option value="Alumni" <?= $provider['provider_type'] === 'Alumni' ? 'selected' : '' ?>>Alumni Association</option>
+                                    <option value="Government" <?= $current_type === 'Government' ? 'selected' : '' ?>>Government</option>
+                                    <option value="Private" <?= $current_type === 'Private' ? 'selected' : '' ?>>Private</option>
+                                    <option value="Institutional" <?= $current_type === 'Institutional' ? 'selected' : '' ?>>Institutional / University</option>
+                                    <option value="NGO" <?= $current_type === 'NGO' ? 'selected' : '' ?>>Non Government Organization (NGO)</option>
+                                    <option value="Alumni" <?= $current_type === 'Alumni' ? 'selected' : '' ?>>Alumni Association</option>
+                                    <option value="Other" <?= $is_other_type ? 'selected' : '' ?>>Other</option>
                                 </select>
+                            </div>
+
+                            <!-- Dynamic Input for "Other" Type -->
+                            <div class="form-group half-width" id="other_type_container" style="display: <?= $is_other_type ? 'flex' : 'none' ?>;">
+                                <label for="provider_type_other">Specify Other Category / Type <span class="required">*</span></label>
+                                <input type="text" name="provider_type_other" id="provider_type_other" value="<?= $is_other_type ? htmlspecialchars($current_type) : '' ?>" placeholder="e.g., Community Service Grant">
                             </div>
                         </div>
                     </div>
@@ -176,6 +194,27 @@ $provider = $result->fetch_assoc();
                 © 2026 PIT ScholarshipHub. All rights reserved.
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const ptTypeSelect = document.getElementById('provider_type');
+                const otherTypeContainer = document.getElementById('other_type_container');
+                const otherTypeInput = document.getElementById('provider_type_other');
+
+                function toggleOtherTypeInput() {
+                    if (ptTypeSelect.value === 'Other') {
+                        otherTypeContainer.style.display = 'flex';
+                        otherTypeInput.required = true;
+                    } else {
+                        otherTypeContainer.style.display = 'none';
+                        otherTypeInput.required = false;
+                    }
+                }
+
+                ptTypeSelect.addEventListener('change', toggleOtherTypeInput);
+                toggleOtherTypeInput(); // Run on page load
+            });
+        </script>
     <?php endif; ?>
 </body>
 </html>
