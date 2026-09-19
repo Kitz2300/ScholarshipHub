@@ -19,7 +19,9 @@ $isPreview = isset($_POST['action']) && $_POST['action'] === 'preview';
 
 // Get filters and columns
 $scholarship_program = $_POST['scholar_program'] ?? 'all';
+$college = $_POST['college'] ?? 'all';
 $program = $_POST['program'] ?? 'all';
+$academic_status = $_POST['academic_status'] ?? 'all';
 $selected_cols = isset($_POST['columns']) ? $_POST['columns'] : [];
 $column_order = isset($_POST['column_order']) ? json_decode($_POST['column_order'], true) : [];
 
@@ -42,6 +44,18 @@ foreach($selected_cols as $col) {
     }
 }
 
+// Automatically enforce LOA details based on academic status filter
+if ($academic_status === 'Leave of Absence') {
+    if (!in_array('loa_semester', $main_cols)) {
+        $main_cols[] = 'loa_semester';
+    }
+    if (!in_array('loa_school_year', $main_cols)) {
+        $main_cols[] = 'loa_school_year';
+    }
+} else {
+    $main_cols = array_values(array_diff($main_cols, ['loa_semester', 'loa_school_year']));
+}
+
 // Column mapping for main fields
 $column_map = [
     'student_id' => 'scholar_info.student_id',
@@ -58,9 +72,12 @@ $column_map = [
     'father_last' => 'scholar_info.father_last_name',
     'father_given' => 'scholar_info.father_given_name',
     'father_middle' => 'scholar_info.father_middle_name',
+    'father_contact' => 'scholar_info.father_contact',
     'mother_last' => 'scholar_info.mother_last_name',
     'mother_given' => 'scholar_info.mother_given_name',
     'mother_middle' => 'scholar_info.mother_middle_name',
+    'mother_contact' => 'scholar_info.mother_contact',
+    'is_child_of_solo_parent' => 'scholar_info.is_child_of_solo_parent',
     'permanent_address' => 'scholar_info.permanent_address',
     'disability' => 'scholar_info.disability',
     'contact' => 'scholar_info.contact_num',
@@ -69,6 +86,8 @@ $column_map = [
     'philsys_id' => 'scholar_info.philsys_id',
     'lrn' => 'scholar_info.lrn',
     'four_ps_id' => 'scholar_info.four_ps_id',
+    'loa_semester' => 'scholar_info.loa_semester',
+    'loa_school_year' => 'scholar_info.loa_school_year',
 ];
 
 $display_headers = [
@@ -86,9 +105,12 @@ $display_headers = [
     'father_last' => "Father's Last Name",
     'father_given' => "Father's Given Name",
     'father_middle' => "Father's Middle Name",
+    'father_contact' => "Father's Contact Number",
     'mother_last' => "Mother's Last Name",
     'mother_given' => "Mother's Given Name",
     'mother_middle' => "Mother's Middle Name",
+    'mother_contact' => "Mother's Contact Number",
+    'is_child_of_solo_parent' => 'Child of Solo Parent',
     'permanent_address' => 'Permanent Address',
     'disability' => 'Disability',
     'contact' => 'Contact Number',
@@ -97,6 +119,8 @@ $display_headers = [
     'philsys_id' => 'PHILSYS ID',
     'lrn' => 'LRN',
     'four_ps_id' => "4P's ID",
+    'loa_semester' => 'LOA Semester',
+    'loa_school_year' => 'LOA School Year',
 ];
 
 // Build the list of all columns (main + extra) for final ordering
@@ -121,16 +145,32 @@ $select_sql = implode(', ', $select_parts);
 $sql = "SELECT $select_sql 
         FROM scholar_info
         LEFT JOIN program ON scholar_info.program_id = program.id
+        LEFT JOIN college ON program.college_id = college.id
         LEFT JOIN scholarship_program ON scholar_info.scholarship_program_id = scholarship_program.id";
 if($has_extra) {
     $sql .= " LEFT JOIN scholar_notes ON scholar_notes.scholar_id = scholar_info.id";
 }
 $sql .= " WHERE scholar_info.is_archived = 0";
-if($scholarship_program !== 'all') {
-    $sql .= " AND scholarship_program.name = '" . $conn->real_escape_string($scholarship_program) . "'";
+
+if($scholarship_program !== 'all' && !empty($scholarship_program)) {
+    if(is_numeric($scholarship_program)) {
+        $sql .= " AND scholar_info.scholarship_program_id = " . (int)$scholarship_program;
+    } else {
+        $sql .= " AND scholarship_program.name = '" . $conn->real_escape_string($scholarship_program) . "'";
+    }
+}
+if($college !== 'all' && !empty($college)) {
+    if(is_numeric($college)) {
+        $sql .= " AND program.college_id = " . (int)$college;
+    } else {
+        $sql .= " AND college.college_name = '" . $conn->real_escape_string($college) . "'";
+    }
 }
 if($program !== 'all') {
     $sql .= " AND program.name = '" . $conn->real_escape_string($program) . "'";
+}
+if($academic_status !== 'all') {
+    $sql .= " AND scholar_info.academic_status = '" . $conn->real_escape_string($academic_status) . "'";
 }
 $sql .= " ORDER BY scholar_info.last_name ASC";
 
@@ -142,6 +182,9 @@ if($isPreview) {
     while($row = $result->fetch_assoc()) {
         if(isset($row['sex'])) {
             $row['sex'] = $row['sex'] == 0 ? 'Male' : 'Female';
+        }
+        if(isset($row['is_child_of_solo_parent'])) {
+            $row['is_child_of_solo_parent'] = $row['is_child_of_solo_parent'] == 1 ? 'Yes' : 'No';
         }
         // Decode notes for extra columns
         if($has_extra && isset($row['_notes'])) {
@@ -264,6 +307,9 @@ while($row = $result->fetch_assoc()) {
         if($colName === 'sex' && $value !== '') {
             $value = $value == 0 ? 'Male' : 'Female';
         }
+        if($colName === 'is_child_of_solo_parent' && $value !== '') {
+            $value = $value == 1 ? 'Yes' : 'No';
+        }
         $cell = Coordinate::stringFromColumnIndex($col) . $rowNum;
         $sheet->setCellValue($cell, $value);
         $col++;
@@ -294,7 +340,7 @@ $fullFilename = $filename . '.xlsx';
 
 // ========== AUDIT TRAIL LOGGING ==========
 $user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
-$action = "Exported scholar data to Excel ($fullFilename) [Scholarship Program: $scholarship_program, Academic Program: $program]";
+$action = "Exported scholar data to Excel ($fullFilename) [Scholarship Program: $scholarship_program, College: $college, Academic Program: $program, Academic Status: $academic_status]";
 
 $audit_sql = "INSERT INTO audit_trail (user_id, action) VALUES (?, ?)";
 $audit_stmt = $conn->prepare($audit_sql);
