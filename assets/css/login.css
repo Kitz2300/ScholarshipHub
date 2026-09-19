@@ -2,15 +2,17 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: #333;
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 12px;
     position: relative;
     
     /* Background */
@@ -29,113 +31,124 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(0, 0, 0, 0.2);
     z-index: -1;
     pointer-events: none;
 }
 
-img {
-    width: 40px;
-    height: 40px;
-}
-
 /* Glassmorphism Container */
 .container {
-    max-width: 450px;
+    max-width: 440px;
     width: 100%;
-    margin: 20px;
-    background: rgba(255, 255, 255, 0.85); /* Semi-transparent */
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
     overflow: hidden;
 }
 
-/* Header - Updated to Forest Green to match the trees in the background */
+/* Header */
 .header {
-    background: rgba(26, 59, 34, 0.85) !important; /* Deep forest green */
+    background: rgba(26, 59, 34, 0.92) !important;
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     color: #fff;
-    padding: 30px 20px 25px;
+    padding: 24px 20px 20px;
     text-align: center;
 }
 
 .header img {
-    width: 90px;
-    height: 90px;
-    margin-bottom: 12px;
-    padding: 5px;
+    width: 75px;
+    height: 75px;
+    margin-bottom: 10px;
+    padding: 4px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255,255,255,0.5);
-    background-color: rgba(255, 255, 255, 0.818);
+    border: 2px solid rgba(255,255,255,0.6);
+    background-color: rgba(255, 255, 255, 0.9);
 }
 
 .header h1 {
-    font-size: 28px;
+    font-size: 24px;
+    line-height: 1.2;
 }
 
 .header p {
-    font-size: 14px;
-    opacity: 0.85;
-    margin-top: 5px;
+    font-size: 13px;
+    opacity: 0.88;
+    margin-top: 4px;
 }
 
 /* Login Box */
 .login-box {
-    padding: 30px;
+    padding: 24px 22px;
 }
 
 .login-box h2 {
-    color: #1e4628; /* Matches header */
-    font-size: 25px;
+    color: #1e4628;
+    font-size: 22px;
     text-align: center;
 }
 
 .login-box .subtitle {
     color: #555;
     text-align: center;
-    font-size: 14px;
-    margin: 5px 0 20px 0;
+    font-size: 13px;
+    margin: 6px 0 20px 0;
+    line-height: 1.4;
 }
 
-/* Error Message */
-.error-msg {
-    background: rgba(248, 215, 218, 0.9);
-    color: #721c24;
-    padding: 10px 15px;
-    border-radius: 6px;
-    margin-bottom: 15px;
-    font-size: 14px;
-    text-align: center;
-    border: 1px solid rgba(114, 28, 36, 0.2);
-}
-
-/* Form */
+/* Form Groups */
 .form-group {
-    margin-bottom: 18px;
+    margin-bottom: 16px;
 }
 
 .form-group label {
     display: block;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 13px;
     color: #333;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
 }
 
+/* Label Header Flex Container for Forgot Password */
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.label-row label {
+    margin-bottom: 0;
+}
+
+.forgot-btn {
+    font-size: 13px;
+    color: #1e4628;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s;
+    display: inline-block;
+}
+
+.forgot-btn:hover {
+    text-decoration: underline;
+    color: #2a6b37;
+}
+
+/* 16px font-size prevents iOS Safari zoom on focus */
 .form-group input {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 12px 14px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
     border-radius: 6px;
-    font-size: 14px;
-    transition: border 0.3s;
-    box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.8);
+    font-size: 16px;
+    transition: border 0.3s, box-shadow 0.3s;
+    background: rgba(255, 255, 255, 0.9);
 }
 
 .form-group input:focus {
@@ -144,10 +157,10 @@ img {
     box-shadow: 0 0 0 3px rgba(26, 59, 34, 0.15);
 }
 
-/* Login Button - Updated to solid forest green */
+/* Login Button */
 .login-btn {
     width: 100%;
-    padding: 12px;
+    padding: 13px;
     background: #1e4628;
     color: #fff;
     border: none;
@@ -155,12 +168,12 @@ img {
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
+    transition: background 0.3s, transform 0.15s;
+    touch-action: manipulation;
 }
 
 .login-btn:hover {
     background: #2a6b37;
-    transform: translateY(-2px);
 }
 
 .login-btn:active {
@@ -178,6 +191,8 @@ img {
     text-decoration: none;
     font-size: 14px;
     font-weight: bold;
+    display: inline-block;
+    padding: 4px;
 }
 
 .login-links a:hover {
@@ -187,49 +202,44 @@ img {
 /* Footer */
 .footer {
     text-align: center;
-    padding: 15px 20px;
+    padding: 14px 20px;
     color: #666;
     font-size: 12px;
     border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-/* Responsive */
+/* Mobile Adjustments */
 @media (max-width: 480px) {
-    .container {
-        margin: 10px;
-        border-radius: 8px;
+    body {
+        padding: 8px;
     }
     
-    .login-box {
-        padding: 20px;
+    .container {
+        border-radius: 10px;
+    }
+    
+    .header {
+        padding: 20px 15px 16px;
+    }
+    
+    .header img {
+        width: 65px;
+        height: 65px;
     }
     
     .header h1 {
-        font-size: 22px;
+        font-size: 20px;
     }
-}
 
-/* Label Header Flex Container for Forgot Password */
-.label-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-}
+    .login-box {
+        padding: 18px 16px;
+    }
 
-.label-row label {
-    margin-bottom: 0;
-}
+    .login-box h2 {
+        font-size: 20px;
+    }
 
-.forgot-btn {
-    font-size: 14px;
-    color: #1e4628;
-    text-decoration: none;
-    font-weight: bold;
-    transition: color 0.2s;
-}
-
-.forgot-btn:hover {
-    text-decoration: underline;
-    color: #2a6b37;
+    .forgot-btn {
+        font-size: 12px;
+    }
 }
