@@ -64,9 +64,8 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                             <div class="form-group">
                                 <label for="scholar_program">Scholarship Program</label>
                                 <select name="scholar_program" id="scholar_program">
-                                    <option value="all">All Scholarship Programs</option>
                                     <?php 
-                                    $sp_sql = "SELECT name, code FROM scholarship_program
+                                    $sp_sql = "SELECT id, name, code FROM scholarship_program
                                                WHERE EXISTS (SELECT 1 FROM scholar_info 
                                                              WHERE scholar_info.scholarship_program_id = scholarship_program.id 
                                                              AND scholar_info.is_archived = 0 
@@ -75,8 +74,23 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                                     $sp_stmt = $conn->prepare($sp_sql);
                                     $sp_stmt->execute();
                                     $sp_result = $sp_stmt->get_result();
-                                    while($row = $sp_result->fetch_assoc()) : ?>
-                                        <option value="<?= $row['name'] ?>"><?= htmlspecialchars($row['name']) ?> (<?= htmlspecialchars($row['code']) ?>)</option>
+                                    while($row = $sp_result->fetch_assoc()) : 
+                                    ?>
+                                        <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['name']) ?> (<?= htmlspecialchars($row['code']) ?>)</option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="college">College</label>
+                                <select name="college" id="college">
+                                    <option value="all" selected>All Colleges</option>
+                                    <?php 
+                                    $c_sql = "SELECT id, college_name FROM college ORDER BY college_name ASC";
+                                    $c_stmt = $conn->prepare($c_sql);
+                                    $c_stmt->execute();
+                                    $c_result = $c_stmt->get_result();
+                                    while($row = $c_result->fetch_assoc()) : ?>
+                                        <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['college_name']) ?></option>
                                     <?php endwhile; ?>
                                 </select>
                             </div>
@@ -90,8 +104,19 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                                     $p_stmt->execute();
                                     $p_result = $p_stmt->get_result();
                                     while($row = $p_result->fetch_assoc()) : ?>
-                                        <option value="<?= $row['name'] ?>"><?= htmlspecialchars($row['name']) ?></option>
+                                        <option value="<?= htmlspecialchars($row['name']) ?>"><?= htmlspecialchars($row['name']) ?></option>
                                     <?php endwhile; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="academic_status">Academic Status</label>
+                                <select name="academic_status" id="academic_status">
+                                    <option value="Enrolled" selected>Enrolled</option>
+                                    <option value="Not Enrolled">Not Enrolled</option>
+                                    <option value="Graduated">Graduated</option>
+                                    <option value="Transferred">Transferred</option>
+                                    <option value="Dropped">Dropped</option>
+                                    <option value="Leave of Absence">Leave of Absence</option>
                                 </select>
                             </div>
                         </div>
@@ -117,7 +142,10 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                                 'year_level' => 'Year Level',
                                 'academic_status' => 'Academic Status',
                                 'father_name' => "Father's Name",
+                                'father_contact' => "Father's Contact Number",
                                 'mother_name' => "Mother's Name",
+                                'mother_contact' => "Mother's Contact Number",
+                                'is_child_of_solo_parent' => 'Child of Solo Parent',
                                 'permanent_address' => 'Permanent Address',
                                 'disability' => 'Disability',
                                 'contact' => 'Contact Number',
@@ -125,6 +153,8 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                                 'sex' => 'Sex',
                                 'email' => 'Email Address',
                                 'ip_group' => 'IP Group',
+                                'loa_semester' => 'LOA Semester',
+                                'loa_school_year' => 'LOA School Year',
                             ];
                             // Extra fields from scholar_notes
                             $extra_keys = [];
@@ -142,9 +172,13 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                                     }
                                 }
                             }
-                            foreach($all_columns as $col => $label) : ?>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="col_<?= $col ?>" name="columns[]" value="<?= $col ?>" checked />
+                            foreach($all_columns as $col => $label) : 
+                                $is_loa = in_array($col, ['loa_semester', 'loa_school_year']);
+                                $checked = $is_loa ? '' : 'checked';
+                                $disabled = $is_loa ? 'disabled' : '';
+                            ?>
+                                <div class="checkbox-group" id="group_<?= $col ?>">
+                                    <input type="checkbox" id="col_<?= $col ?>" name="columns[]" value="<?= $col ?>" <?= $checked ?> <?= $disabled ?> />
                                     <label for="col_<?= $col ?>"><?= $label ?></label>
                                 </div>
                             <?php endforeach; ?>
@@ -173,7 +207,7 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                     </div>
 
                     <!-- Preview & Rearrange button -->
-                    <div class="form-actions" style="margin-top:20px; margin-bottom:30px; display:block;">
+                    <div class="form-actions" id="proceed-btn-wrapper" style="margin-top:20px; margin-bottom:30px; display:block;">
                         <button type="button" id="proceed-btn" class="btn btn-success" style="width:100%; padding: 20px 16px">Preview & Rearrange</button>
                     </div>
 
@@ -188,7 +222,7 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                             </table>
                         </div>
                         <div class="form-actions" style="margin-top:15px;">
-                            <button type="submit" id="export-btn" class="btn btn-success" onclick="return confirmAction(event, 'Are you sure you want to export and download the selected scholar records?', 'Export & Download', 'primary')">Export & Download Now</button>
+                            <button type="button" id="export-btn" class="btn btn-success" onclick="return confirmAction(event, 'Are you sure you want to export and download the selected scholar records?', 'Export & Download', 'primary')">Export & Download Now</button>
                             <button type="button" id="refresh-preview" class="btn btn-secondary">Reset</button>
                             <a href="export_scholars.php" class="btn btn-cancel">Cancel</a>
                         </div>
@@ -199,11 +233,31 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                 </form>
             </div>
 
+            <!-- Preview Loading Modal -->
+            <div id="exportPreviewModal" class="sys-modal">
+                <div class="sys-modal-content" style="text-align: center; padding: 35px 20px;">
+                    <div class="sys-spinner"></div>
+                    <h3 style="margin-top: 18px; color: #1e4628; font-size: 18px;">Generating Preview...</h3>
+                    <p style="color: #666; font-size: 13px; margin-top: 6px;">Please wait while the system prepares your data preview.</p>
+                </div>
+            </div>
+
+            <!-- Download Loading Modal -->
+            <div id="exportDownloadModal" class="sys-modal">
+                <div class="sys-modal-content" style="text-align: center; padding: 35px 20px;">
+                    <div class="sys-spinner"></div>
+                    <h3 style="margin-top: 18px; color: #1e4628; font-size: 18px;">Exporting & Downloading File...</h3>
+                    <p style="color: #666; font-size: 13px; margin-top: 6px;">Please wait while your Excel file is generated and downloaded.</p>
+                </div>
+            </div>
+
             <!-- Footer -->
             <div class="footer">
                 © 2026 PIT ScholarshipHub. All rights reserved.
             </div>
         </div>
+
+        <script src="../assets/js/export.js?v=<?= filemtime('../assets/js/export.js') ?>"></script>
 
         <!-- Custom JS -->
         <script src="../assets/js/export_reorder.js"></script>
