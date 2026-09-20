@@ -53,23 +53,17 @@ if (isset($_POST['add_provider'])) {
     <title>Add Funding Provider - PIT ScholarshipHub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/form.css?v=<?= filemtime('../assets/css/form.css') ?>">
+    <link rel="stylesheet" href="../assets/css/modals.css?v=<?= filemtime('../assets/css/modals.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
 <body>
-    <?php 
-    if (isset($_SESSION['success'])) {
-        echo "<script>alert('" . htmlspecialchars($_SESSION['success'], ENT_QUOTES) . "')</script>";
-        unset($_SESSION['success']);
-    } else if (isset($_SESSION['fail'])) {
-        echo "<script>alert('" . htmlspecialchars($_SESSION['fail'], ENT_QUOTES) . "')</script>";
-        unset($_SESSION['fail']);
-    }
-    ?>
+    <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
 
-    <?php if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
-        <script>alert('You are not logged in')</script>
-        <script>window.location.href='../portal.php'</script>
-    <?php else : ?>
+    <?php if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : 
+        $_SESSION['fail'] = "You are no logged in!";
+        header("Location: ../portal.php");
+        exit();
+    else : ?>
         <div class="container">
             <!-- Header -->
             <div class="header">
@@ -149,7 +143,7 @@ if (isset($_POST['add_provider'])) {
                             </div>
                             <div class="form-group half-width">
                                 <label for="contact_num">Contact Number</label>
-                                <input type="text" id="contact_num" name="contact_num" placeholder="e.g., 09123456789 / (053) 123-4567">
+                                <input type="number" id="contact_num" name="contact_num" placeholder="e.g., 09123456789">
                             </div>
                         </div>
                     </div>

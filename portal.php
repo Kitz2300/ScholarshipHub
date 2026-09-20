@@ -1,5 +1,6 @@
 <?php 
 include __DIR__ . "/includes/conn.php";
+session_start();
 
 // Helper function to turn plain URLs into clickable links safely
 function makeLinksClickable($text) {
@@ -23,8 +24,10 @@ function makeLinksClickable($text) {
         <title>Scholarship Portal - PIT ScholarshipHub</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="assets/css/portal.css">
+        <link rel="stylesheet" href="assets/css/modals.css">
         <link rel="icon" href="assets/images/PIT LOGO.png">
     </head>
+    <?php include __DIR__ . "/includes/modal_alerts.php"; ?>
     <body>
         <div class="container">
             <!-- hero & header section -->

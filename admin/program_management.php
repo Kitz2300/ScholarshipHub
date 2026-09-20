@@ -64,10 +64,11 @@ $programs_result = $conn->query($programs_sql);
     <!-- alert messages -->
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <?php 
-    if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
-        <script>alert('You are not logged in')</script>
-        <script>window.location.href="../portal.php"</script>
-    <?php else : ?>
+    if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : 
+        $_SESSION['fail'] = "You are no logged in!";
+        header("Location: ../portal.php");
+        exit();
+    else : ?>
     <div class="container">
         <!-- Header -->
         <div class="header">

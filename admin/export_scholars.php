@@ -24,11 +24,11 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
 <body>
     <!-- alert messages -->
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
-    <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== "admin") : ?>
-        <script>alert('You are not logged in')</script>
-        <?php $_SESSION = []; ?>
-        <script>window.location.href='login.php'</script>
-    <?php else: ?>
+    <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== "admin" && $_SESSION['role'] !== "staff")) : 
+        $_SESSION['fail'] = "You are no logged in!";
+        header("Location: ../portal.php");
+        exit();
+    else: ?>
         <div class="container">
             <!-- Header -->
             <div class="header">

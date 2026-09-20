@@ -17,15 +17,17 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'announcements', 'add')) {
     <title>Add Announcement - PIT ScholarshipHub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/form.css?v=<?= filemtime('../assets/css/form.css') ?>">
+    <link rel="stylesheet" href="../assets/css/modals.css?v=<?= filemtime('../assets/css/modals.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
 <body>
+    <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <?php
-    if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
-        <!-- if not logged in, redirect user to login page -->
-        <script>alert('You are not logged in')</script>
-        <script>window.location.href='login.php'</script>
-    <?php else : ?>
+    if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) :
+        $_SESSION['fail'] = "You are no logged in!";
+        header("Location: ../portal.php");
+        exit();
+    else : ?>
         <div class="container">
             <!-- Header -->
             <div class="header">

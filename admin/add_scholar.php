@@ -46,21 +46,18 @@ $barangays_result = $stmt->get_result();
     <title>Add Scholar - PIT ScholarshipHub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/css/form.css">
+    <link rel="stylesheet" href="../assets/css/modals.css?v=<?= filemtime('../assets/css/modals.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../assets/js/address.js"></script>
 </head>
 <body>
-    <?php 
-    if(isset($_SESSION['fail'])) {
-        echo "<script>alert('" . htmlspecialchars($_SESSION['fail'], ENT_QUOTES) . "')</script>";
-        unset($_SESSION['fail']);
-    }
-    ?>
-    <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
-        <script>alert('You are not logged in')</script>
-        <script>window.location.href='login.php'</script>
-    <?php else : ?>
+    <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
+    <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) :
+        $_SESSION['fail'] = "You are no logged in!";
+        header("Location: ../portal.php");
+        exit();
+    else : ?>
         <div class="container">
             <!-- Header -->
             <div class="header">

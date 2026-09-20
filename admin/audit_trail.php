@@ -95,22 +95,17 @@ $logs_result = $logs_stmt->get_result();
 <head>
     <title>Audit Trail - PIT ScholarshipHub</title>
     <link rel="stylesheet" href="../assets/css/audit_trail.css?v=<?= filemtime('../assets/css/audit_trail.css') ?>">
+    <link rel="stylesheet" href="../assets/css/modals.css?v=<?= filemtime('../assets/css/modals.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
 </head>
 <body>
+    <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <?php 
-    if (isset($_SESSION['success'])) {
-        echo "<script>alert('" . $_SESSION['success'] . "')</script>";
-        unset($_SESSION['success']);
-    } else if (isset($_SESSION['fail'])) {
-        echo "<script>alert('" . $_SESSION['fail'] . "')</script>";
-        unset($_SESSION['fail']);
-    }
-
-    if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
-        <script>alert('You are not logged in')</script>
-        <script>window.location.href="../portal.php"</script>
-    <?php else : ?>
+    if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : 
+        $_SESSION['fail'] = "You are no logged in!";
+        header("Location: ../portal.php");
+        exit();
+    else : ?>
     <div class="container">
         <!-- Header -->
         <div class="header">

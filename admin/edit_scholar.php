@@ -123,10 +123,11 @@ if($row = $scholar_result->fetch_assoc()) {
 </head>
 <body>
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
-    <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : ?>
-        <script>alert('You are not logged in')</script>
-        <script>window.location.href='login.php'</script>
-    <?php else : ?>
+    <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : 
+        $_SESSION['fail'] = "You are no logged in!";
+        header("Location: ../portal.php");
+        exit();    
+    else : ?>
         <div class="container">
             <!-- Header -->
             <div class="header">

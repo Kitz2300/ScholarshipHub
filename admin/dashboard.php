@@ -5,6 +5,12 @@ session_start();
 
 include __DIR__ . "/../includes/school_year_helper.php";
 
+if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) {
+        $_SESSION['fail'] = "You are no logged in!";
+        header("Location: ../portal.php");
+        exit();
+    }
+
 if(isset($_POST['set_school_year'])) {
     setSelectedSchoolYear($_POST['school_year']);
     header("Location: dashboard.php");
@@ -136,10 +142,6 @@ while($row = $status_result->fetch_assoc()) {
 <body>
     <!-- Alert Messages -->
     <?php include __DIR__ . '/../includes/modal_alerts.php'; ?>
-    <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : ?>
-        <script>alert('You are not logged in')</script>
-        <script>window.location.href='login.php'</script>
-    <?php else : ?>
         <div class="container">
             <!-- Header -->
             <div class="header">
@@ -302,6 +304,5 @@ while($row = $status_result->fetch_assoc()) {
                 © 2026 PIT ScholarshipHub. All rights reserved.
             </div>
         </div>
-    <?php endif; ?>
 </body>
 </html>
