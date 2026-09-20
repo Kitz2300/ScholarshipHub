@@ -139,7 +139,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>My Profile - PIT ScholarshipHub</title>
     <link rel="stylesheet" href="../assets/css/profile.css?v=<?= filemtime('../assets/css/profile.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
@@ -150,10 +150,10 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <div class="container">
         <!-- Header -->
-        <div class="header">
+        <header class="header">
             <div class="header-left">
                 <img src="../assets/images/PIT%20LOGO.png" alt="PIT Logo">
-                <div>
+                <div class="header-title-box">
                     <h1>PIT ScholarshipHub</h1>
                     <p>My Profile</p>
                 </div>
@@ -161,10 +161,10 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
             <div class="header-right">
                 <span class="welcome-text">Welcome, <?= htmlspecialchars($given_name) ?>!</span>
                 <form action="../functions/logout.php" method="post" style="display: inline;">
-                    <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
+                    <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to log out?', 'Logout', true)">Logout</button>
                 </form>
             </div>
-        </div>
+        </header>
 
         <!-- Navigation -->
         <nav class="nav-bar">
@@ -174,7 +174,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
         </nav>
 
         <!-- Page Content -->
-        <div class="page-content">
+        <main class="page-content">
             
             <!-- Hero Scholar Banner -->
             <div class="profile-hero-card">
@@ -188,7 +188,8 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 </div>
                 <div class="hero-details">
                     <h2><?= htmlspecialchars($full_name) ?></h2>
-                    <p><strong>Student ID:</strong> <?= htmlspecialchars($id_num) ?> | <strong>College:</strong> <?= htmlspecialchars($college) ?></p>
+                    <p><strong>Student ID:</strong> <?= htmlspecialchars($id_num) ?></p>
+                    <p><strong>College:</strong> <?= htmlspecialchars($college) ?></p>
                     <p><strong>Program:</strong> <?= htmlspecialchars($program) ?></p>
                 </div>
                 <div class="hero-badges">
@@ -200,7 +201,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                             ⚠️ Below GWA Requirement
                         </span>
                     <?php endif; ?>
-                    <button type="button" class="btn btn-warning" onclick="openPasswordModal()">🔒 Change Password</button>
+                    <button type="button" class="btn btn-warning btn-password-change" onclick="openPasswordModal()">🔒 Change Password</button>
                 </div>
             </div>
 
@@ -269,7 +270,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 </div>
 
                 <!-- Contact & Family Information -->
-                <div>
+                <div class="right-column-stack">
                     <div class="profile-card mb-20">
                         <h3>Contact & Address Details</h3>
                         <div class="info-group">
@@ -328,7 +329,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                     ?>
 
                     <?php if ($academic_result->num_rows > 0) : ?>
-                        <table>
+                        <table class="responsive-table">
                             <thead>
                                 <tr>
                                     <th>Semester</th>
@@ -342,12 +343,12 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                             <tbody>
                                 <?php while ($acad_row = $academic_result->fetch_assoc()) : ?>
                                     <tr>
-                                        <td><strong><?= htmlspecialchars($acad_row['semester']) ?></strong></td>
-                                        <td><strong><?= htmlspecialchars($acad_row['gwa']) ?></strong></td>
-                                        <td><?= htmlspecialchars($acad_row['units']) ?></td>
-                                        <td><?= htmlspecialchars($acad_row['year_level']) ?></td>
-                                        <td><?= htmlspecialchars($acad_row['school_year']) ?></td>
-                                        <td>
+                                        <td data-label="Semester"><strong><?= htmlspecialchars($acad_row['semester']) ?></strong></td>
+                                        <td data-label="GWA"><strong><?= htmlspecialchars($acad_row['gwa']) ?></strong></td>
+                                        <td data-label="Units"><?= htmlspecialchars($acad_row['units']) ?></td>
+                                        <td data-label="Year Level"><?= htmlspecialchars($acad_row['year_level']) ?></td>
+                                        <td data-label="School Year"><?= htmlspecialchars($acad_row['school_year']) ?></td>
+                                        <td data-label="Status">
                                             <?php if ($gwa_req > 0) : ?>
                                                 <?php if ((float)$acad_row['gwa'] > $gwa_req) : ?>
                                                     <span class="req-unmet">⚠️ Requirement Not Met</span>
@@ -388,15 +389,15 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
             </div>
             <?php endif; ?>
 
-        </div>
+        </main>
 
         <!-- Footer -->
-        <div class="footer">
+        <footer class="footer">
             © 2026 PIT ScholarshipHub. All rights reserved.
-        </div>
+        </footer>
     </div>
 
-    <!-- Change Password Modal (Automatically forced if password has not been changed yet) -->
+    <!-- Change Password Modal -->
     <div id="passwordModal" class="modal <?= $is_password_changed === 0 ? 'show' : '' ?>">
         <div class="modal-content">
             <div class="modal-header">
@@ -407,13 +408,13 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
             </div>
 
             <?php if ($is_password_changed === 0): ?>
-                <div style="background: #fff3cd; color: #856404; padding: 12px 15px; border-radius: 4px; font-size: 13px; margin: 15px 15px 0 15px; border: 1px solid #ffeeba;">
+                <div class="notice-box">
                     <strong>First-Time Login Notice:</strong> For security reasons, you must change your initial password before accessing your account dashboard.
                 </div>
             <?php endif; ?>
 
             <form action="../functions/student/change_password_process.php" method="POST" onsubmit="return validatePasswordChange(event)">
-                <div class="form-group" style="padding-top: 15px;">
+                <div class="form-group">
                     <label for="current_password">Current / Temporary Password <span class="required">*</span></label>
                     <input type="password" name="current_password" id="current_password" required>
                 </div>
@@ -490,7 +491,6 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
     }
     
     function closeModal(id) { 
-        // Prevent closing password modal if first-time password change is required
         if (id === 'passwordModal' && isPasswordChanged === 0) {
             return;
         }
@@ -498,7 +498,6 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
     }
 
     window.onclick = function(event) {
-        // Prevent closing modals by clicking outside if forced password change is pending
         if (event.target.classList.contains('modal')) {
             if (event.target.id === 'passwordModal' && isPasswordChanged === 0) {
                 return;
