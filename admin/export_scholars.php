@@ -153,6 +153,7 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
                                 'sex' => 'Sex',
                                 'email' => 'Email Address',
                                 'ip_group' => 'IP Group',
+                                'gwa' => 'GWA',
                                 'loa_semester' => 'LOA Semester',
                                 'loa_school_year' => 'LOA School Year',
                             ];
@@ -260,7 +261,7 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
         <script src="../assets/js/export.js?v=<?= filemtime('../assets/js/export.js') ?>"></script>
 
         <!-- Custom JS -->
-        <script src="../assets/js/export_reorder.js"></script>
+        <script src="../assets/js/export_reorder.js?v=<?= filemtime('../assets/js/export_reorder.js') ?>"></script>
     <?php endif; ?>
 </body>
 </html>

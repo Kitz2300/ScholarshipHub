@@ -86,6 +86,7 @@ $column_map = [
     'philsys_id' => 'scholar_info.philsys_id',
     'lrn' => 'scholar_info.lrn',
     'four_ps_id' => 'scholar_info.four_ps_id',
+    'gwa' => '(SELECT ap.gwa FROM academic_performance ap WHERE ap.scholar_id = scholar_info.id ORDER BY ap.school_year DESC LIMIT 1)',
     'loa_semester' => 'scholar_info.loa_semester',
     'loa_school_year' => 'scholar_info.loa_school_year',
 ];
@@ -119,6 +120,7 @@ $display_headers = [
     'philsys_id' => 'PHILSYS ID',
     'lrn' => 'LRN',
     'four_ps_id' => "4P's ID",
+    'gwa' => 'GWA',
     'loa_semester' => 'LOA Semester',
     'loa_school_year' => 'LOA School Year',
 ];
@@ -253,11 +255,40 @@ if(!$result || $result->num_rows === 0) {
     exit();
 }
 
+// Fetch Scholarship Program Details for Row 1 Header Banner
+$sp_title = "ALL SCHOLARSHIP PROGRAMS";
+$sp_school_year = "";
+if ($scholarship_program !== 'all' && !empty($scholarship_program)) {
+    if (is_numeric($scholarship_program)) {
+        $sp_info_sql = "SELECT name, school_year FROM scholarship_program WHERE id = " . (int)$scholarship_program;
+    } else {
+        $sp_info_sql = "SELECT name, school_year FROM scholarship_program WHERE name = '" . $conn->real_escape_string($scholarship_program) . "'";
+    }
+    $sp_info_res = $conn->query($sp_info_sql);
+    if ($sp_info_res && $sp_info_row = $sp_info_res->fetch_assoc()) {
+        $sp_title = $sp_info_row['name'];
+        $sp_school_year = $sp_info_row['school_year'];
+    }
+}
+
+// Build Row 1 Banner Text
+$banner_text = strtoupper($sp_title);
+if (!empty($sp_school_year)) {
+    $banner_text .= " (" . $sp_school_year . ")";
+}
+
 // Create spreadsheet
 $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
 
 // Define styles
+$bannerStyle = [
+    'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
+    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1E4628']],
+    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+];
+
 $headerStyle = [
     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4472C4']],
@@ -269,10 +300,19 @@ $dataStyle = [
     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
 ];
 
-// Add header row
+$totalCols = count($final_cols);
+$lastColLetter = Coordinate::stringFromColumnIndex($totalCols);
+
+// ===== ROW 1: SCHOLARSHIP PROGRAM & SCHOOL YEAR HEADER BANNER =====
+$sheet->mergeCells("A1:{$lastColLetter}1");
+$sheet->setCellValue('A1', $banner_text);
+$sheet->getStyle("A1:{$lastColLetter}1")->applyFromArray($bannerStyle);
+$sheet->getRowDimension(1)->setRowHeight(32);
+
+// ===== ROW 2: COLUMN HEADERS =====
 $col = 1;
 foreach($final_cols as $colName) {
-    $cell = Coordinate::stringFromColumnIndex($col) . '1';
+    $cell = Coordinate::stringFromColumnIndex($col) . '2';
     if(strpos($colName, 'extra_') === 0) {
         $headerText = substr($colName, 6);
     } else {
@@ -282,9 +322,10 @@ foreach($final_cols as $colName) {
     $sheet->getStyle($cell)->applyFromArray($headerStyle);
     $col++;
 }
+$sheet->getRowDimension(2)->setRowHeight(24);
 
-// Add data rows
-$rowNum = 2;
+// ===== ROW 3 ONWARDS: DATA ROWS =====
+$rowNum = 3;
 while($row = $result->fetch_assoc()) {
     if($has_extra && isset($row['_notes'])) {
         $notes = json_decode($row['_notes'], true);
@@ -318,21 +359,20 @@ while($row = $result->fetch_assoc()) {
 }
 
 // Auto-size columns
-$totalCols = count($final_cols);
 for($c = 1; $c <= $totalCols; $c++) {
     $sheet->getColumnDimensionByColumn($c)->setAutoSize(true);
 }
 
-// Apply borders to data rows
+// Apply borders to data rows (starting at Row 3)
 $lastRow = $rowNum - 1;
-if($lastRow >= 2) {
-    $firstData = 'A2';
-    $lastData = Coordinate::stringFromColumnIndex($totalCols) . $lastRow;
+if($lastRow >= 3) {
+    $firstData = 'A3';
+    $lastData = $lastColLetter . $lastRow;
     $sheet->getStyle($firstData . ':' . $lastData)->applyFromArray($dataStyle);
 }
 
-// Freeze header row
-$sheet->freezePane('A2');
+// Freeze top two header rows (Freeze below Row 2)
+$sheet->freezePane('A3');
 
 // Set filename and download
 $filename = !empty($_POST['filename']) ? $_POST['filename'] : 'scholars_export_' . date('Y-m-d');
