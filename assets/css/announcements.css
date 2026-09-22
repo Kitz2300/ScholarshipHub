@@ -389,6 +389,18 @@ body::before {
     word-wrap: break-word;
 }
 
+.announcement-content a {
+    color: #1a73e8;
+    font-weight: 600;
+    text-decoration: underline;
+    word-break: break-all;
+    transition: color 0.2s ease;
+}
+
+.announcement-content a:hover {
+    color: #0d47a1;
+}
+
 .announcement-actions {
     display: flex;
     gap: 8px;

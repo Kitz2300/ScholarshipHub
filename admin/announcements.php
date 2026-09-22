@@ -14,6 +14,16 @@ if ($_SESSION['role'] !== 'admin') {
     checkPageAccess($conn, $_SESSION['user_id'], 'announcements');
 }
 
+// Helper function to turn plain URLs into clickable links safely
+if (!function_exists('makeLinksClickable')) {
+    function makeLinksClickable($text) {
+        $safe_text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+        $pattern = '/(https?:\/\/[^\s<]+)/i';
+        $replacement = '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>';
+        return preg_replace($pattern, $replacement, $safe_text);
+    }
+}
+
 // Query all announcements, active and inactive
 $announcement_sql = "SELECT
                         announcements.id AS announcement_id,
@@ -141,7 +151,7 @@ if (isset($_POST['delete']) && isset($_POST['announcement_id'])) {
                                 <span class="meta-item">Posted By: <?= htmlspecialchars($created_by) ?> (<?= htmlspecialchars($role) ?>)</span>
                             </div>
                             <div class="announcement-content">
-                                <p><?= htmlspecialchars($content, ENT_QUOTES, 'UTF-8') ?></p>
+                                <p><?= makeLinksClickable($content) ?></p>
                             </div>
                             <div class="announcement-actions">
                                 <?php if (hasPermission($conn, $_SESSION['user_id'], "announcements", "edit")) : ?>

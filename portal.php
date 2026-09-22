@@ -23,7 +23,7 @@ function makeLinksClickable($text) {
         <meta charset="UTF-8">
         <title>Scholarship Portal - PIT ScholarshipHub</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="assets/css/portal.css">
+        <link rel="stylesheet" href="assets/css/portal.css?v=<?= filemtime(__DIR__ . '/assets/css/portal.css') ?>">
         <link rel="stylesheet" href="assets/css/modals.css">
         <link rel="icon" href="assets/images/PIT LOGO.png">
     </head>

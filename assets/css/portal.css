@@ -464,7 +464,7 @@ body::before {
 }
 
 .detail-content a {
-    color: var(--brand-accent);
+    color: #1a73e8;
     font-weight: 600;
     text-decoration: underline;
     word-break: break-all;
@@ -472,7 +472,7 @@ body::before {
 }
 
 .detail-content a:hover {
-    color: var(--brand-primary);
+    color: #0d47a1;
 }
 
 .no-data {
