@@ -30,7 +30,7 @@ if(isset($_GET['clear'])) {
     exit();
 }
 
-require '../lib/vendor/autoload.php';
+require '../vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Exception as ReaderException;
