@@ -127,7 +127,7 @@ $archived_count = $archived_count_result->fetch_assoc();
             <div class="header-right">
                 <span class="welcome-text">Welcome, <?= $_SESSION['role'] == 'admin' ? 'Admin!' : 'Staff!' ?></span>
                 <form action="../functions/logout.php" method="post">
-                    <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
+                    <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to logout?', 'Logout', true)">Logout</button>
                 </form>
             </div>
         </div>

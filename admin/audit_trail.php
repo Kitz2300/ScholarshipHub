@@ -119,7 +119,7 @@ $logs_result = $logs_stmt->get_result();
             <div class="header-right">
                 <span class="welcome-text">Welcome, Admin!</span>
                 <form action="../functions/logout.php" method="post">
-                    <button type="submit" class="logout-btn" onclick="return confirm('Logout?')">Logout</button>
+                    <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to logout?', 'Logout', true)">Logout</button>
                 </form>
             </div>
         </div>
