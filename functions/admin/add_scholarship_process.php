@@ -59,10 +59,10 @@ if ($check_provider_stmt->get_result()->num_rows === 0) {
     exit();
 }
 
-// Insert Scholarship Program[cite: 19]
+// Insert Scholarship Program
 $insert_sql = "INSERT INTO scholarship_program (
-    name, code, school_year, provider_id, scholarship_type, description, pay_amount, min_gwa_req, is_archived
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)";
+    name, code, school_year, provider_id, scholarship_type, description, pay_amount, min_gwa_req, is_archived, is_active
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 1)";
 
 $stmt = $conn->prepare($insert_sql);
 $stmt->bind_param('sssissdd', $name, $code, $school_year, $provider_id, $sc_type, $description, $pay_amount, $min_gwa_req);
