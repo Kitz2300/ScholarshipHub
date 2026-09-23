@@ -2,6 +2,7 @@
     "require": {
         "php": ">=8.0",
         "ext-gd": "*",
+        "ext-zip": "*",
         "cboden/ratchet": "^0.4.4",
         "phpoffice/phpspreadsheet": "^5.7",
         "phpmailer/phpmailer": "^7.1"
