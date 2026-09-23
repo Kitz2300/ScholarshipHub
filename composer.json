@@ -1,7 +1,7 @@
 {
     "require": {
         "php": ">=8.0",
-        "ext-mysql": "*",
+        "ext-mysqli": "*",
         "ext-gd": "*",
         "ext-zip": "*",
         "cboden/ratchet": "^0.4.4",
