@@ -1,6 +1,6 @@
 <?php
 include __DIR__ . "/../../includes/conn.php";
-require_once "../../lib/vendor/autoload.php";
+require_once "../../vendor/autoload.php";
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
