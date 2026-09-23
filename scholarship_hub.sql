@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 13, 2026 at 07:08 PM
+-- Generation Time: Sep 22, 2026 at 03:05 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -30,12 +30,25 @@ SET time_zone = "+00:00";
 CREATE TABLE `academic_performance` (
   `id` int(11) NOT NULL,
   `scholar_id` int(11) NOT NULL,
-  `semester` enum('1st Semester','2nd Semester','3rd Semester') NOT NULL,
+  `semester` enum('1st Semester','2nd Semester','Summer') NOT NULL,
   `gwa` decimal(3,2) NOT NULL,
   `units` decimal(3,1) NOT NULL,
   `year_level` enum('1st Year','2nd Year','3rd Year','4th Year') NOT NULL,
   `school_year` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `academic_performance`
+--
+
+INSERT INTO `academic_performance` (`id`, `scholar_id`, `semester`, `gwa`, `units`, `year_level`, `school_year`) VALUES
+(9, 55, '1st Semester', 1.20, 20.0, '2nd Year', '2026 - 2027'),
+(10, 58, '1st Semester', 1.00, 20.0, '3rd Year', '2026 - 2027'),
+(15, 88, '1st Semester', 1.20, 21.0, '2nd Year', '2026 - 2027'),
+(17, 138, '1st Semester', 1.00, 20.0, '2nd Year', '2026 - 2027'),
+(19, 138, '2nd Semester', 2.00, 20.0, '2nd Year', '2026 - 2027'),
+(20, 137, '1st Semester', 1.20, 21.0, '3rd Year', '2026 - 2027'),
+(21, 137, '2nd Semester', 3.00, 20.0, '3rd Year', '2026 - 2027');
 
 -- --------------------------------------------------------
 
@@ -57,7 +70,8 @@ CREATE TABLE `announcements` (
 --
 
 INSERT INTO `announcements` (`id`, `title`, `content`, `is_active`, `user_id`, `created_at`) VALUES
-(14, 'CHED Scholarship Application Now Open', 'The Commission on Higher Education (CHED) is now accepting applications for the CHED Tulong Dunong Program for the upcoming academic year. Qualified students must submit their requirements to the Scholarship Office on or before July 15, 2026. Please bring the following:\r\n\r\n- Fully accomplished application form\r\n\r\n- Certificate of Registration\r\n\r\n- Class card or TCG\r\n\r\n- Certificate of Good Moral Character\r\n\r\n- Barangay Certificate of Residency\r\n\r\n- Income Tax Return of parents or Certificate of Indigency\r\n\r\n- 2x2 ID picture', 1, 1, '2026-07-15 11:09:23');
+(14, 'CHED Scholarship Application Now Open', 'The Commission on Higher Education (CHED) is now accepting applications for the CHED Tulong Dunong Program for the upcoming academic year. Qualified students must submit their requirements to the Scholarship Office on or before July 15, 2026. Please bring the following:\r\n\r\n- Fully accomplished application form\r\n\r\n- Certificate of Registration\r\n\r\n- Class card or TCG\r\n\r\n- Certificate of Good Moral Character\r\n\r\n- Barangay Certificate of Residency\r\n\r\n- Income Tax Return of parents or Certificate of Indigency\r\n\r\n- 2x2 ID picture', 1, 1, '2026-07-15 11:09:23'),
+(23, 'Online Application Google Forms', 'https://github.com/Kitz2300\r\n\r\nplease click this link to apply!', 1, 1, '2026-09-03 09:16:43');
 
 -- --------------------------------------------------------
 
@@ -88,7 +102,166 @@ INSERT INTO `audit_trail` (`id`, `user_id`, `action`, `actioned_at`) VALUES
 (9, 1, 'Added a new announcement: gikan sa phone', '2026-08-08 11:11:14'),
 (10, 1, 'Added a new announcement: Ritchard scholarship ', '2026-08-09 11:24:36'),
 (11, 1, 'Added a new announcement: Hero Academy ', '2026-08-09 11:25:22'),
-(12, 1, 'Added a new announcement: basta', '2026-08-09 12:37:04');
+(12, 1, 'Added a new announcement: basta', '2026-08-09 12:37:04'),
+(13, 1, 'Added a new announcement: Online Application Google Forms', '2026-09-03 09:16:43'),
+(14, 2, 'Added a new announcement: basta', '2026-09-04 13:09:13'),
+(15, 1, 'Admin user logged in: admin123', '2026-09-04 13:09:29'),
+(16, 1, 'Added academic performance record for Scholar ID 83 (1st Semester, SY: 2026 - 2027, GWA: 1.75, Units: 21)', '2026-09-05 00:49:08'),
+(17, 1, 'Added academic performance record for Scholar ID 83 (1st Semester, SY: 2026 - 2027, GWA: 1.75, Units: 20)', '2026-09-05 00:51:11'),
+(18, 1, 'Added new scholar: Keith Gabriel Andales (Student ID: 23-0223-403)', '2026-09-05 01:34:28'),
+(19, 1, 'Added new scholar: Keith Gabriel Andales (Student ID: 23-0223-403)', '2026-09-05 01:48:22'),
+(20, 1, 'Updated scholarship program ID 17: DOST-SEI Merit Scholarship (DOST-MERIT)', '2026-09-06 07:26:10'),
+(21, 1, 'Updated scholarship program ID 16: DOST-SEI Undergraduate Scholarship (DOST-7687)', '2026-09-06 07:26:30'),
+(22, 1, 'Updated scholarship program ID 20: Keith\'s Financial Support (KFS)', '2026-09-06 07:26:38'),
+(23, 1, 'Updated scholarship program ID 19: Unifast Tertiary Education Subsidy (TES) (UNIFAST-TES)', '2026-09-06 07:26:44'),
+(24, 1, 'Updated profile for scholar: Keith Gabriel Andales (Student ID: 23-0223-403, Scholar ID: 47)', '2026-09-06 10:34:48'),
+(25, 1, 'Admin user logged in: admin123', '2026-09-06 13:36:35'),
+(26, 1, 'Admin user logged in: admin123', '2026-09-06 13:53:30'),
+(27, 1, 'Admin user logged in: admin123', '2026-09-06 23:46:48'),
+(28, 1, 'Admin user logged in: admin123', '2026-09-06 23:59:23'),
+(29, 1, 'Added new scholar: Ritchard Dilema (Student ID: 23-0388-894)', '2026-09-07 00:05:46'),
+(30, 1, 'Admin user logged in: admin123', '2026-09-07 01:38:00'),
+(31, 1, 'Updated profile for scholar: Keith Gabriel Andales (Student ID: 23-0223-403, Scholar ID: 58)', '2026-09-07 01:42:35'),
+(32, 1, 'Updated profile for scholar: Danwen Serida (Student ID: 23-4393-102, Scholar ID: 49)', '2026-09-07 01:43:24'),
+(33, 1, 'Added academic performance record for Scholar ID 49 (1st Semester, SY: 2026 - 2027, GWA: 3, Units: 21)', '2026-09-07 01:43:55'),
+(34, 1, 'Admin user logged in: admin123', '2026-09-08 06:57:31'),
+(35, 1, 'Admin user logged in: admin123', '2026-09-09 07:01:50'),
+(36, 1, 'Admin user logged in: admin123', '2026-09-09 22:55:15'),
+(37, 1, 'Admin user logged in: admin123', '2026-09-09 22:55:29'),
+(38, 1, 'Admin user logged in: admin123', '2026-09-09 22:56:56'),
+(39, 1, 'Added new scholar: Juan Cruz (Student ID: 92-3834-810)', '2026-09-09 23:05:57'),
+(40, 1, 'Updated profile for scholar: Juan Cruz (Student ID: 92-3834-810, Scholar ID: 88)', '2026-09-09 23:07:09'),
+(41, 1, 'Added academic performance record for Scholar ID 88 (2nd Semester, SY: 2026 - 2027, GWA: 1.2, Units: 21)', '2026-09-09 23:08:08'),
+(42, 1, 'Updated academic performance record ID 15 for Scholar ID 88 (1st Semester, GWA: 1.2, Units: 21)', '2026-09-09 23:09:23'),
+(43, 1, 'Updated academic performance record ID 15 for Scholar ID 88 (2nd Semester, GWA: 1.2, Units: 21)', '2026-09-10 00:40:52'),
+(44, 1, 'Updated academic performance record ID 15 for Scholar ID 88 (1st Semester, GWA: 1.2, Units: 21)', '2026-09-10 00:42:18'),
+(45, 1, 'Added academic performance record for Scholar ID 88 (2nd Semester, SY: 2026 - 2027, GWA: 1.2, Units: 20)', '2026-09-10 00:42:38'),
+(46, 1, 'Added new note record for Scholar ID 88: \'basta\'', '2026-09-10 00:44:40'),
+(47, 1, 'Deleted note \'basta\' for Scholar ID 88 (no notes remaining)', '2026-09-10 00:44:44'),
+(48, 1, 'Updated scholarship program ID 21: Commission on Higher Education (CHED) – Tulong Dunong Program (TDP) (OS-TDP)', '2026-09-10 00:52:02'),
+(49, 1, 'Updated scholarship program ID 21: Commission on Higher Education (CHED) – Tulong Dunong Program (TDP) (OS-TDP)', '2026-09-10 00:52:19'),
+(50, 1, 'Admin user logged in: admin123', '2026-09-10 06:43:03'),
+(51, 1, 'Admin user logged in: admin123', '2026-09-10 06:45:01'),
+(52, 1, 'Admin user logged in: admin123', '2026-09-10 07:12:53'),
+(53, 5, 'Admin user logged in: Dilemaritchard', '2026-09-10 07:12:57'),
+(54, 1, 'Exported scholar data to Excel (scholars_export_2026-09-10.xlsx) [Scholarship Program: all, Academic Program: all]', '2026-09-10 07:20:04'),
+(55, 1, 'Updated announcement ID 23: Online Application Google Forms Yeah!', '2026-09-10 07:22:38'),
+(56, 1, 'Updated announcement ID 23: Online Application Google Forms', '2026-09-10 07:22:47'),
+(57, 1, 'Added a new announcement: adfasdf', '2026-09-10 07:23:01'),
+(58, 5, 'Imported 50 scholar record(s) from Excel file \'TEMPLATE.xlsx\' (Failed: 0)', '2026-09-10 08:08:44'),
+(59, 1, 'Admin user logged in: admin123', '2026-09-10 08:12:30'),
+(60, 1, 'Added academic performance record for Scholar ID 138 (1st Semester, SY: 2026 - 2027, GWA: 1.2, Units: 20)', '2026-09-10 08:13:23'),
+(61, 1, 'Admin user logged in: admin123', '2026-09-11 09:46:17'),
+(62, 1, 'Admin user logged in: admin123', '2026-09-11 09:50:54'),
+(63, 1, 'Admin user logged in: admin123', '2026-09-11 12:13:40'),
+(64, 1, 'Imported 43 scholar record(s) from Excel file \'TEMPLATE - Copy (2).xlsx\' (Failed: 0)', '2026-09-11 15:47:18'),
+(65, 1, 'Admin user logged in: admin123', '2026-09-12 11:08:32'),
+(66, 1, 'Admin user logged in: admin123', '2026-09-12 11:11:31'),
+(67, 1, 'Admin user logged in: admin123', '2026-09-12 11:14:05'),
+(68, 1, 'Added academic performance record for Scholar ID 181 (2nd Semester, SY: 2026 - 2027, GWA: 1, Units: 21)', '2026-09-12 11:20:03'),
+(69, 1, 'Admin user logged in: admin123', '2026-09-12 11:27:32'),
+(70, 1, 'Admin user logged in: admin123', '2026-09-12 12:31:40'),
+(71, 1, 'Admin user logged in: admin123', '2026-09-12 13:25:09'),
+(72, 1, 'Admin user logged in: admin123', '2026-09-13 02:04:13'),
+(73, 1, 'Added new scholar: Gerald Paloma (Student ID: 23-0432-763)', '2026-09-13 02:23:47'),
+(74, 1, 'Added new note record for Scholar ID 182: \'basta\'', '2026-09-13 02:24:53'),
+(75, 1, 'Deleted note \'basta\' for Scholar ID 182 (no notes remaining)', '2026-09-13 02:25:00'),
+(76, 1, 'Admin user logged in: admin123', '2026-09-13 11:15:04'),
+(77, 1, 'Updated profile for scholar: Mark Flores (Student ID: 26-0050-003, Scholar ID: 138)', '2026-09-13 11:30:45'),
+(78, 1, 'Admin user logged in: admin123', '2026-09-15 03:19:26'),
+(79, 1, 'Admin user logged in: admin123', '2026-09-15 05:37:03'),
+(80, 1, 'Admin user logged in: admin123', '2026-09-15 06:42:33'),
+(81, 1, 'Updated academic performance record ID 17 for Scholar ID 138 (1st Semester, GWA: 1, Units: 20)', '2026-09-15 07:05:11'),
+(82, 1, 'Added academic performance record for Scholar ID 138 (2nd Semester, SY: 2026 - 2027, GWA: 2, Units: 20)', '2026-09-15 07:07:00'),
+(83, 1, 'Updated scholarship program ID 16: DOST-SEI Undergraduate Scholarship (DOST-7687)', '2026-09-15 07:09:53'),
+(84, 1, 'Admin user logged in: admin123', '2026-09-15 22:35:23'),
+(85, 1, 'Updated profile for scholar: Mark Flores (Student ID: 26-0050-003, Scholar ID: 138)', '2026-09-15 22:37:13'),
+(86, 1, 'Added new scholar: sadfsdafsadf adsfsadf (Student ID: 12-3924-023)', '2026-09-15 23:19:58'),
+(87, 1, 'Updated profile for scholar: sadfsdafsadf adsfsadf (Student ID: 12-3924-023, Scholar ID: 183)', '2026-09-15 23:43:43'),
+(88, 1, 'Admin user logged in: admin123', '2026-09-16 02:14:40'),
+(89, 1, 'Admin user logged in: admin123', '2026-09-16 02:15:40'),
+(90, 1, 'Updated profile for scholar: sadfsdafsadf adsfsadf (Student ID: 12-3924-023, Scholar ID: 183)', '2026-09-16 03:11:26'),
+(91, 1, 'Added new scholar: gfjhgfjh adsfsadfasfsadasfsaf (Student ID: 12-3234-232, Scholar ID: 184)', '2026-09-16 03:13:35'),
+(92, 1, 'Added new scholar: asdfasdf adsfsadfsfda (Student ID: 28-2321-211, Scholar ID: 185)', '2026-09-16 03:24:24'),
+(93, 1, 'Updated profile for scholar: asdfasdf adsfsadfsfda (Student ID: 28-2321-211, Scholar ID: 185)', '2026-09-16 03:39:45'),
+(94, 1, 'Admin user logged in: admin123', '2026-09-16 07:16:36'),
+(95, 1, 'Admin user logged in: admin123', '2026-09-16 07:16:37'),
+(96, 1, 'Updated college ID 4: College of Maritime Education (COMED)', '2026-09-16 07:23:16'),
+(97, 1, 'Admin user logged in: admin123', '2026-09-16 07:36:07'),
+(98, 1, 'Added academic performance record for Scholar ID 137 (1st Semester, SY: 2026 - 2027, GWA: 1.2, Units: 21)', '2026-09-16 07:40:47'),
+(99, 1, 'Admin user logged in: admin123', '2026-09-16 07:56:47'),
+(100, 1, 'Admin user logged in: admin123', '2026-09-16 08:38:08'),
+(101, 1, 'Added new scholar: Guianna Faith Gaspan (Student ID: 22-0564-152, Scholar ID: 186)', '2026-09-16 08:58:24'),
+(102, 1, 'Admin user logged in: admin123', '2026-09-16 09:02:56'),
+(103, 1, 'Admin user logged in: admin123', '2026-09-16 15:03:03'),
+(104, 1, 'Admin user logged in: admin123', '2026-09-16 15:10:14'),
+(105, 1, 'Admin user logged in: admin123', '2026-09-17 10:15:32'),
+(106, 1, 'Admin user logged in: admin123', '2026-09-17 14:08:47'),
+(107, 1, 'Updated profile for scholar: Guianna Faith Gaspan (Student ID: 22-0564-152, Scholar ID: 186)', '2026-09-17 14:32:55'),
+(108, 1, 'Updated profile for scholar: Guianna Faith Gaspan (Student ID: 22-0564-152, Scholar ID: 186)', '2026-09-17 14:35:02'),
+(109, 1, 'Updated profile for scholar: Guianna Faith Gaspan (Student ID: 22-0564-152, Scholar ID: 186)', '2026-09-17 14:51:45'),
+(110, 1, 'Updated profile for scholar: Guianna Faith Gaspan (Student ID: 22-0564-152, Scholar ID: 186)', '2026-09-17 14:52:07'),
+(111, 1, 'Added new scholar: adfsadf adfasdf (Student ID: 92-3425-234, Scholar ID: 187)', '2026-09-17 14:59:11'),
+(112, 1, 'Updated profile for scholar: adfsadf adfasdf (Student ID: 92-3425-234, Scholar ID: 187)', '2026-09-17 15:00:35'),
+(113, 1, 'Admin user logged in: admin123', '2026-09-18 02:40:13'),
+(114, 1, 'Added academic performance record for Scholar ID 137 (2nd Semester, SY: 2026 - 2027, GWA: 1.2, Units: 20)', '2026-09-18 02:41:26'),
+(115, 1, 'Updated academic performance record ID 20 for Scholar ID 137 (1st Semester, GWA: 3, Units: 21)', '2026-09-18 02:41:40'),
+(116, 1, 'Added academic performance record for Scholar ID 137 (Summer, SY: 2026 - 2027, GWA: 2, Units: 21)', '2026-09-18 02:43:36'),
+(117, 1, 'Updated academic performance record ID 21 for Scholar ID 137 (2nd Semester, GWA: 3, Units: 20)', '2026-09-18 03:12:41'),
+(118, 1, 'Updated academic performance record ID 20 for Scholar ID 137 (1st Semester, GWA: 1.2, Units: 21)', '2026-09-18 03:12:58'),
+(119, 1, 'Added academic performance record for Scholar ID 137 (Summer, SY: 2026 - 2027, GWA: 3, Units: 21)', '2026-09-18 03:14:18'),
+(120, 1, 'Updated academic performance record ID 23 for Scholar ID 137 (Summer, GWA: 3, Units: 21)', '2026-09-18 03:24:40'),
+(121, 1, 'Updated academic performance record ID 23 for Scholar ID 137 (Summer, GWA: 3, Units: 21)', '2026-09-18 03:25:47'),
+(122, 1, 'Updated academic performance record ID 23 for Scholar ID 137 (Summer, GWA: 3, Units: 21)', '2026-09-18 03:26:06'),
+(123, 1, 'Added academic performance record for Scholar ID 137 (Summer, SY: 2026 - 2027, GWA: 1, Units: 21)', '2026-09-18 03:29:48'),
+(124, 1, 'Updated profile for scholar: Keith Gabriel Andales (Student ID: 23-0223-403, Scholar ID: 47)', '2026-09-18 03:49:05'),
+(125, 1, 'Admin user logged in: admin123', '2026-09-18 05:05:23'),
+(126, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: CHED Tulong Dunong Program (TDP), College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:06:59'),
+(127, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: CHED Tulong Dunong Program (TDP), College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:07:02'),
+(128, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: DOST-SEI Undergraduate Scholarship, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:08:07'),
+(129, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: DOST-SEI Undergraduate Scholarship, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:08:26'),
+(130, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: CHED Tulong Dunong Program (TDP), College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:09:16'),
+(131, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: CHED Tulong Dunong Program (TDP), College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:09:25'),
+(132, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: 16, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:18:12'),
+(133, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: 16, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:18:20'),
+(134, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: all, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:19:02'),
+(135, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: all, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:19:48'),
+(136, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: all, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:20:13'),
+(137, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: 16, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:22:00'),
+(138, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: all, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:27:27'),
+(139, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: all, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:31:48'),
+(140, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: all, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:34:59'),
+(141, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: all, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:40:20'),
+(142, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: all, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:43:26'),
+(143, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: all, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:43:46'),
+(144, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: all, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:44:17'),
+(145, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: all, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:48:41'),
+(146, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: all, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 06:57:45'),
+(147, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: all, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 07:00:29'),
+(148, 1, 'Admin user logged in: admin123', '2026-09-18 08:47:04'),
+(149, 1, 'Admin user logged in: admin123', '2026-09-18 10:47:54'),
+(150, 1, 'Admin user logged in: admin123', '2026-09-18 11:20:57'),
+(151, 1, 'Added new note record for Scholar ID 137: \'Old ID\'', '2026-09-18 11:22:06'),
+(152, 1, 'Exported scholar data to Excel (scholars_export_2026-09-18.xlsx) [Scholarship Program: 16, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-18 11:28:21'),
+(153, 1, 'Admin user logged in: admin123', '2026-09-19 08:22:37'),
+(154, 1, 'Admin user logged in: admin123', '2026-09-19 09:00:21'),
+(155, 1, 'Updated scholarship program ID 21: Commission on Higher Education (CHED) – Tulong Dunong Program (TDP) (OS-TDP)', '2026-09-19 09:06:03'),
+(156, 1, 'Admin user logged in: admin123', '2026-09-19 10:07:31'),
+(157, 1, 'Added new scholar: asfdsadfasd adfasdf (Student ID: 98-2328-123, Scholar ID: 188)', '2026-09-19 11:00:45'),
+(158, 1, 'Added new scholar: asfdasdfadsf adfasdf (Student ID: 82-8342-342, Scholar ID: 189)', '2026-09-19 11:10:02'),
+(159, 1, 'Admin user logged in: admin123', '2026-09-19 16:03:11'),
+(160, 1, 'Admin user logged in: admin123', '2026-09-19 16:23:45'),
+(161, 1, 'Admin user logged in: admin123', '2026-09-21 08:56:20'),
+(162, 1, 'Exported scholar data to Excel (scholars_export_2026-09-21.xlsx) [Scholarship Program: 18, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-21 09:01:00'),
+(163, 1, 'Admin user logged in: admin123', '2026-09-22 01:55:15'),
+(164, 1, 'Updated academic performance record ID 24 for Scholar ID 137 (Summer, GWA: 2, Units: 21)', '2026-09-22 02:06:40'),
+(165, 1, 'Updated academic performance record ID 24 for Scholar ID 137 (Summer, GWA: 3, Units: 21)', '2026-09-22 02:06:52'),
+(166, 1, 'Admin user logged in: admin123', '2026-09-22 02:19:13'),
+(167, 1, 'Admin user logged in: admin123', '2026-09-22 02:24:56'),
+(168, 1, 'Admin user logged in: admin123', '2026-09-22 06:54:53'),
+(169, 1, 'Admin user logged in: admin123', '2026-09-22 06:59:41'),
+(170, 1, 'Exported scholar data to Excel (scholars_export_2026-09-22.xlsx) [Scholarship Program: 18, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-22 06:59:59'),
+(171, 1, 'Exported scholar data to Excel (scholars_export_2026-09-22.xlsx) [Scholarship Program: 18, College: all, Academic Program: all, Academic Status: Enrolled]', '2026-09-22 07:19:45');
 
 -- --------------------------------------------------------
 
@@ -110,19 +283,7 @@ INSERT INTO `college` (`id`, `college_name`, `college_code`) VALUES
 (1, 'College of Technology and Engineering', 'COTE'),
 (2, 'College of Arts and Sciences', 'CAS'),
 (3, 'College of Teachers Education', 'CTE'),
-(4, 'College of Maritime Education', 'COMEd');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `home_address`
---
-
-CREATE TABLE `home_address` (
-  `id` int(11) NOT NULL,
-  `street_barangay` varchar(255) NOT NULL,
-  `zipcode` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+(4, 'College of Maritime Education', 'COMED');
 
 -- --------------------------------------------------------
 
@@ -147,7 +308,14 @@ INSERT INTO `import_history` (`id`, `user_id`, `imported_at`, `filename`) VALUES
 (3, 1, '2026-07-18 12:11:37', 'TEMPLATE.xlsx'),
 (4, 1, '2026-07-20 14:41:53', 'TEMPLATE.xlsx'),
 (5, 1, '2026-07-27 14:50:52', 'TEMPLATE.xlsx'),
-(6, 1, '2026-08-02 10:50:03', 'TEMPLATE.xlsx');
+(6, 1, '2026-08-02 10:50:03', 'TEMPLATE.xlsx'),
+(7, 1, '2026-08-15 10:29:17', 'TEMPLATE.xlsx'),
+(8, 1, '2026-08-22 11:11:20', 'OS-TDP-APPLICANTS-AS-OF-08-13-26.xlsx'),
+(9, 1, '2026-08-23 05:39:17', 'OS-TDP-APPLICANTS-AS-OF-08-13-26.xlsx'),
+(10, 1, '2026-08-25 15:35:15', 'TEMPLATE.xlsx'),
+(11, 1, '2026-08-27 07:28:06', 'TEMPLATE.xlsx'),
+(12, 5, '2026-09-10 08:08:44', 'TEMPLATE.xlsx'),
+(13, 1, '2026-09-11 15:47:18', 'TEMPLATE - Copy (2).xlsx');
 
 -- --------------------------------------------------------
 
@@ -182,6 +350,32 @@ INSERT INTO `program` (`id`, `name`, `college_id`) VALUES
 (14, 'Bachelor of Secondary Education', 3),
 (15, 'Bachelor of Technology and Livelihood Education', 3),
 (16, 'Bachelor of Technical Vocational Teacher Education', 3);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `providers`
+--
+
+CREATE TABLE `providers` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `code` varchar(50) NOT NULL,
+  `provider_type` varchar(255) NOT NULL,
+  `contact_person` varchar(150) DEFAULT NULL,
+  `email` varchar(150) DEFAULT NULL,
+  `contact_num` varchar(50) DEFAULT NULL,
+  `is_archived` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `providers`
+--
+
+INSERT INTO `providers` (`id`, `name`, `code`, `provider_type`, `contact_person`, `email`, `contact_num`, `is_archived`, `created_at`) VALUES
+(7, 'Commission on Higher Education', 'CHED', 'Government', '', '', '', 0, '2026-09-03 15:03:27'),
+(10, 'adfdasf', 'adsfdsaf', 'Government', 'adsfdas', 'asdfasdf@adfa.com', 'asdfds', 1, '2026-09-19 16:07:27');
 
 -- --------------------------------------------------------
 
@@ -44223,22 +44417,25 @@ CREATE TABLE `scholarship_program` (
   `code` varchar(255) NOT NULL,
   `description` text NOT NULL,
   `min_gwa_req` decimal(3,2) DEFAULT NULL,
-  `pay_amount` decimal(7,2) DEFAULT NULL,
-  `financial_grant` tinyint(4) NOT NULL,
+  `pay_amount` decimal(10,2) DEFAULT NULL,
   `is_active` tinyint(4) NOT NULL,
   `is_archived` tinyint(4) NOT NULL DEFAULT 0,
-  `school_year` varchar(20) NOT NULL
+  `school_year` varchar(20) NOT NULL,
+  `provider_id` int(11) DEFAULT NULL,
+  `scholarship_type` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `scholarship_program`
 --
 
-INSERT INTO `scholarship_program` (`id`, `name`, `code`, `description`, `min_gwa_req`, `pay_amount`, `financial_grant`, `is_active`, `is_archived`, `school_year`) VALUES
-(16, 'DOST-SEI Undergraduate Scholarship', 'DOST-7687', 'Scholarship for talented students from economically disadvantaged families pursuing priority S&T courses. Includes tuition subsidy and monthly stipend.', 2.50, 84000.00, 0, 1, 0, '2026 - 2027'),
-(17, 'DOST-SEI Merit Scholarship', 'DOST-MERIT', 'Awarded to top-performing students in the DOST-SEI undergraduate scholarship examination, regardless of family income.', 2.50, 84000.00, 0, 1, 0, '2026 - 2027'),
-(18, 'CHED Tulong Dunong Program (TDP)', 'CHED-TDP', 'Financial assistance for students who are residents of areas with high poverty incidence and enrolled in identified priority courses.', 0.00, 30000.00, 1, 1, 0, '2026 - 2027'),
-(19, 'Unifast Tertiary Education Subsidy (TES)', 'UNIFAST-TES', 'Government subsidy for students in State Universities and Colleges (SUCs) and private HEIs who belong to the poorest families.', 0.00, 40000.00, 0, 1, 0, '2025 - 2026');
+INSERT INTO `scholarship_program` (`id`, `name`, `code`, `description`, `min_gwa_req`, `pay_amount`, `is_active`, `is_archived`, `school_year`, `provider_id`, `scholarship_type`) VALUES
+(16, 'DOST-SEI Undergraduate Scholarship', 'DOST-7687', 'Scholarship for talented students from economically disadvantaged families pursuing priority S&T courses. Includes tuition subsidy and monthly stipend.', 2.00, 84000.00, 1, 0, '2026 - 2027', 7, 'Government Scholarship'),
+(17, 'DOST-SEI Merit Scholarship', 'DOST-MERIT', 'Awarded to top-performing students in the DOST-SEI undergraduate scholarship examination, regardless of family income.', 2.00, 84000.00, 1, 1, '2026 - 2027', 7, 'Government Scholarship'),
+(18, 'CHED Tulong Dunong Program (TDP)', 'CHED-TDP', 'Financial assistance for students who are residents of areas with high poverty incidence and enrolled in identified priority courses.', 0.00, 30000.00, 1, 0, '2023 - 2024', NULL, 'Government Scholarship'),
+(19, 'Unifast Tertiary Education Subsidy (TES)', 'UNIFAST-TES', 'Government subsidy for students in State Universities and Colleges (SUCs) and private HEIs who belong to the poorest families.', 0.00, 40000.00, 1, 0, '2026 - 2027', 7, 'Private / Corporate Scholarship'),
+(20, 'Keith\'s Financial Support', 'KFS', 'Keith\'s Financial Support for kids', 0.00, 5000.00, 1, 0, '2026 - 2027', 7, 'Merit-Based'),
+(21, 'Commission on Higher Education (CHED) – Tulong Dunong Program (TDP)', 'OS-TDP', 'A grants-in-aid financial assistance program in the Philippines implemented under the UniFAST (Unified Student Financial Assistance System for Tertiary Education) framework. It provides cash subsidies to qualified undergraduate students to help cover school fees and education-related expenses.', 0.00, 7000.00, 1, 1, '2026 - 2027', 7, 'basta');
 
 -- --------------------------------------------------------
 
@@ -44249,22 +44446,26 @@ INSERT INTO `scholarship_program` (`id`, `name`, `code`, `description`, `min_gwa
 CREATE TABLE `scholarship_users` (
   `id` int(11) NOT NULL,
   `last_name` varchar(50) NOT NULL,
+  `email` varchar(255) DEFAULT NULL,
   `given_name` varchar(50) NOT NULL,
   `middle_name` varchar(50) NOT NULL,
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('admin','staff') NOT NULL,
-  `permissions` text DEFAULT NULL
+  `permissions` text DEFAULT NULL,
+  `reset_otp` varchar(6) DEFAULT NULL,
+  `otp_expiry` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `scholarship_users`
 --
 
-INSERT INTO `scholarship_users` (`id`, `last_name`, `given_name`, `middle_name`, `username`, `password`, `role`, `permissions`) VALUES
-(1, 'Red', 'Cherrie', 'J.', 'admin123', 'admin123', 'admin', NULL),
-(2, 'Andales', 'Keith Gabriel', 'Pajaron', 'staff123', '$2y$10$5cXW6/6aoxpzePZ3AVM4euJmtQ8/JwNMOeT24raJAZIDpJfjOo07e', 'staff', 'view,edit'),
-(3, 'Desabille', 'Shiela Mae', 'Caranzo', 'shiela123', '1234', 'admin', NULL);
+INSERT INTO `scholarship_users` (`id`, `last_name`, `email`, `given_name`, `middle_name`, `username`, `password`, `role`, `permissions`, `reset_otp`, `otp_expiry`) VALUES
+(1, 'Red', 'keithgabrielandales@gmail.com', 'Cherrie', 'J.', 'admin123', '$2y$10$vTTRS9al3CD50wvuuEznYuaJIweshFyAOs12rYkJhK4Tn/IMyoNv.', 'admin', '{\"scholars\":[],\"scholarship_programs\":[],\"import_export\":[],\"announcements\":[],\"program_management\":[]}', '979798', '2026-09-09 15:25:56'),
+(2, 'Andales', NULL, 'Keith Gabriel', 'Pajaron', 'staff123', '$2y$10$HLP.8arTSK2C/4UQQfsqRe5hivbSWdabGY5WUTnFRX77qzDSEl0eS', 'staff', '{\"scholars\":[\"view\",\"add\",\"edit\",\"notes\",\"archive\"],\"scholarship_programs\":[\"view\",\"add\",\"edit\"],\"import_export\":[\"view\",\"import\",\"export\"],\"announcements\":[\"view\",\"add\",\"edit\",\"delete\"],\"program_management\":[]}', NULL, NULL),
+(4, 'Andales', 'keithgabrielandales@gmail.com', 'Keith', 'Pajaron', 'keith1234', '$2y$10$EFc4QhLpFIE2nBfX8xirUui7bS/zvX/ay6jZ2XtvIoz/BnKAXicLq', 'admin', '{\"scholars\":[],\"scholarship_programs\":[],\"import_export\":[],\"announcements\":[],\"program_management\":[]}', NULL, NULL),
+(5, 'Dilema', 'Dilemaritchard13@gmail.com', 'Ritchard', 'Pudot', 'Dilemaritchard', '$2y$10$ehvBb5.tNu.vsJ9Iyh296OWpltbfjmDXFHrm.CJcLOiH5ukLcu3Bu', 'admin', '{\"scholars\":[\"view\"],\"scholarship_programs\":[\"view\"],\"import_export\":[\"view\"],\"announcements\":[\"view\"],\"program_management\":[\"view\"]}', '952518', '2026-09-10 15:27:02');
 
 -- --------------------------------------------------------
 
@@ -44275,6 +44476,9 @@ INSERT INTO `scholarship_users` (`id`, `last_name`, `given_name`, `middle_name`,
 CREATE TABLE `scholar_info` (
   `id` int(11) NOT NULL,
   `student_id` varchar(11) NOT NULL,
+  `philsys_id` varchar(50) DEFAULT NULL,
+  `lrn` varchar(50) DEFAULT NULL,
+  `four_ps_id` varchar(50) DEFAULT NULL,
   `last_name` varchar(50) NOT NULL,
   `given_name` varchar(50) NOT NULL,
   `ext_name` varchar(10) NOT NULL,
@@ -44284,39 +44488,118 @@ CREATE TABLE `scholar_info` (
   `scholarship_program_id` int(11) NOT NULL,
   `program_id` int(11) NOT NULL,
   `year_level` int(11) NOT NULL,
-  `academic_status` enum('Active','Graduated','Transferred','Dropped','Inactive') NOT NULL,
+  `academic_status` enum('Active','Enrolled','Not Enrolled','Graduated','Dropped','Transferred','Leave of Absence') NOT NULL,
+  `loa_semester` varchar(20) DEFAULT NULL,
+  `loa_school_year` varchar(20) DEFAULT NULL,
   `father_last_name` varchar(50) NOT NULL,
   `father_given_name` varchar(50) NOT NULL,
   `father_middle_name` varchar(50) NOT NULL,
+  `father_contact` varchar(15) DEFAULT 'N/A',
   `mother_last_name` varchar(50) NOT NULL,
   `mother_given_name` varchar(50) NOT NULL,
   `mother_middle_name` varchar(50) NOT NULL,
+  `mother_contact` varchar(15) DEFAULT 'N/A',
   `permanent_address` varchar(255) NOT NULL,
   `street` varchar(255) NOT NULL,
-  `barangay_id` bigint(20) NOT NULL,
-  `city_id` bigint(20) NOT NULL,
-  `province_id` bigint(20) NOT NULL,
-  `region_id` bigint(20) NOT NULL,
+  `town_city` varchar(255) NOT NULL,
+  `province` varchar(255) NOT NULL,
+  `barangay_id` bigint(20) DEFAULT NULL,
+  `city_id` bigint(20) DEFAULT NULL,
+  `province_id` bigint(20) DEFAULT NULL,
+  `region_id` bigint(20) DEFAULT NULL,
   `country` varchar(100) NOT NULL,
   `zipcode` varchar(10) NOT NULL,
   `disability` varchar(255) NOT NULL,
   `contact_num` varchar(11) NOT NULL,
   `email` varchar(255) NOT NULL,
   `ip_group` varchar(255) DEFAULT NULL,
+  `is_child_of_solo_parent` tinyint(1) DEFAULT 0,
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `is_archived` tinyint(4) NOT NULL DEFAULT 0,
-  `school_year` varchar(20) NOT NULL
+  `school_year` varchar(20) NOT NULL,
+  `profile_picture` varchar(255) DEFAULT NULL,
+  `is_password_changed` tinyint(4) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `scholar_info`
 --
 
-INSERT INTO `scholar_info` (`id`, `student_id`, `last_name`, `given_name`, `ext_name`, `middle_name`, `sex`, `birthdate`, `scholarship_program_id`, `program_id`, `year_level`, `academic_status`, `father_last_name`, `father_given_name`, `father_middle_name`, `mother_last_name`, `mother_given_name`, `mother_middle_name`, `permanent_address`, `street`, `barangay_id`, `city_id`, `province_id`, `region_id`, `country`, `zipcode`, `disability`, `contact_num`, `email`, `ip_group`, `username`, `password`, `is_archived`, `school_year`) VALUES
-(47, '23-0223-403', 'Andales', 'Keith Gabriel', 'N/A', 'Pajaron', 0, '2004-08-30', 16, 1, 4, 'Active', 'Andales', 'Bernardo', 'Ruizo', 'Pajaron', 'Maria Luz', 'Cuizon', '123 Main Street, Himarco, Palompon, Leyte, Region VIII (Eastern Visayas), Philippines', '123 Main Street', 27549, 27532, 26302, 25680, 'Philippines', '6538', '', '09051210174', 'keithgabrielandales@gmail.com', '', '23-0223-403', '$2y$10$Pfh6LfKQRA8HvUYLOQg4w.5qMZK8/TG.pvxiBtV19DOUHBzxceKca', 0, '2026 - 2027'),
-(48, '82-3213-723', 'Smith', 'John', 'Jr.', 'Reynolds', 0, '2006-06-27', 17, 4, 3, 'Active', 'Smith', 'Gerald', 'Lennon', 'Green', 'Janice', 'Smith', '123 Maint Street, Malapat, Cordon, Isabela, Region II (Cagayan Valley), Philippines', '123 Maint Street', 4585, 4576, 4285, 3398, 'Philippines', '7623', '', '09168686232', 'Smith@gmail.com', '', '82-3213-723', '$2y$10$Qzv0P6ynjtn8nHFrzN049u.97ngkGobbEAAoEYV0oCvvfPkpnRJXa', 0, '2026 - 2027'),
-(49, '23-4393-102', 'Serida', 'Danwen', 'N/A', 'Canedo', 0, '1999-10-15', 16, 1, 4, 'Active', 'Serida', 'Hero', 'Reyes', 'Green', 'Gina', 'Paloma', '123 Maint Street, Calog, Sibalom, Antique, Region VI (Western Visayas), Philippines', '123 Maint Street', 19198, 19182, 18695, 18349, 'Philippines', '6538', '', '09051210174', 'danwen@gmail.com', '', '23-4393-102', '$2y$10$skI2kuKDWvR7RbVtiunPbu3qr9L/cVdWWTSqke5EOMaNJvY/maBy.', 0, '2026 - 2027');
+INSERT INTO `scholar_info` (`id`, `student_id`, `philsys_id`, `lrn`, `four_ps_id`, `last_name`, `given_name`, `ext_name`, `middle_name`, `sex`, `birthdate`, `scholarship_program_id`, `program_id`, `year_level`, `academic_status`, `loa_semester`, `loa_school_year`, `father_last_name`, `father_given_name`, `father_middle_name`, `father_contact`, `mother_last_name`, `mother_given_name`, `mother_middle_name`, `mother_contact`, `permanent_address`, `street`, `town_city`, `province`, `barangay_id`, `city_id`, `province_id`, `region_id`, `country`, `zipcode`, `disability`, `contact_num`, `email`, `ip_group`, `is_child_of_solo_parent`, `username`, `password`, `is_archived`, `school_year`, `profile_picture`, `is_password_changed`) VALUES
+(47, '23-0223-403', '1234-1234-1234-1234', '123456789123', '083740027-6222-00003', 'Andales', 'Keith Gabriel', 'N/A', 'Pajaron', 0, '2004-08-30', 16, 1, 4, 'Enrolled', NULL, NULL, 'Andales', 'Bernardo', 'Ruizo', 'N/A', 'Pajaron', 'Maria Luz', 'Cuizon', 'N/A', '123 Main Street, Himarco, Palompon, Leyte, Region VIII (Eastern Visayas), Philippines', '123 Main Street', '', '', 27549, 27532, 26302, 25680, 'Philippines', '6538', 'Not applicable', '09051210174', 'keithgabrielandales@gmail.com', 'Not applicable', 0, '23-0223-403', '$2y$10$MKTuBzNxrJDU6F1hh4WWmehLzng/LG6dh9YuWOUbpVasqohnuw/Oq', 0, '2026 - 2027', 'scholar_47_1788687150.jpg', 0),
+(48, '82-3213-723', NULL, NULL, NULL, 'Smith', 'John', 'Jr.', 'Reynolds', 0, '2006-06-27', 17, 4, 3, 'Enrolled', NULL, NULL, 'Smith', 'Gerald', 'Lennon', 'N/A', 'Green', 'Janice', 'Smith', 'N/A', '123 Maint Street, Malapat, Cordon, Isabela, Region II (Cagayan Valley), Philippines', '123 Maint Street', '', '', 4585, 4576, 4285, 3398, 'Philippines', '7623', 'Not applicable', '09168686232', 'Smith@gmail.com', 'Not applicable', 0, '82-3213-723', '$2y$10$Qzv0P6ynjtn8nHFrzN049u.97ngkGobbEAAoEYV0oCvvfPkpnRJXa', 1, '2026 - 2027', NULL, 0),
+(50, '23-0224-430', NULL, NULL, NULL, 'Cruz', 'Juan', 'N/A', 'De los', 0, '2000-01-15', 19, 1, 3, 'Enrolled', NULL, NULL, 'Reyes', 'Antonio', 'Mercado', 'N/A', 'Tan', 'Marissa', 'Reyes', 'N/A', '123 Maint Street, Cala-an, Panitan, Capiz, Region VI (Western Visayas), Philippines', '123 Maint Street', '', '', 19564, 19553, 19304, 18349, 'Philippines', '1000', 'Not applicable', '09123456789', 'juan.cruz@email.com', 'Not applicable', 0, '23-0224-430', '$2y$10$uEyXO2rZDjnLwjNW919izei1zifSgIjPtEvsTza7LFrL7OLE6a/l.', 0, '2026 - 2027', NULL, 0),
+(51, '20-2410-302', NULL, NULL, NULL, 'Garcia', 'Maria', 'N/A', 'De Jesus', 1, '2001-05-22', 19, 8, 2, 'Enrolled', NULL, NULL, 'Lee', 'David', 'Canedo', 'N/A', 'Lopez', 'Isabella', 'Donato', 'N/A', 'Washington Street, Idio, Sebaste, Antique, Region VI (Western Visayas), Philippines', 'Washington Street', '', '', 19181, 19171, 18695, 18349, 'Philippines', '1100', 'Not applicable', '09234567890', 'maria.garcia@email.com', 'Not applicable', 0, '20-2410-302', '$2y$10$lrzjBIMJxZTjyvKfLfGkJed0Lv77t0PPN7hRc59OR3Y4JRR3C0bGa', 0, '2026 - 2027', NULL, 0),
+(52, '20-2410-303', NULL, NULL, NULL, 'Smith', 'James', 'N/A', 'Johnson', 0, '1999-11-10', 19, 2, 4, 'Enrolled', NULL, NULL, 'Brown', 'Michael', 'Robredo', 'N/A', 'White', 'Sarah', 'Kamigaynon', 'N/A', '123 Maint Street, Camachin, Doña Remedios Trinidad, Bulacan, Region III (Central Luzon), Philippines', '123 Maint Street', '', '', 6650, 6647, 6059, 5808, 'Philippines', '1200', 'Not applicable', '09345678901', 'james.smith@email.com', 'Igorot', 0, '20-2410-303', '$2y$10$ld8dlneSy4a8YkxdmayItuztVFTanrNywcRmbpR5EipPaw95OTVgq', 0, '2026 - 2027', NULL, 0),
+(53, '20-2410-304', NULL, NULL, NULL, 'Tan', 'Anna', 'N/A', 'Gonzales', 1, '2002-08-03', 19, 9, 1, 'Enrolled', NULL, NULL, 'Torres', 'Fernando', 'Mercado', 'N/A', 'Chavez', 'Lucia', 'Ardios', 'N/A', 'Washington Street, Cantandoy, Palompon, Leyte, Region VIII (Eastern Visayas), Philippines', 'Washington Street', '', '', 27542, 27532, 26302, 25680, 'Philippines', '1500', 'Not applicable', '09456789012', 'anna.tan@email.com', 'Not applicable', 0, '20-2410-304', '$2y$10$If465/cJ6BOiAKIAHilZ/OnLEmwbTpDWmQqHR6nFVaSvlVtFDGspO', 0, '2026 - 2027', NULL, 0),
+(54, '20-2510-705', NULL, NULL, NULL, 'Santos', 'Carlos', 'N/A', 'Reyes', 0, '2001-03-20', 19, 11, 3, 'Enrolled', NULL, NULL, 'De la Cruz', 'Ricardo', 'Pacaldo', 'N/A', 'Domingo', 'Elena', 'Robredo', 'N/A', '123 Maint Street, Panas, Candijay, Bohol, Region VII (Central Visayas), Philippines', '123 Maint Street', '', '', 22780, 22765, 22541, 22540, 'Philippines', '2000', 'Not applicable', '09567890123', 'carlos.santos@email.com', 'Not applicable', 0, '20-2510-705', '$2y$10$nbf7EVZCOuTFP.gd6ruj3u/01bj5hQpr8MPXxPCUZ248gYzHizEwK', 0, '2026 - 2027', NULL, 0),
+(55, '20-2510-306', NULL, NULL, NULL, 'Dela Cruz', 'Ana', 'N/A', 'Martinez', 1, '2002-11-10', 19, 10, 2, 'Enrolled', NULL, NULL, 'Gonzales', 'Roberto', 'Sulano', 'N/A', 'Ramos', 'Maria', 'Lopez', 'N/A', '123 Maint Street, Montesuerte, Carmen, Bohol, Region VII (Central Visayas), Philippines', '123 Maint Street', '', '', 22803, 22787, 22541, 22540, 'Philippines', '3000', 'Not applicable', '09678902211', 'ana.delacruz@email.com', 'Not applicable', 0, '20-2510-306', '$2y$10$Mr9268MkBEH8oz0Y6TyraO1pm/UyV3wYwD47cxRU9Mmqvsjq4lK3e', 0, '2026 - 2027', NULL, 0),
+(58, '23-0223-403', '1234-1234-1234-1234', '121799100006', '083740027-6222-00003', 'Andales', 'Keith Gabriel', 'N/A', 'Pajaron', 0, '2004-08-30', 16, 1, 3, 'Enrolled', NULL, NULL, 'Andales', 'Bernardo', 'Ruizo', 'N/A', 'Pajaron', 'Maria Luz', 'Cuizon', 'N/A', '123 Main Street, Himarco, Palompon, Leyte, Region VIII (Eastern Visayas), Philippines', '123 Main Street', '', '', 27549, 27532, 26302, 25680, 'Philippines', '6538', 'Not applicable', '09168686923', 'keithgabrielandales@gmail.com', 'Not applicable', 0, '23-0223-403', '$2y$10$LyAy3FO0AZArTtJLshzh/O47C/xJ57Aerd9GAUqYot0hdIBlt75EW', 0, '2026 - 2027', NULL, 0),
+(78, '23-0524-430', '', '', '', 'Cruz', 'Juan', 'N/A', 'De los', 0, '2000-01-15', 20, 1, 3, 'Enrolled', NULL, NULL, 'Reyes', 'Antonio', 'M', 'N/A', 'Tan', 'Marissa', 'R', 'N/A', '123 Mabini St., Brgy. San Lorenzo, San Lorenzo, Philippines', '123 Mabini St., Brgy. San Lorenzo', '', '', NULL, NULL, NULL, NULL, 'Philippines', '1000', 'Not applicable', '9123456789', 'juan.cruz@email.com', 'Not applicable', 0, '23-0524-430', '$2y$10$sYaH6LOUVOAyerBfgOVLNeqrAbU5UXZLKdJ4BqGkeru5F.mGtkJjS', 0, '2026 - 2027', NULL, 0),
+(79, '20-2910-302', '', '', '', 'Garcia', 'Maria', 'N/A', 'De Jesus', 1, '2001-05-22', 20, 8, 2, 'Enrolled', NULL, NULL, 'Lee', 'David', 'C', 'N/A', 'Lopez', 'Isabella', 'S', 'N/A', '45 Columbia Ave. Brgy. Pinagbuhatan, Pinagbuhatan, Philippines', '45 Columbia Ave. Brgy. Pinagbuhatan', '', '', NULL, NULL, NULL, NULL, 'Philippines', '1100', 'None', '9234567890', 'maria.garcia@email.com', 'Not applicable', 0, '20-2910-302', '$2y$10$Ru4ZStsIkJ5CV3aXmuCMf.zt1qQfVGsoKgqf9afgVcqs3S.JOrgMC', 0, '2026 - 2027', NULL, 0),
+(80, '20-2420-303', '', '', '', 'Smith', 'James', 'N/A', 'Johnson', 0, '1999-11-10', 20, 2, 4, 'Enrolled', NULL, NULL, 'Brown', 'Michael', 'R', 'N/A', 'White', 'Sarah', 'K', 'N/A', '678 University Drive  Brgy. Sikatuna, Sikatuna, Philippines', '678 University Drive  Brgy. Sikatuna', '', '', NULL, NULL, NULL, NULL, 'Philippines', '1200', 'Not applicable', '9345678901', 'james.smith@email.com', 'Igorot', 0, '20-2420-303', '$2y$10$TkgdZuXdnl5DVLD0nSRL1OhyZsr3TLgBnZu8s5kRn5Tn6hMUumIQy', 0, '2026 - 2027', NULL, 0),
+(81, '20-2610-304', '', '', '', 'Tan', 'Anna', 'N/A', 'Gonzales', 1, '2002-08-03', 20, 9, 1, 'Enrolled', NULL, NULL, 'Torres', 'Fernando', 'M', 'N/A', 'Chavez', 'Lucia', 'A', 'N/A', '9 Reposo St. Brgy. San Juan, San Juan, Philippines', '9 Reposo St. Brgy. San Juan', '', '', NULL, NULL, NULL, NULL, 'Philippines', '1500', 'None', '9456789012', 'anna.tan@email.com', 'Not applicable', 0, '20-2610-304', '$2y$10$tcY44Ult1UgwobY1vLp5g.RhISJDKX6SQ0hqJq9pgPxorUf5znxma', 0, '2026 - 2027', NULL, 0),
+(82, '20-2580-705', '', '', '', 'Santos', 'Carlos', ' ', 'Reyes', 0, '2001-03-20', 20, 11, 3, 'Enrolled', NULL, NULL, 'De la Cruz', 'Ricardo', 'P', 'N/A', 'Domingo', 'Elena', 'R', 'N/A', '22 Rizal Ave. Brgy. Poblacion, Poblacion, Philippines', '22 Rizal Ave. Brgy. Poblacion', '', '', NULL, NULL, NULL, NULL, 'Philippines', '2000', 'Not applicable', '9567890123', 'carlos.santos@email.com', 'Not applicable', 0, '20-2580-705', '$2y$10$vo3igD0jIMVMsrwp9QJsc.ceza/ubkQjpp0U9ELa6yHeYdKS1nqtS', 0, '2026 - 2027', NULL, 0),
+(83, '20-2570-306', '123-123-123-123', '123456789123', '', 'Dela Cruz', 'Ana', 'N/A', 'Martinez', 1, '2026-12-30', 20, 10, 2, 'Enrolled', NULL, NULL, 'Gonzales', 'Roberto', 'Santos', 'N/A', 'Ramos', 'Maria', 'Lopez', 'N/A', '88 Mabuhay St., San Isidro, Palompon, Leyte, Region VIII (Eastern Visayas), Philippines', '88 Mabuhay St.', '', '', 27566, 27532, 26302, 25680, 'Philippines', '3000', 'None', '09678901234', 'ana.delacruz@email.com', 'Bisaya', 0, '20-2570-306', '$2y$10$Qb.TXMKYrlaLOAQGV.FbcuO/BdGJKhPK1T9Y/6rbos9noFYdccOv2', 0, '2026 - 2027', NULL, 0),
+(84, '23-0223-403', '1234-1234-1234-1234', '123456789012', '083740027-6222-00003', 'Andales', 'Keith Gabriel', 'N/A', 'Pajaron', 0, '2004-08-30', 20, 1, 4, 'Enrolled', NULL, NULL, 'Andales', 'Bernardo', 'Ruizo', 'N/A', 'Pajaron', 'Maria Luz', 'Cuizon', 'N/A', 'Himarco Proper, Himarco, Palompon, Leyte, Region VIII (Eastern Visayas), Philippines', 'Himarco Proper', '', '', 27549, 27532, 26302, 25680, 'Philippines', '6538', 'Not applicable', '09051210174', 'keithgabrielandales@gmail.com', 'Not applicable', 0, '23-0223-403', '$2y$10$J/0qkCwvx9HSoGTzp27i5uCZ7jqPSaa0iYir9MNwrDaxt39O6kYJG', 1, '2026 - 2027', NULL, 0),
+(85, '23-0223-403', '1234-1234-1234-1234', '123456789012', '083740027-6222-00003', 'Andales', 'Keith Gabriel', 'N/A', 'Pajaron', 0, '2004-08-30', 20, 1, 4, 'Enrolled', NULL, NULL, 'Andales', 'Bernardo', 'Ruizo', 'N/A', 'Pajaron', 'Maria Luz', 'Cuizon', 'N/A', 'Himarco Proper, Himarco, Palompon, Leyte, Region VIII (Eastern Visayas), Philippines', 'Himarco Proper', '', '', 27549, 27532, 26302, 25680, 'Philippines', '6538', 'Not applicable', '09051210174', 'keithgabrielandales@gmail.com', 'Not applicable', 0, '23-0223-403', '$2y$10$uY8.90H3fG3kp6ZLRcLUTOzK58rQ4Cpm9xImgE0dKM0.pADSQBnVG', 1, '2026 - 2027', NULL, 0),
+(86, '23-0223-403', '1234-5678-9012-3456', '121443100011', '083740027-6222-00003', 'Andales', 'Keith Gabriel', 'N/A', 'Pajaron', 0, '2004-08-30', 20, 1, 4, 'Enrolled', NULL, NULL, 'Andales', 'Bernardo', 'Ruizo', 'N/A', 'Pajaron', 'Maria Luz', 'Cuizon', 'N/A', 'Himarco Proper, Himarco, Palompon, Leyte, Region VIII (Eastern Visayas), Philippines', 'Himarco Proper', '', '', 27549, 27532, 26302, 25680, 'Philippines', '6538', 'Not applicable', '09051210174', 'keithgabrielandales@gmail.com', 'Not applicable', 0, '23-0223-403', '$2y$10$/6FcBRTcNwEyC9xKAWS8F.CSkT.utAc71EPCm9TOOIkih5NGduMpG', 0, '2026 - 2027', NULL, 0),
+(87, '23-0388-894', '363728283737', '136434120931', '', 'Dilema', 'Ritchard', 'N/A', 'Pudot', 0, '2003-11-17', 18, 1, 4, 'Enrolled', NULL, NULL, 'Delima', 'Richie', 'Maloloy-on', 'N/A', 'Divina', 'Delima', 'Pudot', 'N/A', 'Washington Street, Pinaghi-usa Pob., Palompon, Leyte, Region VIII (Eastern Visayas), Philippines', 'Washington Street', '', '', 27581, 27532, 26302, 25680, 'Philippines', '6538', 'Not applicable', '09547163792', 'dilemaritchard13@gmail.com', 'Not applicable', 0, '23-0388-894', '$2y$10$C4X1IiilNMngWqNZL/HkYeqag8pt/oOZhnIrw7vDOQ50ORrN2xuPW', 0, '2023 - 2024', 'scholar_87_1789022517.png', 1),
+(88, '92-3834-810', '123-123-123-123', '121443100011', '083740027-6222-00003', 'Cruz', 'Juan', 'N/A', 'De Jesuse', 0, '2026-09-07', 21, 7, 2, 'Enrolled', NULL, NULL, 'Serida', 'Bernardo', 'Santos', 'N/A', 'Noynay', 'Gina', 'Paloma', 'N/A', 'Washington Street, Carawisan I, San Remigio, Antique, Region VI (Western Visayas), Philippines', 'Washington Street', '', '', 19141, 19125, 18695, 18349, 'Philippines', '4563', 'Not applicable', '09168686232', 'juan.cruz@email.com', 'Not applicable', 0, '92-3834-810', '$2y$10$Z5vgsO6fmHBnnqIOUQb6bOHdETjAAUpyA5zzw7.z0fYt2GCrRXoKO', 0, '2026 - 2027', NULL, 0),
+(89, '26-0001-003', '', '', '', 'Reyes', 'Camille', 'N/A', 'Ramos', 1, '2004-09-20', 16, 1, 1, 'Enrolled', NULL, NULL, 'Reyes', 'John', 'Ramos', 'N/A', 'Ocampo', 'Hannah', 'Ramos', 'N/A', 'Brgy. Hinabangan, Palompon, Leyte, Hinabangan, Philippines', 'Brgy. Hinabangan, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9174946684', 'camille.reyes1@gmail.com', 'Not applicable', 0, '26-0001-003', '$2y$10$G6SV.85Com2w8WLylsb1j.mHo.XnMoP1Y/qd5CAJ0cOScs3jrsisq', 0, '2026 - 2027', NULL, 0),
+(90, '26-0002-003', '', '', '', 'Reyes', 'John', 'N/A', 'Cruz', 0, '2005-11-19', 16, 9, 2, 'Enrolled', NULL, NULL, 'Reyes', 'Carlos', 'Cruz', 'N/A', 'Reyes', 'Hannah', 'Cruz', 'N/A', 'Brgy. Hinabangan, Palompon, Leyte, Hinabangan, Philippines', 'Brgy. Hinabangan, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9402763208', 'john.reyes2@gmail.com', 'Not applicable', 0, '26-0002-003', '$2y$10$GounqZAovx7qnQcM/MkfV..C4lfZKJOe/E1WJEySxXzQ6QTXaX0TO', 0, '2026 - 2027', NULL, 0),
+(91, '26-0003-003', '', '', '', 'Cruz', 'Juan', 'N/A', 'Bautista', 0, '2004-02-10', 16, 8, 4, 'Enrolled', NULL, NULL, 'Cruz', 'Joshua', 'Bautista', 'N/A', 'Aquino', 'Diana', 'Bautista', 'N/A', 'Brgy. Cruz, Palompon, Leyte, Cruz, Philippines', 'Brgy. Cruz, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9363943425', 'juan.cruz3@gmail.com', 'Not applicable', 0, '26-0003-003', '$2y$10$xmtdb3/T8ajv2zfXQ981j.oydBOJFr3exnNposmeSvRGoJQmtmO0.', 0, '2026 - 2027', NULL, 0),
+(92, '26-0004-002', '', '', '', 'Torres', 'Juan', 'N/A', 'Santos', 0, '2003-07-31', 16, 1, 2, 'Enrolled', NULL, NULL, 'Torres', 'Gabriel', 'Santos', 'N/A', 'Dela Cruz', 'Diana', 'Santos', 'N/A', 'Brgy. San Jose, Palompon, Leyte, San Jose, Philippines', 'Brgy. San Jose, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9917848423', 'juan.torres4@gmail.com', 'Not applicable', 0, '26-0004-002', '$2y$10$TnQ4TvFqw47yZLTgPTnbE.s7q/57qH6oyUKlCi7iyAnhAkn2WTwne', 0, '2026 - 2027', NULL, 0),
+(93, '26-0005-003', '', '', '', 'Torres', 'Hannah', 'N/A', 'Reyes', 1, '2006-10-26', 16, 1, 2, 'Enrolled', NULL, NULL, 'Torres', 'Juan', 'Reyes', 'N/A', 'Dela Cruz', 'Grace', 'Reyes', 'N/A', 'Brgy. Bagtic, Palompon, Leyte, Bagtic, Philippines', 'Brgy. Bagtic, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9923691979', 'hannah.torres5@gmail.com', 'Not applicable', 0, '26-0005-003', '$2y$10$qCWfI3Q5IrcPwd41i6UxJeP2gM89r5b.33zGGfNQQ77KJCKARL6He', 0, '2026 - 2027', NULL, 0),
+(94, '26-0006-004', '', '', '', 'Aquino', 'Diana', 'N/A', 'Gonzales', 1, '2003-07-07', 16, 1, 3, 'Enrolled', NULL, NULL, 'Aquino', 'Jose', 'Gonzales', 'N/A', 'Pascual', 'Camille', 'Gonzales', 'N/A', 'Brgy. Cruz, Palompon, Leyte, Cruz, Philippines', 'Brgy. Cruz, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9475076258', 'diana.aquino6@gmail.com', 'Not applicable', 0, '26-0006-004', '$2y$10$9tPinb/rp0OM8O6a6KaVXO0gl587KfF6ar/uka9IgTozMc8S2iXm6', 0, '2026 - 2027', NULL, 0),
+(95, '26-0007-002', '', '', '', 'Aquino', 'Miguel', 'N/A', 'Reyes', 0, '2005-05-02', 16, 1, 2, 'Enrolled', NULL, NULL, 'Aquino', 'Joshua', 'Reyes', 'N/A', 'Reyes', 'Erika', 'Reyes', 'N/A', 'Brgy. Central, Palompon, Leyte, Central, Philippines', 'Brgy. Central, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9686765772', 'miguel.aquino7@gmail.com', 'Not applicable', 0, '26-0007-002', '$2y$10$8aaUdLJLtAyA0WVisUuV6.cUQUz.JFcPEVgcxvVSKcNmRspkpOu9S', 0, '2026 - 2027', NULL, 0),
+(96, '26-0008-003', '', '', '', 'Bautista', 'Hannah', 'N/A', 'Gonzales', 1, '2005-01-10', 16, 1, 4, 'Enrolled', NULL, NULL, 'Bautista', 'Juan', 'Gonzales', 'N/A', 'Gonzales', 'Angelica', 'Gonzales', 'N/A', 'Brgy. Hinabangan, Palompon, Leyte, Hinabangan, Philippines', 'Brgy. Hinabangan, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9882168185', 'hannah.bautista8@gmail.com', 'Not applicable', 0, '26-0008-003', '$2y$10$UP78LgG6nbIxys5hMc1uQ.3blv2yoh0miX8tf0RFrg0f396RS3Bwm', 0, '2026 - 2027', NULL, 0),
+(97, '26-0009-003', '', '', '', 'Mendoza', 'Juan', 'N/A', 'Gonzales', 0, '2005-10-05', 16, 9, 4, 'Enrolled', NULL, NULL, 'Mendoza', 'Juan', 'Gonzales', 'N/A', 'Gonzales', 'Camille', 'Gonzales', 'N/A', 'Brgy. Cruz, Palompon, Leyte, Cruz, Philippines', 'Brgy. Cruz, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9704142500', 'juan.mendoza9@gmail.com', 'Not applicable', 0, '26-0009-003', '$2y$10$hBzQwwWEdQbOj7kaj7IZeeF0iiIjDYzfT0RM46D9BwMprLwqMikK2', 0, '2026 - 2027', NULL, 0),
+(98, '26-0010-003', '', '', '', 'Villanueva', 'Ana', 'Jr.', 'Ramos', 1, '2003-08-14', 16, 1, 3, 'Enrolled', NULL, NULL, 'Villanueva', 'Gabriel', 'Ramos', 'N/A', 'Aquino', 'Bea', 'Ramos', 'N/A', 'Brgy. Bagtic, Palompon, Leyte, Bagtic, Philippines', 'Brgy. Bagtic, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9793725563', 'ana.villanueva10@gmail.com', 'Not applicable', 0, '26-0010-003', '$2y$10$ZNINtHpbVo8eYmfn.yEP/.9YwV4ezkfAZZAN.fqQutQ6b0qTwtRVe', 0, '2026 - 2027', NULL, 0),
+(99, '26-0011-002', '', '', '', 'Aquino', 'Juan', 'N/A', 'Bautista', 0, '2003-04-16', 16, 1, 1, 'Enrolled', NULL, NULL, 'Aquino', 'Christian', 'Bautista', 'N/A', 'Lim', 'Grace', 'Bautista', 'N/A', 'Brgy. Cruz, Palompon, Leyte, Cruz, Philippines', 'Brgy. Cruz, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9235605496', 'juan.aquino11@gmail.com', 'Not applicable', 0, '26-0011-002', '$2y$10$UhlGuj.U/FzTa01Tes/PWub/b3rpKX1bMyFU9kxiLJTzIj6sPs3rS', 0, '2026 - 2027', NULL, 0),
+(100, '26-0012-003', '', '', '', 'Lim', 'Ana', 'N/A', 'Torres', 1, '2006-04-08', 16, 9, 4, 'Enrolled', NULL, NULL, 'Lim', 'Kevin', 'Torres', 'N/A', 'Flores', 'Ana', 'Torres', 'N/A', 'Brgy. Hinabangan, Palompon, Leyte, Hinabangan, Philippines', 'Brgy. Hinabangan, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9857657613', 'ana.lim12@gmail.com', 'Not applicable', 0, '26-0012-003', '$2y$10$ghu5H6jbLLMu.oDkCoGzWOkR5SQYwf/kTT6ug1ERenjfzXIp2f1tW', 0, '2026 - 2027', NULL, 0),
+(101, '26-0013-002', '', '', '', 'Reyes', 'Jose', 'N/A', 'Santos', 0, '2003-08-15', 16, 1, 2, 'Enrolled', NULL, NULL, 'Reyes', 'Miguel', 'Santos', 'N/A', 'Tomas', 'Angelica', 'Santos', 'N/A', 'Brgy. Cruz, Palompon, Leyte, Cruz, Philippines', 'Brgy. Cruz, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9627158184', 'jose.reyes13@gmail.com', 'Not applicable', 0, '26-0013-002', '$2y$10$NdZG5WdOlqkZpJcc04PuIOq9DO.zPrTxYQ0QDPLOhG1K3qSN9OlYC', 0, '2026 - 2027', NULL, 0),
+(102, '26-0014-002', '', '', '', 'Dela Cruz', 'Frances', 'N/A', 'Santos', 1, '2006-08-31', 16, 9, 4, 'Enrolled', NULL, NULL, 'Dela Cruz', 'Gabriel', 'Santos', 'N/A', 'Ramos', 'Erika', 'Santos', 'N/A', 'Brgy. Hinabangan, Palompon, Leyte, Hinabangan, Philippines', 'Brgy. Hinabangan, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9605365086', 'frances.delacruz14@gmail.com', 'Not applicable', 0, '26-0014-002', '$2y$10$z5mxh5Y3cVMJLxZ5kzsCMe/Z3uG/vamTw01.b2nRYdAZBwDRq6ywy', 0, '2026 - 2027', NULL, 0),
+(103, '26-0015-002', '', '', '', 'Flores', 'Bea', 'N/A', 'Santos', 1, '2005-03-06', 16, 8, 1, 'Enrolled', NULL, NULL, 'Flores', 'Kevin', 'Santos', 'N/A', 'Dela Cruz', 'Angelica', 'Santos', 'N/A', 'Brgy. San Jose, Palompon, Leyte, San Jose, Philippines', 'Brgy. San Jose, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9552797402', 'bea.flores15@gmail.com', 'Not applicable', 0, '26-0015-002', '$2y$10$kwU5iqWR7xZUvoXUpwsl5.kOLXS4h.6o7wQplk9oKFQ9h2MLXofTq', 0, '2026 - 2027', NULL, 0),
+(104, '26-0016-002', '', '', '', 'Castillo', 'Carlos', 'N/A', 'Ramos', 0, '2003-04-04', 16, 1, 1, 'Enrolled', NULL, NULL, 'Castillo', 'Joshua', 'Ramos', 'N/A', 'Aquino', 'Camille', 'Ramos', 'N/A', 'Brgy. San Jose, Palompon, Leyte, San Jose, Philippines', 'Brgy. San Jose, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9464642863', 'carlos.castillo16@gmail.com', 'Not applicable', 0, '26-0016-002', '$2y$10$iEJIIDK5GzlgCYKl1JkJreFJ40bwi9O3OQ6vt.R5tOf/CFZWMOb2y', 0, '2026 - 2027', NULL, 0),
+(105, '26-0017-003', '', '', '', 'Ramos', 'Hannah', 'N/A', 'Santos', 1, '2004-12-11', 16, 8, 2, 'Enrolled', NULL, NULL, 'Ramos', 'Gabriel', 'Santos', 'N/A', 'Ramos', 'Frances', 'Santos', 'N/A', 'Brgy. Bagtic, Palompon, Leyte, Bagtic, Philippines', 'Brgy. Bagtic, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9987909489', 'hannah.ramos17@gmail.com', 'Not applicable', 0, '26-0017-003', '$2y$10$b30TgjnWLb1cPoMMJyjesuxBM1SmPO9AH.wc35vYSeEaIap9pUJEm', 0, '2026 - 2027', NULL, 0),
+(106, '26-0018-003', '', '', '', 'Aquino', 'Juan', 'N/A', 'Mendoza', 0, '2003-12-16', 16, 9, 2, 'Enrolled', NULL, NULL, 'Aquino', 'Jose', 'Mendoza', 'N/A', 'Garcia', 'Ana', 'Mendoza', 'N/A', 'Brgy. Bagtic, Palompon, Leyte, Bagtic, Philippines', 'Brgy. Bagtic, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9581954695', 'juan.aquino18@gmail.com', 'Not applicable', 0, '26-0018-003', '$2y$10$2QAFpwPXDwTz1fTHc5.gUeEnmLrxCfhkRxL5ycdgZ8FL1xnwoFHGK', 0, '2026 - 2027', NULL, 0),
+(107, '26-0019-003', '', '', '', 'Cruz', 'Mark', 'N/A', 'Garcia', 0, '2005-02-03', 16, 8, 1, 'Enrolled', NULL, NULL, 'Cruz', 'Gabriel', 'Garcia', 'N/A', 'Tomas', 'Bea', 'Garcia', 'N/A', 'Brgy. Cruz, Palompon, Leyte, Cruz, Philippines', 'Brgy. Cruz, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9335595276', 'mark.cruz19@gmail.com', 'Not applicable', 0, '26-0019-003', '$2y$10$d2rac4fDBvZowl4uOFouIelDHlpQFDosqB0I5Pm5AL9uqReTlHbRu', 0, '2026 - 2027', NULL, 0),
+(108, '26-0020-003', '', '', '', 'Bautista', 'Camille', 'N/A', 'Ramos', 1, '2005-12-25', 16, 1, 2, 'Enrolled', NULL, NULL, 'Bautista', 'Christian', 'Ramos', 'N/A', 'Aquino', 'Frances', 'Ramos', 'N/A', 'Brgy. San Jose, Palompon, Leyte, San Jose, Philippines', 'Brgy. San Jose, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9446334872', 'camille.bautista20@gmail.com', 'Not applicable', 0, '26-0020-003', '$2y$10$V4hMEgHFZEZCjx/WIJspc.sUAMCakkYLbuPk9dNt5I9uK1sx7UA86', 0, '2026 - 2027', NULL, 0),
+(109, '26-0021-003', '', '', '', 'Ocampo', 'Diana', 'N/A', 'Cruz', 1, '2003-08-03', 16, 1, 2, 'Enrolled', NULL, NULL, 'Ocampo', 'John', 'Cruz', 'N/A', 'Dela Cruz', 'Frances', 'Cruz', 'N/A', 'Brgy. Hinabangan, Palompon, Leyte, Hinabangan, Philippines', 'Brgy. Hinabangan, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9545458961', 'diana.ocampo21@gmail.com', 'Not applicable', 0, '26-0021-003', '$2y$10$VBIXv2rhWBn4QS09AZfMo.0x3DR88D7WMsUf39FJt4b7f6.65c48W', 0, '2026 - 2027', NULL, 0),
+(110, '26-0022-003', '', '', '', 'Flores', 'Jose', 'N/A', 'Ramos', 0, '2004-01-30', 16, 1, 4, 'Enrolled', NULL, NULL, 'Flores', 'Gabriel', 'Ramos', 'N/A', 'Garcia', 'Camille', 'Ramos', 'N/A', 'Brgy. Hinabangan, Palompon, Leyte, Hinabangan, Philippines', 'Brgy. Hinabangan, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9541419551', 'jose.flores22@gmail.com', 'Not applicable', 0, '26-0022-003', '$2y$10$lCS2yiDSsEnXAMtrylVSxejIZ37eFyDk7Ksmr6bj5bEXvYcLF58Ey', 0, '2026 - 2027', NULL, 0),
+(111, '26-0023-003', '', '', '', 'Pascual', 'Maria', 'N/A', 'Mendoza', 1, '2004-04-09', 16, 9, 2, 'Enrolled', NULL, NULL, 'Pascual', 'Juan', 'Mendoza', 'N/A', 'Gonzales', 'Frances', 'Mendoza', 'N/A', 'Brgy. Hinabangan, Palompon, Leyte, Hinabangan, Philippines', 'Brgy. Hinabangan, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9182839881', 'maria.pascual23@gmail.com', 'Not applicable', 0, '26-0023-003', '$2y$10$fbZAJAn5OmnCx3lBjI.1A.XuYLNk8l159cP1XyLdrbRnxMbzlGpmy', 0, '2026 - 2027', NULL, 0),
+(112, '26-0024-003', '', '', '', 'Aquino', 'Kevin', 'N/A', 'Torres', 0, '2004-08-02', 16, 1, 1, 'Enrolled', NULL, NULL, 'Aquino', 'Joshua', 'Torres', 'N/A', 'Lim', 'Maria', 'Torres', 'N/A', 'Brgy. San Jose, Palompon, Leyte, San Jose, Philippines', 'Brgy. San Jose, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9759742980', 'kevin.aquino24@gmail.com', 'Not applicable', 0, '26-0024-003', '$2y$10$T8r/rJ34h9stSd4AgT5DdeiErxoU5IBXmSld206b6kA3d/Ug1RyxC', 0, '2026 - 2027', NULL, 0),
+(113, '26-0025-003', '', '', '', 'Villanueva', 'Juan', 'N/A', 'Reyes', 0, '2005-06-15', 16, 1, 4, 'Enrolled', NULL, NULL, 'Villanueva', 'Jose', 'Reyes', 'N/A', 'Aquino', 'Diana', 'Reyes', 'N/A', 'Brgy. Bagtic, Palompon, Leyte, Bagtic, Philippines', 'Brgy. Bagtic, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9159127344', 'juan.villanueva25@gmail.com', 'Not applicable', 0, '26-0025-003', '$2y$10$j91S0nPm21uBcgWMf9hLeuts83EU00jY1CE3.K1fCMEM5ToC1IM1e', 0, '2026 - 2027', NULL, 0),
+(114, '26-0026-003', '', '', '', 'Ocampo', 'Gabriel', 'N/A', 'Flores', 0, '2003-03-09', 16, 8, 2, 'Enrolled', NULL, NULL, 'Ocampo', 'John', 'Flores', 'N/A', 'Cruz', 'Grace', 'Flores', 'N/A', 'Brgy. Bagtic, Palompon, Leyte, Bagtic, Philippines', 'Brgy. Bagtic, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9818312167', 'gabriel.ocampo26@gmail.com', 'Not applicable', 0, '26-0026-003', '$2y$10$9G5nK/L655vFiS9Pmg0aZe3E5oDSnDSdp74cOI0FQg5wU1AkmEVgW', 0, '2026 - 2027', NULL, 0),
+(115, '26-0027-003', '', '', '', 'Aquino', 'Maria', 'N/A', 'Bautista', 1, '2003-10-09', 16, 1, 3, 'Enrolled', NULL, NULL, 'Aquino', 'Kevin', 'Bautista', 'N/A', 'Gonzales', 'Maria', 'Bautista', 'N/A', 'Brgy. Cruz, Palompon, Leyte, Cruz, Philippines', 'Brgy. Cruz, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9857002810', 'maria.aquino27@gmail.com', 'Not applicable', 0, '26-0027-003', '$2y$10$zOBfbvSb3ZUa/KCSFLYXZuTiDJyQs2i1wGnDB5TSOow5iTjLP92lK', 0, '2026 - 2027', NULL, 0),
+(116, '26-0028-003', '', '', '', 'Villanueva', 'Grace', 'Jr.', 'Garcia', 1, '2005-11-12', 16, 1, 4, 'Enrolled', NULL, NULL, 'Villanueva', 'John', 'Garcia', 'N/A', 'Villanueva', 'Ana', 'Garcia', 'N/A', 'Brgy. Central, Palompon, Leyte, Central, Philippines', 'Brgy. Central, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9708685903', 'grace.villanueva28@gmail.com', 'Not applicable', 0, '26-0028-003', '$2y$10$kIqt9ihnfT1pZemUrqEwteHhVMq9cN8z9MAJTNt6xgSdaFWgmbjg.', 0, '2026 - 2027', NULL, 0),
+(117, '26-0029-003', '', '', '', 'Rivera', 'Miguel', 'N/A', 'Reyes', 0, '2004-08-10', 16, 1, 4, 'Enrolled', NULL, NULL, 'Rivera', 'Jose', 'Reyes', 'N/A', 'Lim', 'Maria', 'Reyes', 'N/A', 'Brgy. Bagtic, Palompon, Leyte, Bagtic, Philippines', 'Brgy. Bagtic, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9825321872', 'miguel.rivera29@gmail.com', 'Not applicable', 0, '26-0029-003', '$2y$10$lq3EpCZbtUPn/zXh035jgeMIJUJhWgq4Uj0aYf9TVtfI.EKRI2oIy', 0, '2026 - 2027', NULL, 0),
+(118, '26-0030-003', '', '', '', 'Mendoza', 'Diana', 'N/A', 'Garcia', 1, '2005-03-29', 16, 9, 1, 'Enrolled', NULL, NULL, 'Mendoza', 'Jose', 'Garcia', 'N/A', 'Lim', 'Camille', 'Garcia', 'N/A', 'Brgy. Cruz, Palompon, Leyte, Cruz, Philippines', 'Brgy. Cruz, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9906002173', 'diana.mendoza30@gmail.com', 'Not applicable', 0, '26-0030-003', '$2y$10$5WVjWhJfuajae1f8DIb3JuTVbw5PRQtGQzPd4FXkUyolJZG/J0FHe', 0, '2026 - 2027', NULL, 0),
+(119, '26-0031-003', '', '', '', 'Aquino', 'Grace', 'N/A', 'Mendoza', 1, '2005-11-02', 16, 8, 3, 'Enrolled', NULL, NULL, 'Aquino', 'Christian', 'Mendoza', 'N/A', 'Pascual', 'Bea', 'Mendoza', 'N/A', 'Brgy. Cruz, Palompon, Leyte, Cruz, Philippines', 'Brgy. Cruz, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9889034431', 'grace.aquino31@gmail.com', 'Not applicable', 0, '26-0031-003', '$2y$10$k9FE3tzLIvkniwlQeAHnhOKCYpD2acXdr0JP9dEopwI9yrWBYYC3S', 0, '2026 - 2027', NULL, 0),
+(120, '26-0032-003', '', '', '', 'Rivera', 'Mark', 'N/A', 'Ramos', 0, '2004-10-16', 16, 1, 2, 'Enrolled', NULL, NULL, 'Rivera', 'Carlos', 'Ramos', 'N/A', 'Bautista', 'Erika', 'Ramos', 'N/A', 'Brgy. Cruz, Palompon, Leyte, Cruz, Philippines', 'Brgy. Cruz, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9423393261', 'mark.rivera32@gmail.com', 'Not applicable', 0, '26-0032-003', '$2y$10$IcJZVFgKW09DZNKHF0plTuRJcpYZwKbS3VANoXBkDk3w5j6QvEx9C', 0, '2026 - 2027', NULL, 0),
+(121, '26-0033-003', '', '', '', 'Mendoza', 'Diana', 'N/A', 'Bautista', 1, '2005-10-21', 16, 1, 4, 'Enrolled', NULL, NULL, 'Mendoza', 'Jose', 'Bautista', 'N/A', 'Castillo', 'Maria', 'Bautista', 'N/A', 'Brgy. Central, Palompon, Leyte, Central, Philippines', 'Brgy. Central, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9724411389', 'diana.mendoza33@gmail.com', 'Not applicable', 0, '26-0033-003', '$2y$10$QP.ULg2meyZ4p1whvccqI.bxxA4fa45JFITqvFDE0LPjjENX1KIKe', 0, '2026 - 2027', NULL, 0),
+(122, '26-0034-003', '', '', '', 'Lim', 'Miguel', 'N/A', 'Garcia', 0, '2004-02-25', 16, 8, 2, 'Enrolled', NULL, NULL, 'Lim', 'John', 'Garcia', 'N/A', 'Mendoza', 'Bea', 'Garcia', 'N/A', 'Brgy. San Jose, Palompon, Leyte, San Jose, Philippines', 'Brgy. San Jose, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9899542827', 'miguel.lim34@gmail.com', 'Not applicable', 0, '26-0034-003', '$2y$10$rsFgQFbxayyBDsCXQSk4iez9zjjgalQAhRON0PI6ZsIHgKyrYU2NO', 0, '2026 - 2027', NULL, 0),
+(123, '26-0035-003', '', '', '', 'Villanueva', 'Bea', 'N/A', 'Garcia', 1, '2004-12-21', 16, 8, 3, 'Enrolled', NULL, NULL, 'Villanueva', 'Juan', 'Garcia', 'N/A', 'Reyes', 'Bea', 'Garcia', 'N/A', 'Brgy. San Jose, Palompon, Leyte, San Jose, Philippines', 'Brgy. San Jose, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9413784470', 'bea.villanueva35@gmail.com', 'Not applicable', 0, '26-0035-003', '$2y$10$iQtHlZ377yoNZHjJKWX.u.gp/5R4eGssUCt0DsR74mBwnPpoYBlxW', 0, '2026 - 2027', NULL, 0),
+(124, '26-0036-003', '', '', '', 'Ocampo', 'Hannah', 'N/A', 'Reyes', 1, '2004-04-08', 16, 8, 1, 'Enrolled', NULL, NULL, 'Ocampo', 'Carlos', 'Reyes', 'N/A', 'Santos', 'Bea', 'Reyes', 'N/A', 'Brgy. San Jose, Palompon, Leyte, San Jose, Philippines', 'Brgy. San Jose, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9309904991', 'hannah.ocampo36@gmail.com', 'Not applicable', 0, '26-0036-003', '$2y$10$a2TljQhg/FXBMP6HScyB.eq0ypZ1LQArgY7PKR0CKuhSRygnebbpu', 0, '2026 - 2027', NULL, 0),
+(125, '26-0037-003', '', '', '', 'Pascual', 'Gabriel', 'N/A', 'Ramos', 0, '2004-09-01', 16, 8, 3, 'Enrolled', NULL, NULL, 'Pascual', 'Carlos', 'Ramos', 'N/A', 'Santos', 'Grace', 'Ramos', 'N/A', 'Brgy. Bagtic, Palompon, Leyte, Bagtic, Philippines', 'Brgy. Bagtic, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9276427886', 'gabriel.pascual37@gmail.com', 'Not applicable', 0, '26-0037-003', '$2y$10$phdusoCKYR6omP0xI0JNe.wpjFsJuKr03zdgYfZ.MYBfoz8vbdaxy', 0, '2026 - 2027', NULL, 0),
+(126, '26-0038-003', '', '', '', 'Gonzales', 'Ana', 'N/A', 'Ramos', 1, '2006-05-15', 16, 1, 1, 'Enrolled', NULL, NULL, 'Gonzales', 'Gabriel', 'Ramos', 'N/A', 'Dela Cruz', 'Grace', 'Ramos', 'N/A', 'Brgy. Central, Palompon, Leyte, Central, Philippines', 'Brgy. Central, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9795514554', 'ana.gonzales38@gmail.com', 'Not applicable', 0, '26-0038-003', '$2y$10$fiUPnf//12cf8ugC7wOyVOhVlv8AntB8G7rCzL0x1WITumd18/lL2', 0, '2026 - 2027', NULL, 0),
+(127, '26-0039-003', '', '', '', 'Garcia', 'Frances', 'N/A', 'Garcia', 1, '2003-05-21', 16, 1, 1, 'Enrolled', NULL, NULL, 'Garcia', 'Miguel', 'Garcia', 'N/A', 'Mendoza', 'Diana', 'Garcia', 'N/A', 'Brgy. Hinabangan, Palompon, Leyte, Hinabangan, Philippines', 'Brgy. Hinabangan, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9198843023', 'frances.garcia39@gmail.com', 'Not applicable', 0, '26-0039-003', '$2y$10$RZbxCQNClVdfH8XhK.G4IeaLGRiJlE8X5En6mb8C0zbDdcueJkEZm', 0, '2026 - 2027', NULL, 0),
+(128, '26-0040-003', '', '', '', 'Castillo', 'Gabriel', 'N/A', 'Torres', 0, '2004-04-06', 16, 9, 3, 'Enrolled', NULL, NULL, 'Castillo', 'Kevin', 'Torres', 'N/A', 'Santos', 'Camille', 'Torres', 'N/A', 'Brgy. Cruz, Palompon, Leyte, Cruz, Philippines', 'Brgy. Cruz, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9889793191', 'gabriel.castillo40@gmail.com', 'Not applicable', 0, '26-0040-003', '$2y$10$w9w2kXSVAfenv8EtI5g.ROqUPC06iq9suXqRsPjVLztveijiwZRfe', 0, '2026 - 2027', NULL, 0),
+(129, '26-0041-003', '', '', '', 'Rivera', 'Gabriel', 'N/A', 'Gonzales', 0, '2006-03-06', 16, 9, 3, 'Enrolled', NULL, NULL, 'Rivera', 'Miguel', 'Gonzales', 'N/A', 'Ramos', 'Bea', 'Gonzales', 'N/A', 'Brgy. Central, Palompon, Leyte, Central, Philippines', 'Brgy. Central, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9279618626', 'gabriel.rivera41@gmail.com', 'Not applicable', 0, '26-0041-003', '$2y$10$x4SgEADxyLGvPp2wPE1REODfm8gvYIQnfwOJ3mDla6LP2PtWdEIcS', 0, '2026 - 2027', NULL, 0),
+(130, '26-0042-003', '', '', '', 'Cruz', 'Gabriel', 'N/A', 'Garcia', 0, '2003-12-19', 16, 9, 3, 'Enrolled', NULL, NULL, 'Cruz', 'Kevin', 'Garcia', 'N/A', 'Garcia', 'Angelica', 'Garcia', 'N/A', 'Brgy. Cruz, Palompon, Leyte, Cruz, Philippines', 'Brgy. Cruz, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9803495101', 'gabriel.cruz42@gmail.com', 'Not applicable', 0, '26-0042-003', '$2y$10$LG9clcYMkYiOfDHukxYNLOX3Lw.MSADb.dO66k.8fjkaYA8XkOt9u', 0, '2026 - 2027', NULL, 0),
+(131, '26-0043-003', '', '', '', 'Santos', 'Ana', 'N/A', 'Garcia', 1, '2004-07-19', 16, 1, 3, 'Enrolled', NULL, NULL, 'Santos', 'Miguel', 'Garcia', 'N/A', 'Pascual', 'Bea', 'Garcia', 'N/A', 'Brgy. Central, Palompon, Leyte, Central, Philippines', 'Brgy. Central, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9152706215', 'ana.santos43@gmail.com', 'Not applicable', 0, '26-0043-003', '$2y$10$0owA9BWOrzc0NC3bFSP29O9Okp8QckNoyRkPUVCCDQQlEJXQfu8GO', 0, '2026 - 2027', NULL, 0),
+(132, '26-0044-003', '', '', '', 'Torres', 'Diana', 'N/A', 'Santos', 1, '2006-06-14', 16, 9, 1, 'Enrolled', NULL, NULL, 'Torres', 'Joshua', 'Santos', 'N/A', 'Lim', 'Maria', 'Santos', 'N/A', 'Brgy. Bagtic, Palompon, Leyte, Bagtic, Philippines', 'Brgy. Bagtic, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9227711551', 'diana.torres44@gmail.com', 'Not applicable', 0, '26-0044-003', '$2y$10$wtyOBopSLcvExOBA31FemOeTUIXf5.qrTJvaVTM07XOLMdCeDheiS', 0, '2026 - 2027', NULL, 1),
+(133, '26-0045-003', '', '', '', 'Castillo', 'Miguel', 'N/A', 'Mendoza', 0, '2004-07-13', 16, 1, 4, 'Enrolled', NULL, NULL, 'Castillo', 'Carlos', 'Mendoza', 'N/A', 'Castillo', 'Hannah', 'Mendoza', 'N/A', 'Brgy. Hinabangan, Palompon, Leyte, Hinabangan, Philippines', 'Brgy. Hinabangan, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9582328004', 'miguel.castillo45@gmail.com', 'Not applicable', 0, '26-0045-003', '$2y$10$KzbUPij0ckthpeAquqUP0Oq7cQC1IiTActf10a2vN3rvyYB/.LYoa', 0, '2026 - 2027', 'scholar_133_1790044021.jpg', 1),
+(134, '26-0046-003', '', '', '', 'Reyes', 'Ana', 'N/A', 'Garcia', 1, '2006-06-01', 16, 1, 4, 'Enrolled', NULL, NULL, 'Reyes', 'Juan', 'Garcia', 'N/A', 'Santos', 'Camille', 'Garcia', 'N/A', 'Brgy. San Jose, Palompon, Leyte, San Jose, Philippines', 'Brgy. San Jose, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9601754732', 'ana.reyes46@gmail.com', 'Not applicable', 0, '26-0046-003', '$2y$10$pHDc0wwDEb/o93E4kqvrQu99D5vgDrCs0.HSZ.AujZ8lYk./jzpvG', 0, '2026 - 2027', NULL, 0),
+(135, '26-0047-003', '', '', '', 'Santos', 'Jose', 'N/A', 'Cruz', 0, '2003-06-20', 16, 1, 4, 'Enrolled', NULL, NULL, 'Santos', 'Kevin', 'Cruz', 'N/A', 'Ocampo', 'Bea', 'Cruz', 'N/A', 'Brgy. San Jose, Palompon, Leyte, San Jose, Philippines', 'Brgy. San Jose, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9689831888', 'jose.santos47@gmail.com', 'Not applicable', 0, '26-0047-003', '$2y$10$RmRy4zP1OK1IL5igMM8KR.k4AGtuiDG/Vua/EY20vBTLq2bBhVOGy', 0, '2026 - 2027', NULL, 1),
+(136, '26-0048-003', '', '', '', 'Gonzales', 'Ana', 'N/A', 'Garcia', 1, '2003-01-03', 16, 8, 3, 'Enrolled', NULL, NULL, 'Gonzales', 'Kevin', 'Garcia', 'N/A', 'Castillo', 'Camille', 'Garcia', 'N/A', 'Brgy. Bagtic, Palompon, Leyte, Bagtic, Philippines', 'Brgy. Bagtic, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9688353459', 'ana.gonzales48@gmail.com', 'Not applicable', 0, '26-0048-003', '$2y$10$cqrC2kwdLyB/nPjsxINxm.vnvCoatsIhMb12yHQEFJP2lASmjM11K', 0, '2026 - 2027', NULL, 0),
+(137, '26-0049-003', '', '', '', 'Dela Cruz', 'Kevin', 'N/A', 'Bautista', 0, '2004-02-26', 16, 9, 3, 'Enrolled', NULL, NULL, 'Dela Cruz', 'Carlos', 'Bautista', 'N/A', 'Rivera', 'Ana', 'Bautista', 'N/A', 'Brgy. Hinabangan, Palompon, Leyte, Hinabangan, Philippines', 'Brgy. Hinabangan, Palompon, Leyte', '', '', NULL, NULL, NULL, NULL, 'Philippines', '6538', 'Not applicable', '9832463232', 'kevin.delacruz49@gmail.com', 'Not applicable', 0, '26-0049-003', '$2y$10$afrgNIWr8hr84O/etsSsiucLRkfjU3IDWv5GgdfQT22yUaqcprYRW', 0, '2026 - 2027', NULL, 1),
+(138, '26-0050-003', '1234-1234-1234-1234', '123456789012', '123456789-2134-12345', 'Flores', 'Mark', 'N/A', 'Mendoza', 0, '2003-10-14', 16, 9, 2, 'Leave of Absence', NULL, NULL, 'Flores', 'Carlos', 'Mendoza', 'N/A', 'Villanueva', 'Diana', 'Mendoza', 'N/A', 'Brgy. Bagtic, Palompon, Leyte, Baraoas, City of San Fernando , La Union, Region I (Ilocos Region), Philippines', 'Brgy. Bagtic, Palompon, Leyte', '', '', 1803, 1793, 1388, 1, 'Philippines', '6538', 'Not applicable', '09335241498', 'mark.flores50@gmail.com', 'Not applicable', 0, '26-0050-003', '$2y$10$WqLsodMW2FFrDQc2QPQLXOci5qL/SyOB2fVU1ElDxd9zbXLI.Hx5C', 0, '2026 - 2027', NULL, 0),
+(186, '22-0564-152', '1234-1234-1234-1234', '123456789012', '123456789-2134-12345', 'Gaspan', 'Guianna Faith', 'N/A', 'Poblete', 1, '2026-10-21', 19, 1, 4, 'Leave of Absence', '2nd Semester', '2027-2028', 'sample', 'sample', 'sample', 'N/A', 'sample', 'sample', 'sample', 'N/A', 'Ilawd, Himarco, Palompon, Leyte, Region VIII (Eastern Visayas), Philippines', 'Ilawd', '', '', 27549, 27532, 26302, 25680, 'Philippines', '6538', 'Not applicable', '09123456789', 'pitad21gaspanguianna@gmail.com', 'Not applicable', 0, '22-0564-152', '$2y$10$3cqIa2zzYMwVeurYt7FtruccY7L2wgGtWNhhktlauEZ8B0ppTzKNC', 0, '2026 - 2027', NULL, 1),
+(187, '92-3425-234', '1234-1234-1234-1234', '123456789012', '123456789-2134-12345', 'adfasdf', 'adfsadf', 'N/A', 'fasdfsdaf', 0, '2026-10-01', 18, 2, 5, 'Enrolled', NULL, NULL, 'adfasdf', 'adsfasdf', 'sadfasdf', 'N/A', 'adsfdsaf', 'asdfsadf', 'asdfsdaf', 'N/A', 'Brgy. Bagtic, Palompon, Leyte, Dalapang, Labangan, Zamboanga del Sur, Region IX (Zamboanga Peninsula), Philippines', 'Brgy. Bagtic, Palompon, Leyte', '', '', 31148, 31141, 30915, 30195, 'Philippines', '2314', 'Not applicable', '09213721341', 'adfsadf@asdfsad.com', 'Not applicable', 0, '92-3425-234', '$2y$10$98jrNr/mH6jzpoQ8hPH8deLO8tc0EoqgkrcF3Ky3g4aFgLutHMLXu', 0, '2023 - 2024', NULL, 0),
+(189, '82-8342-342', '1234-1234-1234-1234', '123456789012', '123456789-2134-12345', 'Andales', 'asfdasdfadsf', 'N/A', 'asdfdsasdf', 0, '2026-09-15', 18, 13, 5, 'Enrolled', NULL, NULL, 'adfasf', 'asdfasdfasdf', 'asdfasdfas', '09051210174', 'dsafasd', 'asfdsaf', 'asdfsaf', 'N/A', 'Ilawd, Kima, Payao, Zamboanga Sibugay, Region IX (Zamboanga Peninsula), Philippines', 'Ilawd', '', '', 31980, 31970, 31723, 30195, 'Philippines', '6538', 'Not applicable', '09213721341', 'keithgabrielandales@gmail.com', 'Not applicable', 1, '82-8342-342', '$2y$10$QcxTaBa5DPHvWQj7dDhmlelXl3o6QTu73Vh8IHLCJpclTpn9qUbI.', 0, '2023 - 2024', NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -44329,6 +44612,19 @@ CREATE TABLE `scholar_notes` (
   `scholar_id` int(11) NOT NULL,
   `notes` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `scholar_notes`
+--
+
+INSERT INTO `scholar_notes` (`id`, `scholar_id`, `notes`) VALUES
+(28, 78, '{\"Age\":\"26\"}'),
+(29, 79, '{\"Age\":\"25\"}'),
+(30, 80, '{\"Age\":\"27\"}'),
+(31, 81, '{\"Age\":\"24\"}'),
+(32, 82, '{\"Age\":\"25\"}'),
+(33, 83, '{\"Age\":\"24\"}'),
+(36, 137, '{\"Old ID\":\"23-8432-834\"}');
 
 --
 -- Indexes for dumped tables
@@ -44362,12 +44658,6 @@ ALTER TABLE `college`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `home_address`
---
-ALTER TABLE `home_address`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indexes for table `import_history`
 --
 ALTER TABLE `import_history`
@@ -44382,6 +44672,12 @@ ALTER TABLE `program`
   ADD KEY `college_id` (`college_id`);
 
 --
+-- Indexes for table `providers`
+--
+ALTER TABLE `providers`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `psgc`
 --
 ALTER TABLE `psgc`
@@ -44391,7 +44687,8 @@ ALTER TABLE `psgc`
 -- Indexes for table `scholarship_program`
 --
 ALTER TABLE `scholarship_program`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_scholarship_provider` (`provider_id`);
 
 --
 -- Indexes for table `scholarship_users`
@@ -44420,19 +44717,19 @@ ALTER TABLE `scholar_notes`
 -- AUTO_INCREMENT for table `academic_performance`
 --
 ALTER TABLE `academic_performance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `announcements`
 --
 ALTER TABLE `announcements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `audit_trail`
 --
 ALTER TABLE `audit_trail`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=172;
 
 --
 -- AUTO_INCREMENT for table `college`
@@ -44441,22 +44738,22 @@ ALTER TABLE `college`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `home_address`
---
-ALTER TABLE `home_address`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `import_history`
 --
 ALTER TABLE `import_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `program`
 --
 ALTER TABLE `program`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+
+--
+-- AUTO_INCREMENT for table `providers`
+--
+ALTER TABLE `providers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `psgc`
@@ -44468,25 +44765,25 @@ ALTER TABLE `psgc`
 -- AUTO_INCREMENT for table `scholarship_program`
 --
 ALTER TABLE `scholarship_program`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `scholarship_users`
 --
 ALTER TABLE `scholarship_users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `scholar_info`
 --
 ALTER TABLE `scholar_info`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=190;
 
 --
 -- AUTO_INCREMENT for table `scholar_notes`
 --
 ALTER TABLE `scholar_notes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- Constraints for dumped tables
@@ -44521,6 +44818,12 @@ ALTER TABLE `import_history`
 --
 ALTER TABLE `program`
   ADD CONSTRAINT `program_ibfk_1` FOREIGN KEY (`college_id`) REFERENCES `college` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `scholarship_program`
+--
+ALTER TABLE `scholarship_program`
+  ADD CONSTRAINT `fk_scholarship_provider` FOREIGN KEY (`provider_id`) REFERENCES `providers` (`id`);
 
 --
 -- Constraints for table `scholar_notes`
