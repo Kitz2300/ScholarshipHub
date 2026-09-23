@@ -1,5 +1,5 @@
 <?php 
-// Database connection parameters (checking $_ENV, $_SERVER, and getenv)
+// Database connection parameters
 $servername = $_ENV['MYSQLHOST']     ?? $_SERVER['MYSQLHOST']     ?? getenv('MYSQLHOST')     ?: "localhost";
 $username   = $_ENV['MYSQLUSER']     ?? $_SERVER['MYSQLUSER']     ?? getenv('MYSQLUSER')     ?: "root";
 $password   = $_ENV['MYSQLPASSWORD'] ?? $_SERVER['MYSQLPASSWORD'] ?? getenv('MYSQLPASSWORD') ?: "";
@@ -12,6 +12,10 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 try {
     $conn = new mysqli($servername, $username, $password, $dbname, (int)$port);
     $conn->set_charset("utf8mb4");
+    
+    // Relax ONLY_FULL_GROUP_BY mode to match local XAMPP behavior
+    $conn->query("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))");
+
 } catch (Exception $e) {
     error_log("Database Connection Error: " . $e->getMessage());
     die("Unable to connect to the server at this time. Please try again later.");
