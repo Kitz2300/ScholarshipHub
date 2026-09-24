@@ -18,12 +18,14 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
         $mail->SMTPAuth   = true;
         $mail->Username   = 'keithgabrielandales@gmail.com';
         $mail->Password   = 'jsncwypnchefqvsy';
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
+        
+        // Using SMTPS with Port 465 for higher reliability against blocked ports
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        $mail->Port       = 465;
         $mail->CharSet    = 'UTF-8';
 
         // ========== TIMEOUT & CONNECTION SETTINGS ==========
-        $mail->Timeout       = 5; // Socket connection timeout in seconds
+        $mail->Timeout       = 8; // Timeout in 8 seconds if unreachable
         $mail->SMTPKeepAlive = false;
 
         // ========== XAMPP LOCALHOST SSL FIX ==========
@@ -56,8 +58,7 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
         $body .= "<p>Best regards,<br>PIT Scholarship Office</p>";
 
         $mail->Body = $body;
-        $mail->send();
-        return true;
+        return $mail->send();
     } catch (Exception $e) {
         error_log("Mail Error for $to_email: " . $mail->ErrorInfo);
         return false;

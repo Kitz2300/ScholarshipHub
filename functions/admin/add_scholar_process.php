@@ -280,9 +280,10 @@ if (isset($_POST['add'])) {
     );
     
     if ($scholar_stmt->execute()) {
-        // Safe execution in case of SMTP server failure or connection timeout
+        $email_sent = false;
+
         try {
-            sendAccountCreatedEmail($email, $first_name, $student_id);
+            $email_sent = sendAccountCreatedEmail($email, $first_name, $student_id);
         } catch (Throwable $e) {
             error_log("Email sending failed for student $student_id: " . $e->getMessage());
         }
@@ -298,7 +299,12 @@ if (isset($_POST['add'])) {
         $audit_stmt->bind_param("is", $user_id, $action);
         $audit_stmt->execute();
 
-        $_SESSION['success'] = "Scholar added successfully!";
+        if ($email_sent) {
+            $_SESSION['success'] = "Scholar added successfully and account notification email sent!";
+        } else {
+            $_SESSION['success'] = "Scholar added successfully! (Note: Email notification failed to send. Check SMTP settings or spam folder).";
+        }
+        
         header("Location: ../../admin/scholar_list.php");
     } else {
         $_SESSION['fail'] = "Failed to add scholar: " . $scholar_stmt->error;
