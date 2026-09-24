@@ -155,9 +155,8 @@ if (isset($_POST['add'])) {
     $lrn = trim($_POST['lrn'] ?? '');
     $four_ps_id = trim($_POST['four_ps_id'] ?? '');
     
-    // Fetch location names for address compilation
+    // Fetch location names for address compilation and string column insertion
     $location_names = [];
-    $town_city = $location_names['city'] ?? trim($_POST['other_address2'] ?? $_POST['street'] ?? '');
     if ($region_id > 0) {
         $sql = "SELECT name FROM psgc WHERE id = $region_id";
         $result = $conn->query($sql);
@@ -179,66 +178,75 @@ if (isset($_POST['add'])) {
         $location_names['barangay'] = $result->fetch_assoc()['name'] ?? '';
     }
 
+    // Extract individual address strings for NOT NULL table columns
+    $region_name   = $location_names['region']   ?? '';
+    $province_name = $location_names['province'] ?? '';
+    $town_city     = $location_names['city']     ?? trim($_POST['other_address2'] ?? $_POST['street'] ?? '');
+    $barangay_name = $location_names['barangay'] ?? '';
+
     // Build permanent address string
     $address_parts = [];
     if (!empty($street)) $address_parts[] = $street;
-    if (!empty($location_names['barangay'])) $address_parts[] = $location_names['barangay'];
-    if (!empty($location_names['city'])) $address_parts[] = $location_names['city'];
-    if (!empty($location_names['province'])) $address_parts[] = $location_names['province'];
-    if (!empty($location_names['region'])) $address_parts[] = $location_names['region'];
+    if (!empty($barangay_name)) $address_parts[] = $barangay_name;
+    if (!empty($town_city)) $address_parts[] = $town_city;
+    if (!empty($province_name)) $address_parts[] = $province_name;
+    if (!empty($region_name)) $address_parts[] = $region_name;
     if (!empty($country)) $address_parts[] = $country;
 
     $permanent_address = implode(', ', $address_parts);
 
-    // ─── INSERT QUERY (40 columns) ───
+    // ─── INSERT QUERY (44 columns) ───
     $scholar_sql = "INSERT INTO scholar_info (
-                student_id, 
-                last_name, 
-                given_name, 
-                ext_name, 
-                middle_name, 
-                sex, 
-                birthdate, 
-                scholarship_program_id, 
-                program_id, 
-                year_level, 
-                academic_status,
-                loa_semester,
-                loa_school_year,
-                father_last_name, 
-                father_given_name, 
-                father_middle_name,
-                father_contact, 
-                mother_last_name, 
-                mother_given_name, 
-                mother_middle_name, 
-                mother_contact,
-                permanent_address,
-                street, 
-                town_city,
-                barangay_id, 
-                city_id, 
-                province_id, 
-                region_id, 
-                country,
-                zipcode, 
-                disability, 
-                contact_num, 
-                email,
-                ip_group,
-                is_child_of_solo_parent,
-                username,
-                password,
-                school_year,
-                philsys_id,
-                lrn,
-                four_ps_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    student_id, 
+                    last_name, 
+                    given_name, 
+                    ext_name, 
+                    middle_name, 
+                    sex, 
+                    birthdate, 
+                    scholarship_program_id, 
+                    program_id, 
+                    year_level, 
+                    academic_status,
+                    loa_semester,
+                    loa_school_year,
+                    father_last_name, 
+                    father_given_name, 
+                    father_middle_name,
+                    father_contact, 
+                    mother_last_name, 
+                    mother_given_name, 
+                    mother_middle_name, 
+                    mother_contact,
+                    permanent_address,
+                    street, 
+                    barangay,
+                    town_city,
+                    province,
+                    region,
+                    barangay_id, 
+                    city_id, 
+                    province_id, 
+                    region_id, 
+                    country,
+                    zipcode, 
+                    disability, 
+                    contact_num, 
+                    email,
+                    ip_group,
+                    is_child_of_solo_parent,
+                    username,
+                    password,
+                    school_year,
+                    philsys_id,
+                    lrn,
+                    four_ps_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $scholar_stmt = $conn->prepare($scholar_sql);
     
-    // Exactly 40 type specifiers matching 40 bound variables
-    $types = "sssssisiiissssssssssssssiiiissssssissssss";
+    // Exactly 44 type specifiers matching 44 bound variables
+    $types = "sssssisiiisssssssssssssssssiiiissssssissssss";
     
     $scholar_stmt->bind_param(
         $types, 
@@ -265,7 +273,10 @@ if (isset($_POST['add'])) {
         $mother_contact,
         $permanent_address,
         $street,
+        $barangay_name,
         $town_city,
+        $province_name,
+        $region_name,
         $barangay_id,
         $city_id,
         $province_id,
