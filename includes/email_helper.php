@@ -12,40 +12,30 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
     $mail = new PHPMailer(true);
 
     try {
-        // Read environment variables (supports SMTP_USER, SMTP_PASS, SMTP_HOST, SMTP_PORT)
-        $smtp_host = getenv('SMTP_HOST') ?: ($_ENV['SMTP_HOST'] ?? 'smtp.gmail.com');
-        $smtp_user = getenv('SMTP_USER') ?: ($_ENV['SMTP_USER'] ?? 'keithgabrielandales@gmail.com');
-        $smtp_pass = getenv('SMTP_PASS') ?: ($_ENV['SMTP_PASS'] ?? 'jsncwypnchefqvsy');
-        $smtp_port = (int) (getenv('SMTP_PORT') ?: ($_ENV['SMTP_PORT'] ?? 587));
-        $smtp_from = getenv('SMTP_FROM') ?: ($_ENV['SMTP_FROM'] ?? $smtp_user);
-        $smtp_from_name = getenv('SMTP_FROM_NAME') ?: ($_ENV['SMTP_FROM_NAME'] ?? 'PIT ScholarshipHub');
+        // Read smtp_user and smtp_pass from environment (supports lowercase 'smtp_user' / 'smtp_pass' or uppercase 'SMTP_USER' / 'SMTP_PASS')
+        $smtp_user = getenv('smtp_user') ?: (getenv('SMTP_USER') ?: ($_ENV['smtp_user'] ?? ($_ENV['SMTP_USER'] ?? 'keithgabrielandales@gmail.com')));
+        $smtp_pass = getenv('smtp_pass') ?: (getenv('SMTP_PASS') ?: ($_ENV['smtp_pass'] ?? ($_ENV['SMTP_PASS'] ?? 'jsncwypnchefqvsy')));
 
         if (empty($smtp_user) || empty($smtp_pass)) {
-            error_log("SMTP Error: Username or password missing in environment variables.");
+            error_log("SMTP Error: smtp_user or smtp_pass is missing in environment variables.");
             return false;
         }
 
         // ========== SMTP CONFIGURATION ==========
         $mail->isSMTP();
-        $mail->Host       = $smtp_host;
+        $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = $smtp_user;
-        $mail->Password   = $smtp_pass;
-        $mail->Port       = $smtp_port;
+        $mail->Username   = trim($smtp_user);
+        $mail->Password   = trim($smtp_pass);
+        $mail->Port       = 587;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->CharSet    = 'UTF-8';
 
-        // Set Encryption based on Port (465 = SMTPS, 587 = STARTTLS)
-        if ($smtp_port === 465) {
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        } else {
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        }
-
-        // ========== TIMEOUT & CONNECTION SETTINGS ==========
-        $mail->Timeout       = 10; // Socket connection timeout in seconds
+        // ========== SHORT SOCKET TIMEOUT ==========
+        $mail->Timeout       = 5; // Fail after 5 seconds if SMTP port is blocked by host
         $mail->SMTPKeepAlive = false;
 
-        // ========== XAMPP LOCALHOST / SERVER SSL FIX ==========
+        // ========== LOCALHOST / SERVER SSL FIX ==========
         $mail->SMTPOptions = array(
             'ssl' => array(
                 'verify_peer'       => false,
@@ -55,7 +45,7 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
         );
 
         // Sender & Recipient
-        $mail->setFrom($smtp_from, $smtp_from_name);
+        $mail->setFrom($smtp_user, 'PIT ScholarshipHub');
         $mail->addAddress($to_email, $first_name);
 
         // Content
