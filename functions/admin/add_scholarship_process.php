@@ -34,7 +34,7 @@ $name = trim($_POST['name']);
 $code = trim($_POST['code']);
 $start_year = (int) $_POST['start_year'];
 $end_year = !empty($_POST['end_year']) ? (int) $_POST['end_year'] : ($start_year + 1);
-$school_year = $start_year . '-' . $end_year;
+$school_year = $start_year . ' - ' . $end_year;
 
 $provider_id = (int) $_POST['provider_id'];
 $sc_type = trim($_POST['sc_type']);
