@@ -240,7 +240,7 @@ if (isset($_POST['add'])) {
     $scholar_stmt = $conn->prepare($scholar_sql);
     
     // Exactly 39 type specifiers matching 39 bound variables
-    $types = "sssssisiiisssssssssssssiiiissssssissssss";
+    $types = "sssssisiiissssssssssssiiiissssssissssss";
     
     $scholar_stmt->bind_param(
         $types, 
