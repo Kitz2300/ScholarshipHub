@@ -302,7 +302,7 @@ if (isset($_POST['add'])) {
         if ($email_sent) {
             $_SESSION['success'] = "Scholar added successfully and account notification email sent!";
         } else {
-            $_SESSION['success'] = "Scholar added successfully! (Note: Email notification failed to send. Check SMTP settings or spam folder).";
+            $_SESSION['fail'] = "Scholar added, but account email failed to send. Check SMTP credentials or error log.";
         }
         
         header("Location: ../../admin/scholar_list.php");

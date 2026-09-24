@@ -12,24 +12,40 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
     $mail = new PHPMailer(true);
 
     try {
+        // Read environment variables (supports SMTP_USER, SMTP_PASS, SMTP_HOST, SMTP_PORT)
+        $smtp_host = getenv('SMTP_HOST') ?: ($_ENV['SMTP_HOST'] ?? 'smtp.gmail.com');
+        $smtp_user = getenv('SMTP_USER') ?: ($_ENV['SMTP_USER'] ?? 'keithgabrielandales@gmail.com');
+        $smtp_pass = getenv('SMTP_PASS') ?: ($_ENV['SMTP_PASS'] ?? 'jsncwypnchefqvsy');
+        $smtp_port = (int) (getenv('SMTP_PORT') ?: ($_ENV['SMTP_PORT'] ?? 587));
+        $smtp_from = getenv('SMTP_FROM') ?: ($_ENV['SMTP_FROM'] ?? $smtp_user);
+        $smtp_from_name = getenv('SMTP_FROM_NAME') ?: ($_ENV['SMTP_FROM_NAME'] ?? 'PIT ScholarshipHub');
+
+        if (empty($smtp_user) || empty($smtp_pass)) {
+            error_log("SMTP Error: Username or password missing in environment variables.");
+            return false;
+        }
+
         // ========== SMTP CONFIGURATION ==========
         $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';
+        $mail->Host       = $smtp_host;
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'keithgabrielandales@gmail.com';
-        $mail->Password   = 'jsncwypnchefqvsy';
-        
-        // Using SMTPS with Port 465 for higher reliability against blocked ports
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        $mail->Port       = 465;
+        $mail->Username   = $smtp_user;
+        $mail->Password   = $smtp_pass;
+        $mail->Port       = $smtp_port;
         $mail->CharSet    = 'UTF-8';
 
+        // Set Encryption based on Port (465 = SMTPS, 587 = STARTTLS)
+        if ($smtp_port === 465) {
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        } else {
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        }
+
         // ========== TIMEOUT & CONNECTION SETTINGS ==========
-        $mail->Timeout       = 8; // Timeout in 8 seconds if unreachable
+        $mail->Timeout       = 10; // Socket connection timeout in seconds
         $mail->SMTPKeepAlive = false;
 
-        // ========== XAMPP LOCALHOST SSL FIX ==========
-        // Prevents OpenSSL certificate verification failures on Windows XAMPP
+        // ========== XAMPP LOCALHOST / SERVER SSL FIX ==========
         $mail->SMTPOptions = array(
             'ssl' => array(
                 'verify_peer'       => false,
@@ -39,7 +55,7 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
         );
 
         // Sender & Recipient
-        $mail->setFrom('keithgabrielandales@gmail.com', 'PIT ScholarshipHub');
+        $mail->setFrom($smtp_from, $smtp_from_name);
         $mail->addAddress($to_email, $first_name);
 
         // Content
