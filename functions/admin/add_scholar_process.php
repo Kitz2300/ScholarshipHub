@@ -155,7 +155,7 @@ if (isset($_POST['add'])) {
     $lrn = trim($_POST['lrn'] ?? '');
     $four_ps_id = trim($_POST['four_ps_id'] ?? '');
     
-    // Fetch location names for address compilation and string column insertion
+    // Fetch location names to build permanent_address string
     $location_names = [];
     if ($region_id > 0) {
         $sql = "SELECT name FROM psgc WHERE id = $region_id";
@@ -178,10 +178,9 @@ if (isset($_POST['add'])) {
         $location_names['barangay'] = $result->fetch_assoc()['name'] ?? '';
     }
 
-    // Extract individual address strings for NOT NULL table columns
     $region_name   = $location_names['region']   ?? '';
     $province_name = $location_names['province'] ?? '';
-    $town_city     = $location_names['city']     ?? trim($_POST['other_address2'] ?? $_POST['street'] ?? '');
+    $town_city     = $location_names['city']     ?? trim($_POST['other_address2'] ?? '');
     $barangay_name = $location_names['barangay'] ?? '';
 
     // Build permanent address string
@@ -195,7 +194,7 @@ if (isset($_POST['add'])) {
 
     $permanent_address = implode(', ', $address_parts);
 
-    // ─── INSERT QUERY (44 columns) ───
+    // ─── INSERT QUERY (39 columns) ───
     $scholar_sql = "INSERT INTO scholar_info (
                     student_id, 
                     last_name, 
@@ -219,11 +218,6 @@ if (isset($_POST['add'])) {
                     mother_middle_name, 
                     mother_contact,
                     permanent_address,
-                    street, 
-                    barangay,
-                    town_city,
-                    province,
-                    region,
                     barangay_id, 
                     city_id, 
                     province_id, 
@@ -241,12 +235,12 @@ if (isset($_POST['add'])) {
                     philsys_id,
                     lrn,
                     four_ps_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $scholar_stmt = $conn->prepare($scholar_sql);
     
-    // Exactly 44 type specifiers matching 44 bound variables
-    $types = "sssssisiiisssssssssssssssssiiiissssssissssss";
+    // Exactly 39 type specifiers matching 39 bound variables
+    $types = "sssssisiiisssssssssssssiiiissssssissssss";
     
     $scholar_stmt->bind_param(
         $types, 
@@ -272,11 +266,6 @@ if (isset($_POST['add'])) {
         $mother_middle_name, 
         $mother_contact,
         $permanent_address,
-        $street,
-        $barangay_name,
-        $town_city,
-        $province_name,
-        $region_name,
         $barangay_id,
         $city_id,
         $province_id,
