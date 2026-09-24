@@ -17,10 +17,14 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
         $mail->Username   = 'keithgabrielandales@gmail.com';
-        $mail->Password   = 'jsncwypnchefqvsy'; // Removed spaces for cleaner parsing
+        $mail->Password   = 'jsncwypnchefqvsy';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
         $mail->CharSet    = 'UTF-8';
+
+        // ========== TIMEOUT & CONNECTION SETTINGS ==========
+        $mail->Timeout       = 5; // Socket connection timeout in seconds
+        $mail->SMTPKeepAlive = false;
 
         // ========== XAMPP LOCALHOST SSL FIX ==========
         // Prevents OpenSSL certificate verification failures on Windows XAMPP

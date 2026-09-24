@@ -155,27 +155,21 @@ if (isset($_POST['add'])) {
     $lrn = trim($_POST['lrn'] ?? '');
     $four_ps_id = trim($_POST['four_ps_id'] ?? '');
     
-    // Fetch location names to build permanent_address string
+    // Fetch location names in a single query to build permanent_address string
+    $location_ids = array_filter([$region_id, $province_id, $city_id, $barangay_id]);
     $location_names = [];
-    if ($region_id > 0) {
-        $sql = "SELECT name FROM psgc WHERE id = $region_id";
-        $result = $conn->query($sql);
-        $location_names['region'] = $result->fetch_assoc()['name'] ?? '';
-    }
-    if ($province_id > 0) {
-        $sql = "SELECT name FROM psgc WHERE id = $province_id";
-        $result = $conn->query($sql);
-        $location_names['province'] = $result->fetch_assoc()['name'] ?? '';
-    }
-    if ($city_id > 0) {
-        $sql = "SELECT name FROM psgc WHERE id = $city_id";
-        $result = $conn->query($sql);
-        $location_names['city'] = $result->fetch_assoc()['name'] ?? '';
-    }
-    if ($barangay_id > 0) {
-        $sql = "SELECT name FROM psgc WHERE id = $barangay_id";
-        $result = $conn->query($sql);
-        $location_names['barangay'] = $result->fetch_assoc()['name'] ?? '';
+
+    if (!empty($location_ids)) {
+        $ids_string = implode(',', array_map('intval', $location_ids));
+        $psgc_sql = "SELECT id, name FROM psgc WHERE id IN ($ids_string)";
+        $psgc_res = $conn->query($psgc_sql);
+        
+        while ($row = $psgc_res->fetch_assoc()) {
+            if ($row['id'] == $region_id)   $location_names['region']   = $row['name'];
+            if ($row['id'] == $province_id) $location_names['province'] = $row['name'];
+            if ($row['id'] == $city_id)     $location_names['city']     = $row['name'];
+            if ($row['id'] == $barangay_id) $location_names['barangay'] = $row['name'];
+        }
     }
 
     $region_name   = $location_names['region']   ?? '';
@@ -286,7 +280,13 @@ if (isset($_POST['add'])) {
     );
     
     if ($scholar_stmt->execute()) {
-        sendAccountCreatedEmail($email, $first_name, $student_id);
+        // Safe execution in case of SMTP server failure or connection timeout
+        try {
+            sendAccountCreatedEmail($email, $first_name, $student_id);
+        } catch (Throwable $e) {
+            error_log("Email sending failed for student $student_id: " . $e->getMessage());
+        }
+
         $new_scholar_id = $conn->insert_id;
 
         // AUDIT TRAIL LOGGING
