@@ -157,6 +157,7 @@ if (isset($_POST['add'])) {
     
     // Fetch location names for address compilation
     $location_names = [];
+    $town_city = $location_names['city'] ?? trim($_POST['other_address2'] ?? $_POST['street'] ?? '');
     if ($region_id > 0) {
         $sql = "SELECT name FROM psgc WHERE id = $region_id";
         $result = $conn->query($sql);
@@ -191,52 +192,53 @@ if (isset($_POST['add'])) {
 
     // ─── INSERT QUERY (40 columns) ───
     $scholar_sql = "INSERT INTO scholar_info (
-                    student_id, 
-                    last_name, 
-                    given_name, 
-                    ext_name, 
-                    middle_name, 
-                    sex, 
-                    birthdate, 
-                    scholarship_program_id, 
-                    program_id, 
-                    year_level, 
-                    academic_status,
-                    loa_semester,
-                    loa_school_year,
-                    father_last_name, 
-                    father_given_name, 
-                    father_middle_name,
-                    father_contact, 
-                    mother_last_name, 
-                    mother_given_name, 
-                    mother_middle_name, 
-                    mother_contact,
-                    permanent_address,
-                    street, 
-                    barangay_id, 
-                    city_id, 
-                    province_id, 
-                    region_id, 
-                    country,
-                    zipcode, 
-                    disability, 
-                    contact_num, 
-                    email,
-                    ip_group,
-                    is_child_of_solo_parent,
-                    username,
-                    password,
-                    school_year,
-                    philsys_id,
-                    lrn,
-                    four_ps_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                student_id, 
+                last_name, 
+                given_name, 
+                ext_name, 
+                middle_name, 
+                sex, 
+                birthdate, 
+                scholarship_program_id, 
+                program_id, 
+                year_level, 
+                academic_status,
+                loa_semester,
+                loa_school_year,
+                father_last_name, 
+                father_given_name, 
+                father_middle_name,
+                father_contact, 
+                mother_last_name, 
+                mother_given_name, 
+                mother_middle_name, 
+                mother_contact,
+                permanent_address,
+                street, 
+                town_city,
+                barangay_id, 
+                city_id, 
+                province_id, 
+                region_id, 
+                country,
+                zipcode, 
+                disability, 
+                contact_num, 
+                email,
+                ip_group,
+                is_child_of_solo_parent,
+                username,
+                password,
+                school_year,
+                philsys_id,
+                lrn,
+                four_ps_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $scholar_stmt = $conn->prepare($scholar_sql);
     
     // Exactly 40 type specifiers matching 40 bound variables
-    $types = "sssssisiiisssssssssssssiiiissssssissssss";
+    $types = "sssssisiiissssssssssssssiiiissssssissssss";
     
     $scholar_stmt->bind_param(
         $types, 
@@ -263,6 +265,7 @@ if (isset($_POST['add'])) {
         $mother_contact,
         $permanent_address,
         $street,
+        $town_city,
         $barangay_id,
         $city_id,
         $province_id,
