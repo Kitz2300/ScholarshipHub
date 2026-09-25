@@ -138,18 +138,18 @@ $barangays_result = $stmt->get_result();
                             <div class="form-group">
                                 <label for="philsys_id">PHILSYS ID <span class="required">*</span></label>
                                 <input type="text" name="philsys_id" id="philsys_id" 
-                                    placeholder="e.g., 1234-5678-9012-3456" 
+                                    placeholder="e.g., 1234-5678-9012-3456" pattern="[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}"
                                     required>
                             </div>
                             <div class="form-group">
                                 <label for="lrn">LRN <span class="required">*</span></label>
-                                <input type="text" name="lrn" id="lrn" 
-                                    placeholder="e.g., 123456789021" 
+                                <input type="number" name="lrn" id="lrn" 
+                                    placeholder="e.g., 123456789021" pattern="[0-9]{12}"
                                     required>
                             </div>
                             <div class="form-group">
                                 <label for="four_ps_id">4P's ID</label>
-                                <input type="text" name="four_ps_id" id="four_ps_id" placeholder="e.g., 083740027-6222-00003">
+                                <input type="text" name="four_ps_id" id="four_ps_id" placeholder="e.g., 083740027-6222-00003" pattern="[A-Za-z0-9-]{17,21}">
                             </div>
                         </div>
 
