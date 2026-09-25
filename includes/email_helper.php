@@ -41,7 +41,7 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
 
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -59,6 +59,11 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
     // =========================================================================
     // METHOD 2: Direct PHPMailer SMTP (Fallback - for Localhost / XAMPP)
     // =========================================================================
+    
+    // CRITICAL: Prevent low-level socket stream_socket_client() from hanging for 30s
+    $original_socket_timeout = ini_get('default_socket_timeout');
+    ini_set('default_socket_timeout', 3);
+
     $mail = new PHPMailer(true);
 
     try {
@@ -69,6 +74,7 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
 
         if (empty($smtp_user) || empty($smtp_pass)) {
             error_log("SMTP Error: Credentials missing in environment variables.");
+            ini_set('default_socket_timeout', $original_socket_timeout);
             return false;
         }
 
@@ -86,7 +92,7 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         }
 
-        $mail->Timeout       = 5;
+        $mail->Timeout       = 3;
         $mail->SMTPKeepAlive = false;
 
         $mail->SMTPOptions = array(
@@ -104,9 +110,12 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
         $mail->Subject = $subject;
         $mail->Body    = $body;
 
-        return $mail->send();
+        $sent = $mail->send();
+        ini_set('default_socket_timeout', $original_socket_timeout);
+        return $sent;
     } catch (Exception $e) {
         error_log("PHPMailer Mail Error for $to_email: " . $mail->ErrorInfo);
+        ini_set('default_socket_timeout', $original_socket_timeout);
         return false;
     }
 }
