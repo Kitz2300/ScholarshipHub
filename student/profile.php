@@ -95,9 +95,22 @@ if ($row = $scholar_result->fetch_assoc()) {
     $province = $row['province'] ?? '';
     $country = $row['country'] ?? 'Philippines';
 
+    // ─── PROFILE PICTURE RESOLUTION (CLOUDINARY / LOCAL FALLBACK) ───
     $profile_pic = trim($row['profile_picture'] ?? '');
-    $pic_path = '../assets/images/profile_picture/' . $profile_pic;
-    $has_picture = (!empty($profile_pic) && file_exists(__DIR__ . '/../assets/images/profile_picture/' . $profile_pic));
+
+    if (!empty($profile_pic) && preg_match("~^https?://~i", $profile_pic)) {
+        // Stored as remote Cloudinary URL
+        $pic_path = $profile_pic;
+        $has_picture = true;
+    } elseif (!empty($profile_pic) && file_exists(__DIR__ . '/../assets/images/profile_picture/' . $profile_pic)) {
+        // Stored locally in assets directory
+        $pic_path = '../assets/images/profile_picture/' . $profile_pic . '?v=' . time();
+        $has_picture = true;
+    } else {
+        // Default avatar fallback
+        $pic_path = '';
+        $has_picture = false;
+    }
 
     $year_lvl = match ($year) {
         1 => "1st Year",
@@ -180,7 +193,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
             <div class="profile-hero-card">
                 <div class="avatar-wrapper" onclick="openPhotoModal()" title="Click to change photo">
                     <?php if ($has_picture): ?>
-                        <img src="<?= $pic_path ?>?v=<?= time() ?>" alt="Profile Picture" class="hero-avatar-img">
+                        <img src="<?= htmlspecialchars($pic_path) ?>" alt="Profile Picture" class="hero-avatar-img">
                     <?php else: ?>
                         <div class="hero-avatar"><?= $initials ?></div>
                     <?php endif; ?>
