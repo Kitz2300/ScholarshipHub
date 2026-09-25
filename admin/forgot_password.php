@@ -1,11 +1,11 @@
 <?php
-include '../includes/conn.php';
+include __DIR__ . '/../includes/conn.php';
 session_start();
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require '../lib/vendor/autoload.php';
+require '../vendor/autoload.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_otp'])) {
     $email = strtolower(trim($_POST['email']));
