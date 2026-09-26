@@ -354,7 +354,7 @@ while($c_row = $chart_res->fetch_assoc()) {
                     <!-- Scholar Avatar Header Banner -->
                     <div class="scholar-avatar-banner">
                         <?php if ($has_picture): ?>
-                            <img src="<?= htmlspecialchars($pic_path) ?>" alt="Profile Picture" class="scholar-avatar-img">
+                            <img src="<?= htmlspecialchars($pic_path) ?>" alt="Profile Picture" class="scholar-avatar-img" onclick="openImageLightbox('<?= htmlspecialchars($pic_path, ENT_QUOTES) ?>')" title="Click to view photo">
                         <?php else: ?>
                             <div class="scholar-avatar-initials">
                                 <?= htmlspecialchars($initials) ?>
@@ -743,6 +743,14 @@ while($c_row = $chart_res->fetch_assoc()) {
         </div>
     </div>
 
+    <!-- Image Lightbox Modal -->
+    <div id="imageLightboxModal" class="modal">
+        <div class="lightbox-modal-content">
+            <span class="lightbox-close" onclick="closeImageLightbox()">&times;</span>
+            <img id="lightboxImage" src="" alt="Enlarged Profile Picture">
+        </div>
+    </div>
+
     <!-- Modal for Adding Notes -->
     <div id="noteModal" class="modal">
         <div class="modal-content">
@@ -837,5 +845,30 @@ while($c_row = $chart_res->fetch_assoc()) {
             </div>
         </div>
     <?php endif; ?>
+
+    <script>
+    function openImageLightbox(src) {
+        const modal = document.getElementById('imageLightboxModal');
+        const img = document.getElementById('lightboxImage');
+        if (modal && img) {
+            img.src = src;
+            modal.classList.add('show');
+        }
+    }
+
+    function closeImageLightbox() {
+        const modal = document.getElementById('imageLightboxModal');
+        if (modal) {
+            modal.classList.remove('show');
+        }
+    }
+
+    window.addEventListener('click', function(event) {
+        const lightboxModal = document.getElementById('imageLightboxModal');
+        if (event.target === lightboxModal) {
+            closeImageLightbox();
+        }
+    });
+    </script>
 </body>
 </html>
