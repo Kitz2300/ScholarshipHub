@@ -2,6 +2,11 @@
 // includes/navigation.php
 $current_page = basename($_SERVER['PHP_SELF']);
 
+// Detect current folder context (/staff/ or /admin/)
+$is_in_staff_dir = (basename(dirname($_SERVER['PHP_SELF'])) === 'staff');
+$admin_path = $is_in_staff_dir ? '../admin/' : '';
+$staff_path = $is_in_staff_dir ? '' : '../staff/';
+
 // Dynamic subtitle fallback if not explicitly defined in the parent page
 $header_subtitle = isset($page_subtitle) ? $page_subtitle : 'Scholarship Management System';
 
@@ -12,7 +17,7 @@ $nav_has_pic = false;
 $nav_initials = 'A';
 
 if ($nav_user_id > 0 && isset($conn)) {
-    $nav_user_sql = "SELECT email, profile_picture FROM scholarship_users WHERE id = ?";
+    $nav_user_sql = "SELECT given_name, last_name, email, profile_picture FROM scholarship_users WHERE id = ?";
     $nav_user_stmt = $conn->prepare($nav_user_sql);
     if ($nav_user_stmt) {
         $nav_user_stmt->bind_param("i", $nav_user_id);
@@ -27,10 +32,18 @@ if ($nav_user_id > 0 && isset($conn)) {
             } elseif (!empty($raw_user_pic) && file_exists(__DIR__ . '/../assets/images/profile_picture/' . $raw_user_pic)) {
                 $nav_user_pic = '../assets/images/profile_picture/' . $raw_user_pic . '?v=' . time();
                 $nav_has_pic = true;
+            } elseif (!empty($raw_user_pic) && file_exists(__DIR__ . '/../uploads/profile_pics/' . $raw_user_pic)) {
+                $nav_user_pic = '../uploads/profile_pics/' . $raw_user_pic . '?v=' . time();
+                $nav_has_pic = true;
             }
 
-            $email_prefix = explode('@', $nav_u_row['email'])[0] ?? 'Admin';
-            $nav_initials = strtoupper(substr($email_prefix, 0, 2));
+            $nav_given = trim($nav_u_row['given_name'] ?? '');
+            $nav_last = trim($nav_u_row['last_name'] ?? '');
+            $nav_initials = strtoupper(substr($nav_given, 0, 1) . substr($nav_last, 0, 1));
+            
+            if (empty($nav_initials)) {
+                $nav_initials = 'A';
+            }
         }
         $nav_user_stmt->close();
     }
@@ -70,7 +83,7 @@ $announcement_pages = [
 
 $management_pages = array_merge(
     $announcement_pages, 
-    ['program_management.php', 'account_management.php', 'archive.php', 'audit_trail.php']
+    ['program_management.php', 'account_management.php', 'staff_account.php', 'archive.php', 'audit_trail.php']
 );
 ?>
 
@@ -88,10 +101,10 @@ $management_pages = array_merge(
         <div style="display: flex; align-items: center; gap: 10px;">
             <?php if ($nav_has_pic): ?>
                 <img src="<?= htmlspecialchars($nav_user_pic) ?>" alt="User Profile" 
-                     style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer;" 
-                     title="User Profile">
+                    style="width: 49px; height: 49px; border-radius: 50%; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" 
+                    title="User Profile">
             <?php else: ?>
-                <div style="width: 42px; height: 42px; border-radius: 50%; background: #2a6b37; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                <div style="width: 49px; height: 49px; border-radius: 50%; background: #2a6b37; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
                     <?= htmlspecialchars($nav_initials) ?>
                 </div>
             <?php endif; ?>
@@ -109,34 +122,34 @@ $management_pages = array_merge(
     <ul>
         <!-- Dashboard -->
         <li>
-            <a href="dashboard.php" class="<?= isActive('dashboard.php', $current_page) ?>">Dashboard</a>
+            <a href="<?= $admin_path ?>dashboard.php" class="<?= isActive('dashboard.php', $current_page) ?>">Dashboard</a>
         </li>
 
         <!-- Scholar List -->
         <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholars')) : ?>
             <li>
-                <a href="scholar_list.php" class="<?= isActive($scholar_pages, $current_page) ?>">Scholar List</a>
+                <a href="<?= $admin_path ?>scholar_list.php" class="<?= isActive($scholar_pages, $current_page) ?>">Scholar List</a>
             </li>
         <?php endif; ?>
 
         <!-- Scholarship Programs -->
         <?php if(canAccessPage($conn, $_SESSION['user_id'], 'scholarship_programs')) : ?>
             <li>
-                <a href="scholarship_program.php" class="<?= isActive($program_pages, $current_page) ?>">Scholarship Programs</a>
+                <a href="<?= $admin_path ?>scholarship_program.php" class="<?= isActive($program_pages, $current_page) ?>">Scholarship Programs</a>
             </li>
         <?php endif; ?>
 
         <!-- Import Scholar Records -->
         <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'import')) : ?>
             <li>
-                <a href="upload_excel.php" class="<?= isActive('upload_excel.php', $current_page) ?>">Import Scholar Records</a>
+                <a href="<?= $admin_path ?>upload_excel.php" class="<?= isActive('upload_excel.php', $current_page) ?>">Import Scholar Records</a>
             </li>
         <?php endif; ?>
 
         <!-- Export Scholar Records -->
         <?php if(hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) : ?>
             <li>
-                <a href="export_scholars.php" class="<?= isActive('export_scholars.php', $current_page) ?>">Export Scholar Records</a>
+                <a href="<?= $admin_path ?>export_scholars.php" class="<?= isActive('export_scholars.php', $current_page) ?>">Export Scholar Records</a>
             </li>
         <?php endif; ?>
 
@@ -144,7 +157,8 @@ $management_pages = array_merge(
         <?php 
         $can_see_management = canAccessPage($conn, $_SESSION['user_id'], 'announcements') || 
                               canAccessPage($conn, $_SESSION['user_id'], 'program_management') || 
-                              ($_SESSION['role'] ?? '') === 'admin';
+                              ($_SESSION['role'] ?? '') === 'admin' ||
+                              ($_SESSION['role'] ?? '') === 'staff';
         if($can_see_management) : 
         ?>
             <li class="dropdown">
@@ -155,35 +169,42 @@ $management_pages = array_merge(
                     <!-- Announcements -->
                     <?php if(canAccessPage($conn, $_SESSION['user_id'], 'announcements')) : ?>
                         <li>
-                            <a href="announcements.php" class="<?= isActive($announcement_pages, $current_page) ?>">Announcements</a>
+                            <a href="<?= $admin_path ?>announcements.php" class="<?= isActive($announcement_pages, $current_page) ?>">Announcements</a>
                         </li>
                     <?php endif; ?>
 
                     <!-- Program & College Management -->
                     <?php if(canAccessPage($conn, $_SESSION['user_id'], 'program_management')) : ?>
                         <li>
-                            <a href="program_management.php" class="<?= isActive('program_management.php', $current_page) ?>">Programs & Colleges</a>
+                            <a href="<?= $admin_path ?>program_management.php" class="<?= isActive('program_management.php', $current_page) ?>">Programs & Colleges</a>
                         </li>
                     <?php endif; ?>
 
-                    <!-- Account Management -->
+                    <!-- Admin Account Management -->
                     <?php if(($_SESSION['role'] ?? '') === 'admin') : ?>
                         <li>
-                            <a href="account_management.php" class="<?= isActive('account_management.php', $current_page) ?>">Accounts</a>
+                            <a href="<?= $admin_path ?>account_management.php" class="<?= isActive('account_management.php', $current_page) ?>">Accounts</a>
+                        </li>
+                    <?php endif; ?>
+
+                    <!-- Staff My Account -->
+                    <?php if(($_SESSION['role'] ?? '') === 'staff') : ?>
+                        <li>
+                            <a href="<?= $staff_path ?>staff_account.php" class="<?= isActive('staff_account.php', $current_page) ?>">My Account</a>
                         </li>
                     <?php endif; ?>
 
                     <!-- Archives -->
                     <?php if(($_SESSION['role'] ?? '') === 'admin') : ?>
                         <li>
-                            <a href="archive.php" class="<?= isActive('archive.php', $current_page) ?>">Archives</a>
+                            <a href="<?= $admin_path ?>archive.php" class="<?= isActive('archive.php', $current_page) ?>">Archives</a>
                         </li>
                     <?php endif; ?>
 
                     <!-- Audit Trail -->
                     <?php if(($_SESSION['role'] ?? '') === 'admin') : ?>
                         <li>
-                            <a href="audit_trail.php" class="<?= isActive('audit_trail.php', $current_page) ?>">Audit Trail</a>
+                            <a href="<?= $admin_path ?>audit_trail.php" class="<?= isActive('audit_trail.php', $current_page) ?>">Audit Trail</a>
                         </li>
                     <?php endif; ?>
                 </ul>
