@@ -86,22 +86,6 @@ if($scholarship_name_stmt->execute()) {
         exit();    
     else : ?>
         <div class="container">
-            <!-- Header -->
-            <div class="header">
-                <div class="header-left">
-                    <img src="../assets/images/PIT%20LOGO.png" alt="PIT Logo">
-                    <div>
-                        <h1>PIT ScholarshipHub</h1>
-                        <p><?= htmlspecialchars($scholarship_name) ?> Scholar List</p>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <span class="welcome-text">Welcome, Admin!</span>
-                    <form action="../functions/logout.php" method="post" style="display: inline;">
-                        <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to logout?', 'Logout', true)">Logout</button>
-                    </form>
-                </div>
-            </div>
 
             <?php include __DIR__ . "/../includes/navigation.php"; ?>
 

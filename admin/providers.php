@@ -71,22 +71,6 @@ $providers_result = $providers_stmt->get_result();
     <?php include __DIR__ . '/../includes/modal_alerts.php'; ?>
 
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="header-left">
-                <img src="../assets/images/PIT%20LOGO.png" alt="PIT Logo">
-                <div>
-                    <h1>PIT ScholarshipHub</h1>
-                    <p>Scholarship Providers</p>
-                </div>
-            </div>
-            <div class="header-right">
-                <span class="welcome-text">Welcome, <?= $_SESSION['role'] === 'admin' ? 'Admin!' : 'Staff!' ?></span>
-                <form action="../functions/logout.php" method="post" style="display: inline;">
-                    <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to log out?', 'Logout', 'danger')">Logout</button>
-                </form>
-            </div>
-        </div>
 
         <?php include __DIR__ . "/../includes/navigation.php"; ?>
 

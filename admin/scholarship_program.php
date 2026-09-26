@@ -95,22 +95,6 @@ $scholarships_result = $scholarships_stmt->get_result();
         exit();    
     else : ?>
         <div class="container">
-            <!-- Header -->
-            <div class="header">
-                <div class="header-left">
-                    <img src="../assets/images/PIT%20LOGO.png" alt="PIT Logo">
-                    <div>
-                        <h1>PIT ScholarshipHub</h1>
-                        <p>Scholarship Programs</p>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <span class="welcome-text">Welcome, Admin!</span>
-                    <form action="../functions/logout.php" method="post" style="display: inline;">
-                        <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to log out?', 'Logout', 'danger')">Logout</button>
-                    </form>
-                </div>
-            </div>
 
             <?php include __DIR__ . "/../includes/navigation.php"; ?>
 
