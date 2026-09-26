@@ -1,6 +1,40 @@
 <?php
-// includes/navbar.php
+// includes/navigation.php
 $current_page = basename($_SERVER['PHP_SELF']);
+
+// Dynamic subtitle fallback if not explicitly defined in the parent page
+$header_subtitle = isset($page_subtitle) ? $page_subtitle : 'Scholarship Management System';
+
+// Fetch current logged-in user profile picture & details
+$nav_user_id = $_SESSION['user_id'] ?? 0;
+$nav_user_pic = '';
+$nav_has_pic = false;
+$nav_initials = 'A';
+
+if ($nav_user_id > 0 && isset($conn)) {
+    $nav_user_sql = "SELECT email, profile_picture FROM scholarship_users WHERE id = ?";
+    $nav_user_stmt = $conn->prepare($nav_user_sql);
+    if ($nav_user_stmt) {
+        $nav_user_stmt->bind_param("i", $nav_user_id);
+        $nav_user_stmt->execute();
+        $nav_user_res = $nav_user_stmt->get_result();
+        if ($nav_u_row = $nav_user_res->fetch_assoc()) {
+            $raw_user_pic = trim($nav_u_row['profile_picture'] ?? '');
+
+            if (!empty($raw_user_pic) && preg_match("~^https?://~i", $raw_user_pic)) {
+                $nav_user_pic = $raw_user_pic;
+                $nav_has_pic = true;
+            } elseif (!empty($raw_user_pic) && file_exists(__DIR__ . '/../assets/images/profile_picture/' . $raw_user_pic)) {
+                $nav_user_pic = '../assets/images/profile_picture/' . $raw_user_pic . '?v=' . time();
+                $nav_has_pic = true;
+            }
+
+            $email_prefix = explode('@', $nav_u_row['email'])[0] ?? 'Admin';
+            $nav_initials = strtoupper(substr($email_prefix, 0, 2));
+        }
+        $nav_user_stmt->close();
+    }
+}
 
 // Helper function to match exact script or arrays of related sub-pages
 function isActive($pages, $current_page) {
@@ -40,6 +74,37 @@ $management_pages = array_merge(
 );
 ?>
 
+<!-- Integrated Header -->
+<div class="header">
+    <div class="header-left">
+        <img src="../assets/images/PIT%20LOGO.png" alt="PIT Logo">
+        <div>
+            <h1>PIT ScholarshipHub</h1>
+            <p><?= htmlspecialchars($header_subtitle) ?></p>
+        </div>
+    </div>
+    <div class="header-right">
+        <!-- Logged-in Admin/Staff Profile Avatar -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <?php if ($nav_has_pic): ?>
+                <img src="<?= htmlspecialchars($nav_user_pic) ?>" alt="User Profile" 
+                     style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer;" 
+                     title="User Profile">
+            <?php else: ?>
+                <div style="width: 42px; height: 42px; border-radius: 50%; background: #2a6b37; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                    <?= htmlspecialchars($nav_initials) ?>
+                </div>
+            <?php endif; ?>
+            <span class="welcome-text">Welcome, <?= ($_SESSION['role'] ?? '') === 'admin' ? 'Admin!' : 'Staff!' ?></span>
+        </div>
+
+        <form action="../functions/logout.php" method="post" style="display: inline;">
+            <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to log out?', 'Logout', true)">Logout</button>
+        </form>
+    </div>
+</div>
+
+<!-- Navigation Bar -->
 <nav class="nav-bar">
     <ul>
         <!-- Dashboard -->
@@ -79,7 +144,7 @@ $management_pages = array_merge(
         <?php 
         $can_see_management = canAccessPage($conn, $_SESSION['user_id'], 'announcements') || 
                               canAccessPage($conn, $_SESSION['user_id'], 'program_management') || 
-                              $_SESSION['role'] === 'admin';
+                              ($_SESSION['role'] ?? '') === 'admin';
         if($can_see_management) : 
         ?>
             <li class="dropdown">
@@ -102,21 +167,21 @@ $management_pages = array_merge(
                     <?php endif; ?>
 
                     <!-- Account Management -->
-                    <?php if($_SESSION['role'] === 'admin') : ?>
+                    <?php if(($_SESSION['role'] ?? '') === 'admin') : ?>
                         <li>
                             <a href="account_management.php" class="<?= isActive('account_management.php', $current_page) ?>">Accounts</a>
                         </li>
                     <?php endif; ?>
 
                     <!-- Archives -->
-                    <?php if($_SESSION['role'] === 'admin') : ?>
+                    <?php if(($_SESSION['role'] ?? '') === 'admin') : ?>
                         <li>
                             <a href="archive.php" class="<?= isActive('archive.php', $current_page) ?>">Archives</a>
                         </li>
                     <?php endif; ?>
 
                     <!-- Audit Trail -->
-                    <?php if($_SESSION['role'] === 'admin') : ?>
+                    <?php if(($_SESSION['role'] ?? '') === 'admin') : ?>
                         <li>
                             <a href="audit_trail.php" class="<?= isActive('audit_trail.php', $current_page) ?>">Audit Trail</a>
                         </li>
