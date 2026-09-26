@@ -352,17 +352,17 @@ while($c_row = $chart_res->fetch_assoc()) {
                 <!-- Personal Information -->
                 <div class="profile-card">
                     <!-- Scholar Avatar Header Banner -->
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 15px;">
+                    <div class="scholar-avatar-banner">
                         <?php if ($has_picture): ?>
-                            <img src="<?= htmlspecialchars($pic_path) ?>" alt="Profile Picture" style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; border: 3px solid #1e4628;">
+                            <img src="<?= htmlspecialchars($pic_path) ?>" alt="Profile Picture" class="scholar-avatar-img">
                         <?php else: ?>
-                            <div style="width: 75px; height: 75px; border-radius: 50%; background: #1e4628; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold; border: 3px solid #1e4628;">
+                            <div class="scholar-avatar-initials">
                                 <?= htmlspecialchars($initials) ?>
                             </div>
                         <?php endif; ?>
-                        <div>
-                            <h3 style="margin: 0; border: none; padding: 0; font-size: 18px; color: #1e4628;"><?= htmlspecialchars("$given_name $middle_name $last_name $ext_name") ?></h3>
-                            <span style="color: #666; font-size: 13px;">Student ID: <?= htmlspecialchars($id_num) ?></span>
+                        <div class="scholar-avatar-details">
+                            <h3 class="scholar-avatar-name"><?= htmlspecialchars("$given_name $middle_name $last_name $ext_name") ?></h3>
+                            <span class="scholar-avatar-sub">Student ID: <?= htmlspecialchars($id_num) ?></span>
                         </div>
                     </div>
 
@@ -494,15 +494,15 @@ while($c_row = $chart_res->fetch_assoc()) {
 
                 <!-- Combined Academic Performance & Progress Profile Card -->
                 <div class="profile-card">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h3 style="margin: 0;">Academic Performance & Progress</h3>
+                    <div class="card-header acad-card-header">
+                        <h3>Academic Performance & Progress</h3>
                         <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
                             <button type="button" class="btn btn-sm btn-primary" onclick="openAddAcadModal()">+ Add Record</button>
                         <?php endif; ?>
                     </div>
 
                     <!-- GWA Trend Line Chart -->
-                    <div style="position: relative; height: 220px; width: 100%; margin-bottom: 20px;">
+                    <div class="chart-container">
                         <?php if(!empty($chart_gwa)) : ?>
                             <canvas id="gwaProgressChart" 
                                 data-labels='<?= json_encode($chart_labels, JSON_HEX_APOS | JSON_HEX_QUOT) ?>'
@@ -514,7 +514,7 @@ while($c_row = $chart_res->fetch_assoc()) {
                         <?php endif; ?>
                     </div>
 
-                    <h4 style="border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 6px; margin-bottom: 12px; font-size: 15px;">Historical Records</h4>
+                    <h4 class="sub-section-title">Historical Records</h4>
 
                     <!-- Academic Performance Table -->
                     <div class="academic-table-wrapper">
@@ -556,11 +556,11 @@ while($c_row = $chart_res->fetch_assoc()) {
                                                 <?= htmlspecialchars($acad_row['gwa']) ?>
                                                 <?php if($gwa_req > 0) : ?>
                                                     <?php if((float)$acad_row['gwa'] > $gwa_req) : ?>
-                                                        <span style="color: #dc3545; font-size: 11px; font-weight: bold; display: block;">
+                                                        <span class="req-unmet-label">
                                                             (Req: <?= htmlspecialchars($gwa_req) ?> - Not Met)
                                                         </span>
                                                     <?php else : ?>
-                                                        <span style="color: #28a745; font-size: 11px; display: block;">
+                                                        <span class="req-met-label">
                                                             (Req: <?= htmlspecialchars($gwa_req) ?> - Met)
                                                         </span>
                                                     <?php endif; ?>
@@ -675,7 +675,7 @@ while($c_row = $chart_res->fetch_assoc()) {
                                 <?php if(!empty($father_last) && !empty($father_given)) : ?>
                                     <span class="info-value"><?= htmlspecialchars($father_last) ?>, <?= htmlspecialchars($father_given) ?> <?= htmlspecialchars($father_middle) ?></span>
                                 <?php else : ?>
-                                    <span class="info-value" style="color: red;">Not Provided</span>
+                                    <span class="info-value missing-data">Not Provided</span>
                                 <?php endif; ?>
                             </div>
                             <div class="info-row">
@@ -691,7 +691,7 @@ while($c_row = $chart_res->fetch_assoc()) {
                                 <?php if(!empty($mother_last) && !empty($mother_given)) : ?>
                                     <span class="info-value"><?= htmlspecialchars($mother_last) ?>, <?= htmlspecialchars($mother_given) ?> <?= htmlspecialchars($mother_middle) ?></span>
                                 <?php else : ?>
-                                    <span class="info-value" style="color: red;">Not Provided</span>
+                                    <span class="info-value missing-data">Not Provided</span>
                                 <?php endif; ?>
                             </div>
                             <div class="info-row">
