@@ -131,11 +131,99 @@ body::before {
 /* Page Content */
 .page-content { background: rgba(255,255,255,0.4); padding: 25px; flex: 1; }
 .page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid rgba(0,0,0,0.08); }
-.page-header h2 { color: #1e4628; font-size: 22px; }
+.page-header h2 { color: #1e4628; font-size: 22px; margin: 0; }
+
+/* Current Admin User Profile Card */
+.current-user-card {
+    background: linear-gradient(135deg, rgba(30, 70, 40, 0.95) 0%, rgba(42, 107, 55, 0.95) 100%);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 22px 25px;
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.current-user-main {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.current-user-avatar-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.current-user-avatar-img:hover {
+    transform: scale(1.05);
+}
+
+.current-user-avatar-initials {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 26px;
+    border: 3px solid #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.current-user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.current-user-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.current-user-name {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ffffff;
+    margin: 0;
+}
+
+.current-user-meta {
+    display: flex;
+    gap: 20px;
+    font-size: 15px;
+    opacity: 0.95;
+    flex-wrap: wrap;
+}
+
+.current-user-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
 
 /* Section Card */
 .section-card { background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-.section-card h3 { color: #1e4628; font-size: 17px; border-bottom: 2px solid #2a6b37; padding-bottom: 10px; margin-bottom: 15px; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #2a6b37; padding-bottom: 10px; }
+.section-card h3 { color: #1e4628; font-size: 17px; margin: 0; border: none; padding: 0; }
 
 /* Buttons */
 .btn { display: inline-block; padding: 8px 16px; border: none; border-radius: 4px; text-decoration: none; font-size: 16px; cursor: pointer; transition: background 0.3s, transform 0.2s; color: #fff; }
@@ -164,6 +252,101 @@ table tbody tr:nth-child(even) { background: rgba(255,255,255,0.4); }
 table tbody tr:hover { background: rgba(0,0,0,0.05); }
 .action-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
 .no-data { text-align: center; color: #666; padding: 20px; }
+
+/* User Table Photo Column */
+.col-photo { width: 75px; text-align: center; }
+.col-photo-cell { width: 75px; text-align: center; }
+
+.user-table-avatar-img {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid #2a6b37;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.18);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.user-table-avatar-img:hover {
+    transform: scale(1.08);
+    opacity: 0.92;
+}
+
+.user-table-avatar-initials {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #2a6b37;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    border: 2px solid #1e4628;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.18);
+    margin: 0 auto;
+}
+
+.full-access-text {
+    color: #2a6b37;
+    font-weight: bold;
+}
+
+/* Image Lightbox Modal */
+.lightbox-modal-content {
+    position: relative;
+    margin: auto;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-modal-content img {
+    max-width: 85vw;
+    max-height: 80vh;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    object-fit: contain;
+    border: 3px solid #ffffff;
+    background: #000000;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    color: #ffffff;
+    font-size: 36px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.lightbox-close:hover {
+    color: #f39c12;
+}
+
+/* Edit Modal Avatar Upload Styling */
+.edit-avatar-preview-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 12px 0 15px 0;
+}
+
+.edit-avatar-preview-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #2a6b37;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+}
 
 /* Permissions Table */
 .permissions-grid { overflow-x: auto; margin-top: 8px; }
@@ -217,6 +400,14 @@ table tbody tr:hover { background: rgba(0,0,0,0.05); }
 .form-group select:focus { border-color: #1e4628; outline: none; box-shadow: 0 0 0 3px rgba(26,59,34,0.15); }
 .form-group .help-text { display: block; margin-top: 6px; font-size: 14px; color: #666; }
 
+.info-message-admin {
+    background: #d4edda;
+    padding: 12px 15px;
+    border-radius: 4px;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
 .form-actions { display: flex; gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.05); }
 .form-actions .btn { padding: 10px 24px; font-size: 14px; }
 
@@ -238,6 +429,25 @@ table tbody tr:hover { background: rgba(0,0,0,0.05); }
     .permissions-table th,
     .permissions-table td { padding: 6px 8px; }
     .action-checkboxes { gap: 8px; }
+
+    .current-user-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    .current-user-main {
+        flex-direction: column;
+        justify-content: center;
+    }
+    .current-user-title-row {
+        justify-content: center;
+    }
+    .current-user-meta {
+        justify-content: center;
+    }
+    .current-user-actions {
+        justify-content: center;
+        width: 100%;
+    }
 }
 
 @media (max-width: 480px) {

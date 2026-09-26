@@ -10,6 +10,48 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
+$current_user_id = (int) $_SESSION['user_id'];
+
+// ─── HELPER FUNCTION FOR USER AVATARS ───
+function getUserAvatar($user_row) {
+    $profile_pic = trim($user_row['profile_picture'] ?? '');
+    $given_name = trim($user_row['given_name'] ?? '');
+    $last_name = trim($user_row['last_name'] ?? '');
+    
+    $pic_path = '';
+    $has_picture = false;
+
+    if (!empty($profile_pic) && preg_match("~^https?://~i", $profile_pic)) {
+        // Stored as remote Cloudinary URL
+        $pic_path = $profile_pic;
+        $has_picture = true;
+    } elseif (!empty($profile_pic) && file_exists(__DIR__ . '/../assets/images/profile_picture/' . $profile_pic)) {
+        // Stored locally in assets directory
+        $pic_path = '../assets/images/profile_picture/' . $profile_pic . '?v=' . time();
+        $has_picture = true;
+    }
+
+    $initials = strtoupper(substr($given_name, 0, 1) . substr($last_name, 0, 1));
+    if (empty($initials)) {
+        $initials = 'U';
+    }
+
+    return [
+        'has_picture' => $has_picture,
+        'pic_path' => $pic_path,
+        'initials' => $initials
+    ];
+}
+
+// ─── FETCH CURRENT LOGGED-IN ADMIN ───
+$curr_user_sql = "SELECT id, username, role, given_name, middle_name, last_name, email, permissions, profile_picture FROM scholarship_users WHERE id = ?";
+$curr_stmt = $conn->prepare($curr_user_sql);
+$curr_stmt->bind_param("i", $current_user_id);
+$curr_stmt->execute();
+$curr_user = $curr_stmt->get_result()->fetch_assoc();
+$curr_avatar = $curr_user ? getUserAvatar($curr_user) : null;
+$curr_stmt->close();
+
 // ─── ADD ACCOUNT (Staff or Admin) ───
 if(isset($_POST['add_staff'])) {
     $username = trim($_POST['username']);
@@ -51,7 +93,7 @@ if(isset($_POST['add_staff'])) {
     exit();
 }
 
-// ─── EDIT STAFF ───
+// ─── EDIT STAFF / ADMIN ───
 if(isset($_POST['edit_staff'])) {
     $user_id = (int) $_POST['user_id'];
     $username = trim($_POST['username']);
@@ -82,6 +124,45 @@ if(isset($_POST['edit_staff'])) {
         $stmt->bind_param("sssssssi", $username, $role, $given_name, $middle_name, $last_name, $email, $permissions_json, $user_id);
         if($stmt->execute()) {
             $_SESSION['success'] = "Account updated successfully.";
+
+            // ─── PROFILE PICTURE UPLOAD FOR LOGGED IN USER ONLY ───
+            if ($user_id === $current_user_id && isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES['profile_picture'];
+                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+
+                if (in_array($ext, $allowed) && $file['size'] <= 2 * 1024 * 1024) {
+                    // Fetch existing photo to remove old disk file
+                    $old_stmt = $conn->prepare("SELECT profile_picture FROM scholarship_users WHERE id = ?");
+                    $old_stmt->bind_param("i", $user_id);
+                    $old_stmt->execute();
+                    $old_row = $old_stmt->get_result()->fetch_assoc();
+                    $old_pic = trim($old_row['profile_picture'] ?? '');
+                    $old_stmt->close();
+
+                    if (!empty($old_pic) && !preg_match("~^https?://~i", $old_pic)) {
+                        $old_file_path = __DIR__ . '/../assets/images/profile_picture/' . $old_pic;
+                        if (file_exists($old_file_path)) {
+                            @unlink($old_file_path);
+                        }
+                    }
+
+                    $new_filename = 'user_' . $user_id . '_' . time() . '.' . $ext;
+                    $upload_dir = __DIR__ . '/../assets/images/profile_picture/';
+                    if (!is_dir($upload_dir)) {
+                        mkdir($upload_dir, 0777, true);
+                    }
+
+                    if (move_uploaded_file($file['tmp_name'], $upload_dir . $new_filename)) {
+                        $pic_stmt = $conn->prepare("UPDATE scholarship_users SET profile_picture = ? WHERE id = ?");
+                        $pic_stmt->bind_param("si", $new_filename, $user_id);
+                        $pic_stmt->execute();
+                        $pic_stmt->close();
+                    }
+                } else {
+                    $_SESSION['fail'] = "Account details updated, but picture was rejected (Max 2MB, JPG/PNG/WebP).";
+                }
+            }
         } else {
             $_SESSION['fail'] = "Failed to update account: " . $conn->error;
         }
@@ -105,7 +186,7 @@ if(isset($_POST['change_password'])) {
         $target_user = $check_stmt->get_result()->fetch_assoc();
         $check_stmt->close();
 
-        if ($target_user && $target_user['role'] === 'admin' && $user_id !== (int)$_SESSION['user_id']) {
+        if ($target_user && $target_user['role'] === 'admin' && $user_id !== $current_user_id) {
             $_SESSION['fail'] = "You cannot change the password of another admin account.";
         } else {
             $hashed = password_hash($new_password, PASSWORD_DEFAULT);
@@ -126,18 +207,19 @@ if(isset($_POST['change_password'])) {
     exit();
 }
 
-// ─── DELETE STAFF ───
+// ─── DELETE ACCOUNT ───
 if(isset($_POST['delete_staff'])) {
     $user_id = (int) $_POST['user_id'];
-    if($user_id > 0 && $user_id != $_SESSION['user_id']) {
+    if($user_id > 0 && $user_id !== $current_user_id) {
         $sql = "DELETE FROM scholarship_users WHERE id = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $user_id);
         if($stmt->execute()) {
-            $_SESSION['success'] = "Staff account deleted successfully.";
+            $_SESSION['success'] = "Account deleted successfully.";
         } else {
-            $_SESSION['fail'] = "Failed to delete staff account.";
+            $_SESSION['fail'] = "Failed to delete account.";
         }
+        $stmt->close();
     } else {
         $_SESSION['fail'] = "Cannot delete your own account or invalid ID.";
     }
@@ -145,12 +227,15 @@ if(isset($_POST['delete_staff'])) {
     exit();
 }
 
-// ─── FETCH ADMIN USERS ───
-$admin_sql = "SELECT id, username, role, given_name, middle_name, last_name, email, permissions FROM scholarship_users WHERE role = 'admin' ORDER BY last_name ASC, given_name ASC";
-$admin_result = $conn->query($admin_sql);
+// ─── FETCH OTHER ADMIN USERS (EXCLUDING LOGGED IN ADMIN) ───
+$admin_sql = "SELECT id, username, role, given_name, middle_name, last_name, email, permissions, profile_picture FROM scholarship_users WHERE role = 'admin' AND id != ? ORDER BY last_name ASC, given_name ASC";
+$admin_stmt = $conn->prepare($admin_sql);
+$admin_stmt->bind_param("i", $current_user_id);
+$admin_stmt->execute();
+$admin_result = $admin_stmt->get_result();
 
 // ─── FETCH STAFF USERS ───
-$staff_sql = "SELECT id, username, role, given_name, middle_name, last_name, permissions FROM scholarship_users WHERE role = 'staff' ORDER BY last_name ASC, given_name ASC";
+$staff_sql = "SELECT id, username, role, given_name, middle_name, last_name, permissions, profile_picture FROM scholarship_users WHERE role = 'staff' ORDER BY last_name ASC, given_name ASC";
 $staff_result = $conn->query($staff_sql);
 ?>
 <!DOCTYPE html>
@@ -165,43 +250,61 @@ $staff_result = $conn->query($staff_sql);
     <!-- alert messages -->
     <?php include __DIR__ . '/../includes/modal_alerts.php'; ?>
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="header-left">
-                <img src="../assets/images/PIT%20LOGO.png" alt="PIT Logo">
-                <div>
-                    <h1>PIT ScholarshipHub</h1>
-                    <p>Account Management</p>
-                </div>
-            </div>
-            <div class="header-right">
-                <span class="welcome-text">Welcome, Admin!</span>
-                <form action="../functions/logout.php" method="post">
-                    <button type="submit" class="logout-btn" onclick="return confirmAction(event, 'Are you sure you want to logout?', 'Logout', true)">Logout</button>
-                </form>
-            </div>
-        </div>
-
         <?php include __DIR__ . "/../includes/navigation.php"; ?>
 
         <!-- Page Content -->
         <div class="page-content">
             <!-- Page Header with inline Add button -->
-            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-                <h2 style="margin: 0;">Account Management</h2>
+            <div class="page-header">
+                <h2>Account Management</h2>
                 <button type="button" class="btn btn-success" onclick="openAddModal()">Add Account</button>
             </div>
 
-            <!-- ========== ADMIN ACCOUNTS ========== -->
+            <!-- ========== CURRENT ADMIN PROFILE CARD ========== -->
+            <?php if ($curr_user) : ?>
+                <div class="current-user-card">
+                    <div class="current-user-main">
+                        <div class="current-user-avatar">
+                            <?php if ($curr_avatar['has_picture']) : ?>
+                                <img src="<?= htmlspecialchars($curr_avatar['pic_path']) ?>" alt="My Profile Photo" 
+                                     class="current-user-avatar-img"
+                                     onclick="openImageLightbox('<?= htmlspecialchars($curr_avatar['pic_path'], ENT_QUOTES) ?>')" 
+                                     title="Click to view photo">
+                            <?php else : ?>
+                                <div class="current-user-avatar-initials">
+                                    <?= htmlspecialchars($curr_avatar['initials']) ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="current-user-details">
+                            <div class="current-user-title-row">
+                                <h3 class="current-user-name"><?= htmlspecialchars($curr_user['given_name'] . ' ' . $curr_user['middle_name'] . ' ' . $curr_user['last_name']) ?></h3>
+                                <span class="badge badge-admin">Admin (You)</span>
+                            </div>
+                            <div class="current-user-meta">
+                                <span><strong>Username:</strong> <?= htmlspecialchars($curr_user['username']) ?></span>
+                                <span><strong>Email:</strong> <?= htmlspecialchars($curr_user['email'] ?? 'N/A') ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="current-user-actions">
+                        <button class="btn btn-warning" onclick="openEditModal(<?= $curr_user['id'] ?>, '<?= htmlspecialchars($curr_user['username'], ENT_QUOTES) ?>', '<?= htmlspecialchars($curr_user['role'], ENT_QUOTES) ?>', '<?= htmlspecialchars($curr_user['given_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($curr_user['middle_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($curr_user['last_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($curr_user['email'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($curr_user['permissions'], ENT_QUOTES) ?>', true)">Edit Account</button>
+                        <button class="btn btn-secondary" onclick="openPasswordModal(<?= $curr_user['id'] ?>)">Change Password</button>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- ========== OTHER ADMIN ACCOUNTS ========== -->
             <div class="section-card">
-                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #2a6b37; padding-bottom: 10px;">
-                    <h3 style="margin: 0; border: none; padding: 0;">Admin Accounts</h3>
+                <div class="section-header">
+                    <h3>Other Admin Accounts</h3>
                 </div>
 
                 <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
+                                <th class="col-photo">Photo</th>
                                 <th>Name</th>
                                 <th>Username</th>
                                 <th>Email</th>
@@ -213,34 +316,42 @@ $staff_result = $conn->query($staff_sql);
                         <tbody>
                             <?php if($admin_result->num_rows > 0) : ?>
                                 <?php while($admin = $admin_result->fetch_assoc()) : 
-                                    $is_current_user = ($admin['id'] == $_SESSION['user_id']);
+                                    $avatar = getUserAvatar($admin);
                                 ?>
                                     <tr>
+                                        <td class="col-photo-cell">
+                                            <?php if ($avatar['has_picture']) : ?>
+                                                <img src="<?= htmlspecialchars($avatar['pic_path']) ?>" alt="User Photo" 
+                                                     class="user-table-avatar-img"
+                                                     onclick="openImageLightbox('<?= htmlspecialchars($avatar['pic_path'], ENT_QUOTES) ?>')" 
+                                                     title="Click to view photo">
+                                            <?php else : ?>
+                                                <div class="user-table-avatar-initials">
+                                                    <?= htmlspecialchars($avatar['initials']) ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><?= htmlspecialchars($admin['last_name']) ?>, <?= htmlspecialchars($admin['given_name']) ?> <?= htmlspecialchars($admin['middle_name']) ?></td>
                                         <td><?= htmlspecialchars($admin['username']) ?></td>
                                         <td><?= htmlspecialchars($admin['email'] ?? 'N/A') ?></td>
                                         <td><?= htmlspecialchars(ucfirst($admin['role'])) ?></td>
-                                        <td class="perm-summary" style="color: #2a6b37; font-weight: bold;">
+                                        <td class="perm-summary full-access-text">
                                             Full Access
                                         </td>
                                         <td>
                                             <div class="action-buttons">
-                                                <button class="btn-sm btn-edit" onclick="openEditModal(<?= $admin['id'] ?>, '<?= htmlspecialchars($admin['username']) ?>', '<?= htmlspecialchars($admin['role']) ?>', '<?= htmlspecialchars($admin['given_name']) ?>', '<?= htmlspecialchars($admin['middle_name']) ?>', '<?= htmlspecialchars($admin['last_name']) ?>', '<?= htmlspecialchars($admin['email'] ?? '') ?>', '<?= htmlspecialchars($admin['permissions']) ?>', true)">Edit</button>
-                                                <?php if($is_current_user) : ?>
-                                                    <button class="btn-sm btn-warning" onclick="openPasswordModal(<?= $admin['id'] ?>)">Change Password</button>
-                                                <?php endif; ?>
-                                                <?php if(!$is_current_user) : ?>
-                                                    <form action="" method="POST" style="display: inline;">
-                                                        <input type="hidden" name="user_id" value="<?= $admin['id'] ?>">
-                                                        <button type="submit" name="delete_staff" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Are you sure you want to delete this account?', 'Delete', true)">Delete</button>
-                                                    </form>
-                                                <?php endif; ?>
+                                                <button class="btn-sm btn-edit" onclick="openEditModal(<?= $admin['id'] ?>, '<?= htmlspecialchars($admin['username'], ENT_QUOTES) ?>', '<?= htmlspecialchars($admin['role'], ENT_QUOTES) ?>', '<?= htmlspecialchars($admin['given_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($admin['middle_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($admin['last_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($admin['email'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($admin['permissions'], ENT_QUOTES) ?>', true)">Edit</button>
+                                                <form action="" method="POST" style="display: inline;">
+                                                    <input type="hidden" name="delete_staff" value="1">
+                                                    <input type="hidden" name="user_id" value="<?= $admin['id'] ?>">
+                                                    <button type="submit" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Are you sure you want to delete this admin account?', 'Delete', true)">Delete</button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>
                                 <?php endwhile; ?>
                             <?php else : ?>
-                                <tr><td colspan="6" class="no-data">No admin accounts found.</td></tr>
+                                <tr><td colspan="7" class="no-data">No other admin accounts found.</td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -249,14 +360,15 @@ $staff_result = $conn->query($staff_sql);
 
             <!-- ========== STAFF ACCOUNTS ========== -->
             <div class="section-card">
-                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #2a6b37; padding-bottom: 10px;">
-                    <h3 style="margin: 0; border: none; padding: 0;">Staff Accounts</h3>
+                <div class="section-header">
+                    <h3>Staff Accounts</h3>
                 </div>
 
                 <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
+                                <th class="col-photo">Photo</th>
                                 <th>Name</th>
                                 <th>Username</th>
                                 <th>Role</th>
@@ -268,8 +380,21 @@ $staff_result = $conn->query($staff_sql);
                             <?php if($staff_result->num_rows > 0) : ?>
                                 <?php while($staff = $staff_result->fetch_assoc()) : 
                                     $perms = json_decode($staff['permissions'], true) ?: [];
+                                    $avatar = getUserAvatar($staff);
                                 ?>
                                     <tr>
+                                        <td class="col-photo-cell">
+                                            <?php if ($avatar['has_picture']) : ?>
+                                                <img src="<?= htmlspecialchars($avatar['pic_path']) ?>" alt="User Photo" 
+                                                     class="user-table-avatar-img"
+                                                     onclick="openImageLightbox('<?= htmlspecialchars($avatar['pic_path'], ENT_QUOTES) ?>')" 
+                                                     title="Click to view photo">
+                                            <?php else : ?>
+                                                <div class="user-table-avatar-initials">
+                                                    <?= htmlspecialchars($avatar['initials']) ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><?= htmlspecialchars($staff['last_name']) ?>, <?= htmlspecialchars($staff['given_name']) ?> <?= htmlspecialchars($staff['middle_name']) ?></td>
                                         <td><?= htmlspecialchars($staff['username']) ?></td>
                                         <td><?= htmlspecialchars(ucfirst($staff['role'])) ?></td>
@@ -299,18 +424,19 @@ $staff_result = $conn->query($staff_sql);
                                         </td>
                                         <td>
                                             <div class="action-buttons">
-                                                <button class="btn-sm btn-edit" onclick="openEditModal(<?= $staff['id'] ?>, '<?= htmlspecialchars($staff['username']) ?>', '<?= htmlspecialchars($staff['role']) ?>', '<?= htmlspecialchars($staff['given_name']) ?>', '<?= htmlspecialchars($staff['middle_name']) ?>', '<?= htmlspecialchars($staff['last_name']) ?>', '', '<?= htmlspecialchars($staff['permissions']) ?>', false)">Edit</button>
+                                                <button class="btn-sm btn-edit" onclick="openEditModal(<?= $staff['id'] ?>, '<?= htmlspecialchars($staff['username'], ENT_QUOTES) ?>', '<?= htmlspecialchars($staff['role'], ENT_QUOTES) ?>', '<?= htmlspecialchars($staff['given_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($staff['middle_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($staff['last_name'], ENT_QUOTES) ?>', '', '<?= htmlspecialchars($staff['permissions'], ENT_QUOTES) ?>', false)">Edit</button>
                                                 <button class="btn-sm btn-warning" onclick="openPasswordModal(<?= $staff['id'] ?>)">Change Password</button>
                                                 <form action="" method="POST" style="display: inline;">
+                                                    <input type="hidden" name="delete_staff" value="1">
                                                     <input type="hidden" name="user_id" value="<?= $staff['id'] ?>">
-                                                    <button type="submit" name="delete_staff" class="btn-sm btn-delete" onclick="return confirm('Delete this staff account?')">Delete</button>
+                                                    <button type="submit" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Are you sure you want to delete this staff account?', 'Delete', true)">Delete</button>
                                                 </form>
                                             </div>
                                         </td>
                                     </tr>
                                 <?php endwhile; ?>
                             <?php else : ?>
-                                <tr><td colspan="5" class="no-data">No staff accounts found.</td></tr>
+                                <tr><td colspan="6" class="no-data">No staff accounts found.</td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -321,6 +447,14 @@ $staff_result = $conn->query($staff_sql);
         <!-- Footer -->
         <div class="footer">
             © 2026 PIT ScholarshipHub. All rights reserved.
+        </div>
+    </div>
+
+    <!-- ========== IMAGE LIGHTBOX MODAL ========== -->
+    <div id="imageLightboxModal" class="modal">
+        <div class="lightbox-modal-content">
+            <span class="lightbox-close" onclick="closeImageLightbox()">&times;</span>
+            <img id="lightboxImage" src="" alt="Enlarged Profile Picture">
         </div>
     </div>
 
@@ -375,7 +509,7 @@ $staff_result = $conn->query($staff_sql);
 
                 <!-- Message for admin role -->
                 <div class="form-group" id="addAdminMessage" style="display: none;">
-                    <div class="info-message" style="background: #d4edda; padding: 12px 15px; border-radius: 4px; border: 1px solid #c3e6cb; color: #155724;">
+                    <div class="info-message info-message-admin">
                         <strong>Full Access:</strong> Administrators have permission to access all pages and perform all actions. No permission settings are required.
                     </div>
                 </div>
@@ -392,8 +526,20 @@ $staff_result = $conn->query($staff_sql);
     <div id="editModal" class="modal">
         <div class="modal-content">
             <h3 id="editModalTitle">Edit Account</h3>
-            <form action="" method="POST">
+            <form action="" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="edit_staff" value="1">
                 <input type="hidden" name="user_id" id="edit_user_id">
+                
+                <!-- Profile Picture Field (Visible ONLY when editing currently logged-in account) -->
+                <div class="form-group" id="editProfilePicGroup" style="display: none;">
+                    <label>Profile Picture</label>
+                    <div class="edit-avatar-preview-box">
+                        <img id="editAvatarPreviewImg" src="" alt="Avatar Preview" class="edit-avatar-preview-img" style="display: none;">
+                    </div>
+                    <input type="file" name="profile_picture" id="edit_profile_picture" accept="image/jpeg,image/png,image/webp" onchange="previewEditAvatar(this)">
+                    <small class="help-text">Upload JPG, PNG, or WebP (Max 2MB). Leave empty to keep existing photo.</small>
+                </div>
+
                 <div class="form-group">
                     <label>Username <span class="required">*</span></label>
                     <input type="text" name="username" id="edit_username" required>
@@ -435,13 +581,13 @@ $staff_result = $conn->query($staff_sql);
 
                 <!-- Message for admin users -->
                 <div class="form-group" id="editAdminMessage" style="display: none;">
-                    <div class="info-message" style="background: #d4edda; padding: 12px 15px; border-radius: 4px; border: 1px solid #c3e6cb; color: #155724;">
+                    <div class="info-message info-message-admin">
                         <strong>Full Access:</strong> Administrators have permission to access all pages and perform all actions. No permission settings are required.
                     </div>
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" name="edit_staff" class="btn btn-success">Update</button>
+                    <button type="submit" class="btn btn-success">Update</button>
                     <button type="button" onclick="closeModal()" class="btn btn-secondary">Cancel</button>
                 </div>
             </form>
@@ -453,6 +599,7 @@ $staff_result = $conn->query($staff_sql);
         <div class="modal-content">
             <h3>Change Password</h3>
             <form action="" method="POST">
+                <input type="hidden" name="change_password" value="1">
                 <input type="hidden" name="user_id" id="password_user_id">
                 <div class="form-group">
                     <label>New Password <span class="required">*</span></label>
@@ -464,7 +611,7 @@ $staff_result = $conn->query($staff_sql);
                     <small id="password_match_msg"></small>
                 </div>
                 <div class="form-actions">
-                    <button type="submit" name="change_password" class="btn btn-success">Update Password</button>
+                    <button type="submit" class="btn btn-success">Update Password</button>
                     <button type="button" onclick="closeModal()" class="btn btn-secondary">Cancel</button>
                 </div>
             </form>
@@ -472,6 +619,25 @@ $staff_result = $conn->query($staff_sql);
     </div>
 
     <script>
+        const CURRENT_USER_ID = <?= $current_user_id ?>;
+
+        // ─── LIGHTBOX HELPERS ───
+        function openImageLightbox(src) {
+            const modal = document.getElementById('imageLightboxModal');
+            const img = document.getElementById('lightboxImage');
+            if (modal && img) {
+                img.src = src;
+                modal.style.display = 'flex';
+            }
+        }
+
+        function closeImageLightbox() {
+            const modal = document.getElementById('imageLightboxModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
         // ─── MODAL HELPERS ───
         function openAddModal() {
             document.getElementById('addModal').style.display = 'flex';
@@ -496,12 +662,29 @@ $staff_result = $conn->query($staff_sql);
             const adminMessage = document.getElementById('editAdminMessage');
             const modalTitle = document.getElementById('editModalTitle');
             const editEmailGroup = document.getElementById('editEmailGroup');
+            const editProfilePicGroup = document.getElementById('editProfilePicGroup');
+            const fileInput = document.getElementById('edit_profile_picture');
+            const previewImg = document.getElementById('editAvatarPreviewImg');
+
+            // Reset file upload field & preview
+            if (fileInput) fileInput.value = '';
+            if (previewImg) {
+                previewImg.src = '';
+                previewImg.style.display = 'none';
+            }
+
+            // Display profile picture upload ONLY if editing currently logged-in account
+            if (parseInt(id) === CURRENT_USER_ID) {
+                editProfilePicGroup.style.display = 'block';
+            } else {
+                editProfilePicGroup.style.display = 'none';
+            }
 
             if (isAdmin) {
                 permissionsSection.style.display = 'none';
                 adminMessage.style.display = 'block';
                 editEmailGroup.style.display = 'block';
-                modalTitle.textContent = 'Edit Admin Account';
+                modalTitle.textContent = (parseInt(id) === CURRENT_USER_ID) ? 'Edit My Account' : 'Edit Admin Account';
             } else {
                 permissionsSection.style.display = 'block';
                 adminMessage.style.display = 'none';
@@ -526,6 +709,30 @@ $staff_result = $conn->query($staff_sql);
             }
 
             document.getElementById('editModal').style.display = 'flex';
+        }
+
+        // ─── CLIENT-SIDE AVATAR PREVIEW IN EDIT MODAL ───
+        function previewEditAvatar(input) {
+            const previewImg = document.getElementById('editAvatarPreviewImg');
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('File size exceeds 2MB limit.');
+                    input.value = '';
+                    previewImg.style.display = 'none';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewImg.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewImg.style.display = 'none';
+            }
         }
 
         function openPasswordModal(id) {
@@ -607,7 +814,10 @@ $staff_result = $conn->query($staff_sql);
         });
 
         window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
+            const lightboxModal = document.getElementById('imageLightboxModal');
+            if (event.target === lightboxModal) {
+                closeImageLightbox();
+            } else if (event.target.classList.contains('modal')) {
                 event.target.style.display = 'none';
             }
         }
