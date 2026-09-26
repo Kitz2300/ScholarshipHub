@@ -145,6 +145,11 @@ $city_name = "";
 $province_name = "";
 $region_name = "";
 
+$profile_pic = "";
+$pic_path = "";
+$has_picture = false;
+$initials = "";
+
 if($row = $scholar_result->fetch_assoc()) {
     $last_name = $row['last_name'];
     $given_name = $row['given_name'];
@@ -187,6 +192,25 @@ if($row = $scholar_result->fetch_assoc()) {
     $town_city = $row['town_city'] ?? '';
     $province = $row['province'] ?? '';
     $country = $row['country'] ?? 'Philippines';
+
+    // ─── PROFILE PICTURE RESOLUTION (CLOUDINARY / LOCAL FALLBACK) ───
+    $profile_pic = trim($row['profile_picture'] ?? '');
+
+    if (!empty($profile_pic) && preg_match("~^https?://~i", $profile_pic)) {
+        // Stored as remote Cloudinary URL
+        $pic_path = $profile_pic;
+        $has_picture = true;
+    } elseif (!empty($profile_pic) && file_exists(__DIR__ . '/../assets/images/profile_picture/' . $profile_pic)) {
+        // Stored locally in assets directory
+        $pic_path = '../assets/images/profile_picture/' . $profile_pic . '?v=' . time();
+        $has_picture = true;
+    } else {
+        // Default avatar fallback
+        $pic_path = '';
+        $has_picture = false;
+    }
+
+    $initials = strtoupper(substr($given_name, 0, 1) . substr($last_name, 0, 1));
 
     $barangay_id = (int) ($row['barangay_id'] ?? 0);
     $city_id = (int) ($row['city_id'] ?? 0);
@@ -327,6 +351,21 @@ while($c_row = $chart_res->fetch_assoc()) {
             <div class="profile-grid">
                 <!-- Personal Information -->
                 <div class="profile-card">
+                    <!-- Scholar Avatar Header Banner -->
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 15px;">
+                        <?php if ($has_picture): ?>
+                            <img src="<?= htmlspecialchars($pic_path) ?>" alt="Profile Picture" style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; border: 3px solid #1e4628;">
+                        <?php else: ?>
+                            <div style="width: 75px; height: 75px; border-radius: 50%; background: #1e4628; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold; border: 3px solid #1e4628;">
+                                <?= htmlspecialchars($initials) ?>
+                            </div>
+                        <?php endif; ?>
+                        <div>
+                            <h3 style="margin: 0; border: none; padding: 0; font-size: 18px; color: #1e4628;"><?= htmlspecialchars("$given_name $middle_name $last_name $ext_name") ?></h3>
+                            <span style="color: #666; font-size: 13px;">Student ID: <?= htmlspecialchars($id_num) ?></span>
+                        </div>
+                    </div>
+
                     <h3>Personal Information</h3>
                     <div class="info-group">
                         <div class="info-row">
