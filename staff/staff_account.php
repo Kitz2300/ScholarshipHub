@@ -1,7 +1,6 @@
 <?php
 include '../includes/conn.php';
 include '../includes/check_permission.php';
-require_once __DIR__ . '/../includes/upload_profile_picture.php';
 session_start();
 
 // ─── AUTHENTICATION CHECK ───
@@ -12,59 +11,6 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = (int) $_SESSION['user_id'];
-
-// ─── HANDLE PROFILE EDIT ───
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
-    $given_name = trim($_POST['given_name'] ?? '');
-    $middle_name = trim($_POST['middle_name'] ?? '');
-    $last_name = trim($_POST['last_name'] ?? '');
-
-    if (!empty($given_name) && !empty($last_name)) {
-        // Fetch old profile picture
-        $curr_q = $conn->prepare("SELECT profile_picture FROM scholarship_users WHERE id = ?");
-        $curr_q->bind_param("i", $user_id);
-        $curr_q->execute();
-        $curr_res = $curr_q->get_result()->fetch_assoc();
-        $old_pic = $curr_res['profile_picture'] ?? null;
-        $curr_q->close();
-
-        $uploaded_pic_name = null;
-        $upload_error = null;
-
-        if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
-            $upload_res = handleProfilePictureUpload('profile_picture', $user_id, 'user', $old_pic);
-            if ($upload_res['status']) {
-                $uploaded_pic_name = $upload_res['filename'];
-            } else {
-                $upload_error = $upload_res['message'];
-            }
-        }
-
-        if ($uploaded_pic_name) {
-            $u_stmt = $conn->prepare("UPDATE scholarship_users SET given_name = ?, middle_name = ?, last_name = ?, profile_picture = ? WHERE id = ?");
-            $u_stmt->bind_param("ssssi", $given_name, $middle_name, $last_name, $uploaded_pic_name, $user_id);
-        } else {
-            $u_stmt = $conn->prepare("UPDATE scholarship_users SET given_name = ?, middle_name = ?, last_name = ? WHERE id = ?");
-            $u_stmt->bind_param("sssi", $given_name, $middle_name, $last_name, $user_id);
-        }
-
-        if ($u_stmt->execute()) {
-            if ($upload_error) {
-                $_SESSION['fail'] = "Name updated, but photo upload failed: " . $upload_error;
-            } else {
-                $_SESSION['success'] = "Profile updated successfully.";
-            }
-        } else {
-            $_SESSION['fail'] = "Failed to update profile: " . $conn->error;
-        }
-        $u_stmt->close();
-    } else {
-        $_SESSION['fail'] = "First Name and Last Name are required.";
-    }
-
-    header("Location: staff_account.php");
-    exit();
-}
 
 // ─── HANDLE CHANGE PASSWORD ───
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
@@ -271,7 +217,7 @@ $page_subtitle = "Staff Account Profile";
     <div id="editProfileModal" class="modal">
         <div class="modal-content">
             <h3>Edit Profile</h3>
-            <form action="" method="POST" enctype="multipart/form-data">
+            <form action="../functions/admin/upload_profile_pic_process.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="update_profile" value="1">
 
                 <div class="form-group" style="text-align: center;">

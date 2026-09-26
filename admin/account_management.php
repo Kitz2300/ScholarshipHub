@@ -12,6 +12,52 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 
 $current_user_id = (int) $_SESSION['user_id'];
 
+/**
+ * Cloudinary REST API upload helper function.
+ */
+function uploadAdminToCloudinary($file_tmp_path, $folder = 'profile_pictures/admin') {
+    $cloud_name = getenv('CLOUDINARY_CLOUD_NAME') ?: (getenv('cloudinary_cloud_name') ?: ($_ENV['CLOUDINARY_CLOUD_NAME'] ?? ($_ENV['cloudinary_cloud_name'] ?? '')));
+    $api_key    = getenv('CLOUDINARY_API_KEY')    ?: (getenv('cloudinary_api_key')    ?: ($_ENV['CLOUDINARY_API_KEY']    ?? ($_ENV['cloudinary_api_key']    ?? '')));
+    $api_secret = getenv('CLOUDINARY_API_SECRET') ?: (getenv('cloudinary_api_secret') ?: ($_ENV['CLOUDINARY_API_SECRET'] ?? ($_ENV['cloudinary_api_secret'] ?? '')));
+
+    if (empty($cloud_name) || empty($api_key) || empty($api_secret)) {
+        return false;
+    }
+
+    $timestamp = time();
+    $params_to_sign = "folder={$folder}&timestamp={$timestamp}";
+    $signature = sha1($params_to_sign . $api_secret);
+
+    $endpoint = "https://api.cloudinary.com/v1_1/{$cloud_name}/image/upload";
+
+    $post_fields = [
+        'file'      => new CURLFile($file_tmp_path),
+        'api_key'   => $api_key,
+        'timestamp' => $timestamp,
+        'signature' => $signature,
+        'folder'    => $folder
+    ];
+
+    $ch = curl_init($endpoint);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $post_fields);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($http_code === 200 && $response) {
+        $result = json_decode($response, true);
+        if (isset($result['secure_url'])) {
+            return $result['secure_url'];
+        }
+    }
+
+    return false;
+}
+
 // ─── HELPER FUNCTION FOR USER AVATARS ───
 function getUserAvatar($user_row) {
     $profile_pic = trim($user_row['profile_picture'] ?? '');
@@ -125,37 +171,48 @@ if(isset($_POST['edit_staff'])) {
         if($stmt->execute()) {
             $_SESSION['success'] = "Account updated successfully.";
 
-            // ─── PROFILE PICTURE UPLOAD FOR LOGGED IN USER ONLY ───
+            // ─── PROFILE PICTURE UPLOAD WITH CLOUDINARY FOR LOGGED IN USER ONLY ───
             if ($user_id === $current_user_id && isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
                 $file = $_FILES['profile_picture'];
                 $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
                 $allowed = ['jpg', 'jpeg', 'png', 'webp'];
 
                 if (in_array($ext, $allowed) && $file['size'] <= 2 * 1024 * 1024) {
-                    // Fetch existing photo to remove old disk file
-                    $old_stmt = $conn->prepare("SELECT profile_picture FROM scholarship_users WHERE id = ?");
-                    $old_stmt->bind_param("i", $user_id);
-                    $old_stmt->execute();
-                    $old_row = $old_stmt->get_result()->fetch_assoc();
-                    $old_pic = trim($old_row['profile_picture'] ?? '');
-                    $old_stmt->close();
+                    // 1. Attempt Primary Upload to Cloudinary
+                    $image_destination = uploadAdminToCloudinary($file['tmp_name'], 'profile_pictures/admin');
 
-                    if (!empty($old_pic) && !preg_match("~^https?://~i", $old_pic)) {
-                        $old_file_path = __DIR__ . '/../assets/images/profile_picture/' . $old_pic;
-                        if (file_exists($old_file_path)) {
-                            @unlink($old_file_path);
+                    // 2. Fallback to Local Directory
+                    if (!$image_destination) {
+                        $upload_dir = __DIR__ . '/../assets/images/profile_picture/';
+                        if (!is_dir($upload_dir)) {
+                            mkdir($upload_dir, 0777, true);
+                        }
+
+                        $new_filename = 'admin_' . $user_id . '_' . time() . '.' . $ext;
+                        if (move_uploaded_file($file['tmp_name'], $upload_dir . $new_filename)) {
+                            $image_destination = $new_filename;
                         }
                     }
 
-                    $new_filename = 'user_' . $user_id . '_' . time() . '.' . $ext;
-                    $upload_dir = __DIR__ . '/../assets/images/profile_picture/';
-                    if (!is_dir($upload_dir)) {
-                        mkdir($upload_dir, 0777, true);
-                    }
+                    if ($image_destination) {
+                        // Fetch old photo to delete local file if previously stored locally
+                        $old_stmt = $conn->prepare("SELECT profile_picture FROM scholarship_users WHERE id = ?");
+                        $old_stmt->bind_param("i", $user_id);
+                        $old_stmt->execute();
+                        $old_row = $old_stmt->get_result()->fetch_assoc();
+                        $old_pic = trim($old_row['profile_picture'] ?? '');
+                        $old_stmt->close();
 
-                    if (move_uploaded_file($file['tmp_name'], $upload_dir . $new_filename)) {
+                        if (!empty($old_pic) && !preg_match("~^https?://~i", $old_pic)) {
+                            $old_file_path = __DIR__ . '/../assets/images/profile_picture/' . $old_pic;
+                            if (file_exists($old_file_path)) {
+                                @unlink($old_file_path);
+                            }
+                        }
+
+                        // Update database with Cloudinary URL or local filename
                         $pic_stmt = $conn->prepare("UPDATE scholarship_users SET profile_picture = ? WHERE id = ?");
-                        $pic_stmt->bind_param("si", $new_filename, $user_id);
+                        $pic_stmt->bind_param("si", $image_destination, $user_id);
                         $pic_stmt->execute();
                         $pic_stmt->close();
                     }
@@ -179,7 +236,6 @@ if(isset($_POST['change_password'])) {
     $new_password = $_POST['new_password'] ?? '';
 
     if($user_id > 0 && !empty($new_password)) {
-        // Enforce restriction: logged-in admin cannot change other admin passwords
         $check_stmt = $conn->prepare("SELECT role FROM scholarship_users WHERE id = ?");
         $check_stmt->bind_param("i", $user_id);
         $check_stmt->execute();
