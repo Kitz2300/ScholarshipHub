@@ -193,7 +193,7 @@ $archived_count = $archived_count_result->fetch_assoc();
                                         <div class="action-buttons">
                                             <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                 <input type="hidden" name="program_id" value="<?= $row['id'] ?>">
-                                                <button type="submit" name="restore_program" class="btn-sm btn-restore" onclick="return cconfirmAction(event, 'Restoring scholarship program restores it scholars, Proceed?', 'Restore', false)">Restore</button>
+                                                <button type="submit" name="restore_program" class="btn-sm btn-restore" onclick="return confirmAction(event, 'Restoring scholarship program restores it scholars, Proceed?', 'Restore', false)">Restore</button>
                                             </form>
                                             <!-- <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                 <input type="hidden" name="program_id" value="<?= $row['id'] ?>">
