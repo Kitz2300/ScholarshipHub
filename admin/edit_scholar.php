@@ -120,6 +120,7 @@ if($row = $scholar_result->fetch_assoc()) {
     <link rel="stylesheet" href="../assets/css/modals.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../assets/js/address.js"></script>
+    <script src="../assets/js/disable_button.js"></script>
 </head>
 <body>
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>

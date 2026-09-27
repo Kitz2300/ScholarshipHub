@@ -21,6 +21,7 @@ $providers_result = $conn->query($providers_sql);
     <link rel="stylesheet" href="../assets/css/modals.css?v=<?= filemtime('../assets/css/modals.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
     <script src="../assets/js/school_year.js"></script>
+    <script src="../assets/js/disable_button.js"></script>
 </head>
 <body>
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>

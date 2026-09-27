@@ -82,6 +82,7 @@ $is_other_type = !in_array($current_type, $standard_types);
     <link rel="stylesheet" href="../assets/css/form.css?v=<?= filemtime('../assets/css/form.css') ?>">
     <link rel="stylesheet" href="../assets/css/modals.css?v=<?= filemtime('../assets/css/modals.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <script src="../assets/js/disable_button.js"></script>s
 </head>
 <body>
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>

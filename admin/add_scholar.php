@@ -50,6 +50,7 @@ $barangays_result = $stmt->get_result();
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../assets/js/address.js"></script>
+    <script src="../assets/js/disable_button.js"></script>
 </head>
 <body>
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>

@@ -15,6 +15,7 @@ if(isset($_SESSION['user_id']) && ($_SESSION['role'] == "admin" || $_SESSION['ro
     <link rel="stylesheet" href="../assets/css/login.css">
     <link rel="icon" href="../assets/images/PIT LOGO.png">
     <link rel="stylesheet" href="../assets/css/modals.css">
+    <script src="../assets/js/disable_button.js"></script>
 </head>
 <body>
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>

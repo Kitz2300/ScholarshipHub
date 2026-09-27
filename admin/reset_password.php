@@ -59,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
     <title>Reset Password - Admin Access</title>
     <link rel="stylesheet" href="../assets/css/recovery.css">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <script src="../assets/js/disable_button.js"></script>
 </head>
 <body>
     <div class="recovery-card">

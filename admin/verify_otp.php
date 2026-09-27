@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_otp'])) {
     <title>Verify OTP - Admin Access</title>
     <link rel="stylesheet" href="../assets/css/recovery.css">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
+    <script src="../assets/js/disable_button.js"></script>
 </head>
 <body>
     <div class="recovery-card">
