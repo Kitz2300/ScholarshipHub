@@ -480,9 +480,6 @@ while($c_row = $chart_res->fetch_assoc()) {
                 <div class="profile-card">
                     <div class="card-header acad-card-header">
                         <h3>Academic Performance & Progress</h3>
-                        <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
-                            <button type="button" class="btn btn-sm btn-primary" onclick="openAddAcadModal()">+ Add Record</button>
-                        <?php endif; ?>
                     </div>
 
                     <!-- GWA Trend Line Chart -->
@@ -498,7 +495,30 @@ while($c_row = $chart_res->fetch_assoc()) {
                         <?php endif; ?>
                     </div>
 
-                    <h4 class="sub-section-title">Historical Records</h4>
+                    <!-- Historical Records Header with Title, Add Button on Right, and Legend with Min GWA Req on Right -->
+                    <div class="historical-header-wrapper">
+                        <div class="historical-title-row">
+                            <h4 class="sub-section-title">Historical Records</h4>
+                            <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
+                                <button type="button" class="btn btn-sm btn-primary" onclick="openAddAcadModal()">+ Add GWA</button>
+                            <?php endif; ?>
+                        </div>
+                        <?php if($gwa_req > 0) : ?>
+                            <div class="gwa-legend">
+                                <div class="legend-left-group">
+                                    <span class="legend-item legend-pass">
+                                        <span class="legend-dot green-dot">●</span> Requirement Met
+                                    </span>
+                                    <span class="legend-item legend-fail">
+                                        <span class="legend-dot red-dot">●</span> Requirement Not Met
+                                    </span>
+                                </div>
+                                <span class="legend-item legend-req">
+                                    Min GWA Requirement: <?= htmlspecialchars(number_format($gwa_req, 2)) ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+                    </div>
 
                     <!-- Academic Performance Table -->
                     <div class="academic-table-wrapper">
@@ -537,17 +557,14 @@ while($c_row = $chart_res->fetch_assoc()) {
                                         <tr>
                                             <td><?= htmlspecialchars($acad_row['semester']) ?></td>
                                             <td>
-                                                <?= htmlspecialchars($acad_row['gwa']) ?>
                                                 <?php if($gwa_req > 0) : ?>
                                                     <?php if((float)$acad_row['gwa'] > $gwa_req) : ?>
-                                                        <span class="req-unmet-label">
-                                                            (Req: <?= htmlspecialchars($gwa_req) ?> - Not Met)
-                                                        </span>
+                                                        <span class="gwa-val gwa-fail"><?= htmlspecialchars($acad_row['gwa']) ?></span>
                                                     <?php else : ?>
-                                                        <span class="req-met-label">
-                                                            (Req: <?= htmlspecialchars($gwa_req) ?> - Met)
-                                                        </span>
+                                                        <span class="gwa-val gwa-pass"><?= htmlspecialchars($acad_row['gwa']) ?></span>
                                                     <?php endif; ?>
+                                                <?php else : ?>
+                                                    <span class="gwa-val"><?= htmlspecialchars($acad_row['gwa']) ?></span>
                                                 <?php endif; ?>
                                             </td>
                                             <td><?= htmlspecialchars($acad_row['units']) ?></td>
