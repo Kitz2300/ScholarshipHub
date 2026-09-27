@@ -189,31 +189,38 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
         <!-- Page Content -->
         <main class="page-content">
             
-            <!-- Hero Scholar Banner -->
-            <div class="profile-hero-card">
-                <div class="avatar-wrapper" onclick="openPhotoModal()" title="Click to change photo">
-                    <?php if ($has_picture): ?>
-                        <img src="<?= htmlspecialchars($pic_path) ?>" alt="Profile Picture" class="hero-avatar-img">
-                    <?php else: ?>
-                        <div class="hero-avatar"><?= $initials ?></div>
-                    <?php endif; ?>
-                    <div class="avatar-overlay">📷 Edit</div>
+            <!-- Hero Scholar Cards Grid (2 Separate Themed Cards) -->
+            <div class="hero-grid">
+                <!-- Left Hero Card: Scholar Details (Rich Forest Green) -->
+                <div class="hero-card hero-card-info">
+                    <div class="avatar-wrapper" onclick="openPhotoModal()" title="Click to change photo">
+                        <?php if ($has_picture): ?>
+                            <img src="<?= htmlspecialchars($pic_path) ?>" alt="Profile Picture" class="hero-avatar-img">
+                        <?php else: ?>
+                            <div class="hero-avatar"><?= $initials ?></div>
+                        <?php endif; ?>
+                        <div class="avatar-overlay">📷 Edit</div>
+                    </div>
+                    <div class="hero-details">
+                        <h2><?= htmlspecialchars($full_name) ?></h2>
+                        <p><strong>Student ID:</strong> <?= htmlspecialchars($id_num) ?></p>
+                        <p><strong>College:</strong> <?= htmlspecialchars($college) ?></p>
+                        <p><strong>Program:</strong> <?= htmlspecialchars($program) ?></p>
+                    </div>
                 </div>
-                <div class="hero-details">
-                    <h2><?= htmlspecialchars($full_name) ?></h2>
-                    <p><strong>Student ID:</strong> <?= htmlspecialchars($id_num) ?></p>
-                    <p><strong>College:</strong> <?= htmlspecialchars($college) ?></p>
-                    <p><strong>Program:</strong> <?= htmlspecialchars($program) ?></p>
-                </div>
-                <div class="hero-badges">
-                    <span class="status-badge status-<?= $status_slug ?>">
-                        <?= htmlspecialchars($academic_status) ?>
-                    </span>
-                    <?php if ($is_flagged): ?>
-                        <span class="status-badge status-flagged">
-                            ⚠️ Below GWA Requirement
+
+                <!-- Right Hero Card: Statuses & Password (Dark Emerald Slate) -->
+                <div class="hero-card hero-card-actions">
+                    <div class="hero-status-group">
+                        <span class="status-badge status-<?= $status_slug ?>">
+                            <?= htmlspecialchars($academic_status) ?>
                         </span>
-                    <?php endif; ?>
+                        <?php if ($is_flagged): ?>
+                            <span class="status-badge status-flagged">
+                                ⚠️ Below GWA Requirement
+                            </span>
+                        <?php endif; ?>
+                    </div>
                     <button type="button" class="btn btn-warning btn-password-change" onclick="openPasswordModal()">🔒 Change Password</button>
                 </div>
             </div>

@@ -169,52 +169,83 @@ body::before {
 }
 
 /* ============================================================
-   PAGE CONTENT & HERO BANNER
+   PAGE CONTENT & HERO CARDS GRID (DUAL PALETTE)
    ============================================================ */
 .page-content {
     background: var(--glass-bg-sub);
     padding: 20px;
 }
 
-.profile-hero-card {
-    background: linear-gradient(135deg, #1e4628 0%, #2a6b37 100%);
-    color: #ffffff;
-    border-radius: 10px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
+.hero-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
     gap: 20px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
     margin-bottom: 20px;
 }
 
-.hero-details { flex-grow: 1; min-width: 0; }
+.hero-card {
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 22px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    display: flex;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(8px);
+}
+
+/* Card 1: Rich Forest Green Gradient */
+.hero-card-info {
+    background: linear-gradient(135deg, #173e21 0%, #286337 100%);
+    align-items: center;
+    gap: 20px;
+}
+
+/* Card 2: Deep Emerald-Slate Gradient */
+.hero-card-actions {
+    background: linear-gradient(135deg, #286337 0%, #286337 100%);
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.hero-details { 
+    flex-grow: 1; 
+    min-width: 0; 
+}
+
 .hero-details h2 { 
     margin: 0 0 6px 0; 
     font-size: 22px; 
     color: #ffffff; 
     word-break: break-word;
 }
-.hero-details p { margin: 3px 0; font-size: 14px; opacity: 0.92; line-height: 1.4; }
 
-.hero-badges {
+.hero-details p { 
+    margin: 3px 0; 
+    font-size: 14px; 
+    opacity: 0.92; 
+    line-height: 1.4; 
+}
+
+.hero-status-group {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 10px;
-    flex-shrink: 0;
+    gap: 8px;
+    width: 100%;
 }
 
 /* Avatar Upload Overlay */
 .avatar-wrapper {
     position: relative;
-    width: 80px;
-    height: 80px;
+    width: 85px;
+    height: 85px;
     border-radius: 50%;
     cursor: pointer;
     overflow: hidden;
     flex-shrink: 0;
-    border: 3px solid rgba(255, 255, 255, 0.7);
+    border: 3px solid rgba(255, 255, 255, 0.85);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
@@ -558,9 +589,20 @@ body::before {
    ============================================================ */
 @media (max-width: 900px) {
     .layout-two-col, 
-    .profile-grid { 
+    .profile-grid,
+    .hero-grid { 
         grid-template-columns: 1fr; 
         gap: 16px;
+    }
+
+    .hero-card-actions {
+        align-items: center;
+        border-left: none;
+        border-top: 3px solid rgba(243, 156, 18, 0.6);
+    }
+
+    .hero-status-group {
+        align-items: center;
     }
 }
 
@@ -593,17 +635,12 @@ body::before {
     .nav-bar { padding: 8px 16px; }
     .page-content { padding: 14px; }
     
-    /* Hero Banner Mobile Styling */
-    .profile-hero-card {
+    /* Hero Info Card Mobile Layout */
+    .hero-card-info {
         flex-direction: column;
         text-align: center;
         padding: 18px 14px;
         gap: 14px;
-    }
-    
-    .hero-badges {
-        align-items: center;
-        width: 100%;
     }
     
     .btn-password-change {
