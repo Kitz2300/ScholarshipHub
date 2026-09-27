@@ -464,6 +464,77 @@ table tbody tr.data-row-1:nth-child(even):hover {
     display: inline-block;
 }
 
+/* Student ID Cell & Downward-Opening Custom CSS Tooltip */
+.student-id-cell {
+    white-space: nowrap;
+}
+
+.student-id-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.flag-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    font-size: 19px;
+    line-height: 1;
+    background: transparent;
+    outline: none;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 1px #000000);
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.flag-indicator:hover,
+.flag-indicator:focus {
+    transform: scale(1.25);
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 1)) drop-shadow(0 0 2px #000000);
+}
+
+.flag-indicator .tooltip-box {
+    visibility: hidden;
+    opacity: 0;
+    width: 250px;
+    white-space: normal;
+    background-color: #1e293b;
+    color: #ffffff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 8px 12px;
+    position: absolute;
+    z-index: 100;
+    top: 130%;
+    left: 0;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    font-size: 12px;
+    font-weight: normal;
+    line-height: 1.35;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    pointer-events: none;
+}
+
+.flag-indicator .tooltip-box::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 10px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent transparent #1e293b transparent;
+}
+
+.flag-indicator:hover .tooltip-box,
+.flag-indicator:focus .tooltip-box {
+    visibility: visible;
+    opacity: 1;
+}
+
 /* ============================================================
    BUTTONS & ACTIONS
    ============================================================ */
