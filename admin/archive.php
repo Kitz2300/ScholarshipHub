@@ -154,7 +154,7 @@ $archived_count = $archived_count_result->fetch_assoc();
                                             <div class="action-buttons">
                                                 <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                     <input type="hidden" name="scholar_id" value="<?= $row['id'] ?>">
-                                                    <button type="submit" name="restore_scholar" class="btn-sm btn-restore" onclick="return confirm('Restore this scholar?')">Restore</button>
+                                                    <button type="submit" name="restore_scholar" class="btn-sm btn-restore" onclick="return confirmAction(event, 'Restore scholar?', 'Restore', false)">Restore</button>
                                                 </form>
                                                 <!-- <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                     <input type="hidden" name="scholar_id" value="<?= $row['id'] ?>">
@@ -193,12 +193,12 @@ $archived_count = $archived_count_result->fetch_assoc();
                                         <div class="action-buttons">
                                             <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                 <input type="hidden" name="program_id" value="<?= $row['id'] ?>">
-                                                <button type="submit" name="restore_program" class="btn-sm btn-restore" onclick="return confirm('Restore this program?')">Restore</button>
+                                                <button type="submit" name="restore_program" class="btn-sm btn-restore" onclick="return cconfirmAction(event, 'Restoring scholarship program restores it scholars, Proceed?', 'Restore', false)">Restore</button>
                                             </form>
-                                            <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
+                                            <!-- <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                 <input type="hidden" name="program_id" value="<?= $row['id'] ?>">
                                                 <button type="submit" name="delete_program_permanent" class="btn-sm btn-delete" onclick="return confirm('Permanently delete this program and its scholars? This cannot be undone!')">Delete</button>
-                                            </form>
+                                            </form> -->
                                         </div>
                                     </td>
                                 </tr>
