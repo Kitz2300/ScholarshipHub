@@ -20,12 +20,11 @@ if(isset($_POST['restore_scholar']) && isset($_POST['scholar_id'])) {
     $scholarship_result = $scholarship_stmt->get_result();
 
     if($scholarship_result->num_rows == 0) {
-        $_SESSION['fail'] = "Cannot restore scholar becuase scholarship program is archived or not in the records";
+        $_SESSION['fail'] = "Cannot restore scholar because scholarship program is archived or not in the records.";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
     }
         
-            
     $restore_sql = "UPDATE scholar_info SET is_archived = 0 WHERE id = ?";
     $restore_stmt = $conn->prepare($restore_sql);
     $restore_stmt->bind_param("i", $scholar_id);
@@ -110,7 +109,7 @@ $archived_count = $archived_count_result->fetch_assoc();
 <body>
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== "admin") :
-        $_SESSION['fail'] = "You are no logged in!";
+        $_SESSION['fail'] = "You are not logged in!";
         header("Location: ../portal.php");
         exit();    
     else : ?>
@@ -154,11 +153,13 @@ $archived_count = $archived_count_result->fetch_assoc();
                                             <div class="action-buttons">
                                                 <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                     <input type="hidden" name="scholar_id" value="<?= $row['id'] ?>">
-                                                    <button type="submit" name="restore_scholar" class="btn-sm btn-restore" onclick="return confirmAction(event, 'Restore scholar?', 'Restore', false)">Restore</button>
+                                                    <input type="hidden" name="restore_scholar" value="1">
+                                                    <button type="submit" class="btn-sm btn-restore" onclick="return confirmAction(event, 'Restore scholar?', 'Restore', 'primary')">Restore</button>
                                                 </form>
                                                 <!-- <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                     <input type="hidden" name="scholar_id" value="<?= $row['id'] ?>">
-                                                    <button type="submit" name="delete_scholar_permanent" class="btn-sm btn-delete" onclick="return confirm('Permanently delete this scholar? This cannot be undone!')">Delete</button>
+                                                    <input type="hidden" name="delete_scholar_permanent" value="1">
+                                                    <button type="submit" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Permanently delete this scholar? This cannot be undone!', 'Delete', 'danger')">Delete</button>
                                                 </form> -->
                                             </div>
                                         </td>
@@ -193,11 +194,13 @@ $archived_count = $archived_count_result->fetch_assoc();
                                         <div class="action-buttons">
                                             <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                 <input type="hidden" name="program_id" value="<?= $row['id'] ?>">
-                                                <button type="submit" name="restore_program" class="btn-sm btn-restore" onclick="return confirmAction(event, 'Restoring scholarship program restores it scholars, Proceed?', 'Restore', false)">Restore</button>
+                                                <input type="hidden" name="restore_program" value="1">
+                                                <button type="submit" class="btn-sm btn-restore" onclick="return confirmAction(event, 'Restoring scholarship program restores its scholars, Proceed?', 'Restore', 'primary')">Restore</button>
                                             </form>
                                             <!-- <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                 <input type="hidden" name="program_id" value="<?= $row['id'] ?>">
-                                                <button type="submit" name="delete_program_permanent" class="btn-sm btn-delete" onclick="return confirm('Permanently delete this program and its scholars? This cannot be undone!')">Delete</button>
+                                                <input type="hidden" name="delete_program_permanent" value="1">
+                                                <button type="submit" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Permanently delete this program and its scholars? This cannot be undone!', 'Delete', 'danger')">Delete</button>
                                             </form> -->
                                         </div>
                                     </td>
@@ -214,7 +217,7 @@ $archived_count = $archived_count_result->fetch_assoc();
         <!-- Footer -->
         <div class="footer">
             © 2026 PIT ScholarshipHub. All rights reserved.
-      /div>
+        </div>
     </div>
     <?php endif; ?>
 </body>
