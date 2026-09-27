@@ -414,9 +414,26 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                     $year_lvl = "Not specified";
                                 }
                                 $is_archived = (int)$row['is_archived'] === 1;
+                                $is_flagged = (int)$row['is_flagged'] === 1;
+
+                                if ($is_flagged) {
+                                    $latest_gwa = !empty($row['latest_gwa']) ? number_format((float)$row['latest_gwa'], 2) : 'N/A';
+                                    $min_gwa = !empty($row['min_gwa_req']) ? number_format((float)$row['min_gwa_req'], 2) : 'N/A';
+                                    $flag_reason = "Flagged: Scholar's GWA ({$latest_gwa}) exceeds minimum requirement ({$min_gwa})";
+                                }
                             ?>
                                 <tr class="data-row-<?= $row['is_flagged'] ?>">
-                                    <td><?= htmlspecialchars($row['student_id']) ?></td>
+                                    <td class="student-id-cell">
+                                        <div class="student-id-wrapper">
+                                            <?php if ($is_flagged) : ?>
+                                                <span class="flag-indicator" tabindex="0">
+                                                    ⚠️
+                                                    <span class="tooltip-box"><?= htmlspecialchars($flag_reason) ?></span>
+                                                </span>
+                                            <?php endif; ?>
+                                            <span><?= htmlspecialchars($row['student_id']) ?></span>
+                                        </div>
+                                    </td>
                                     <td><?= htmlspecialchars($row['last_name']) ?>, <?= htmlspecialchars($row['given_name']) ?> <?= htmlspecialchars($row['middle_name']) ?> <?= htmlspecialchars($ext_name) ?></td>
                                     <td><?= htmlspecialchars($year_lvl) ?></td>
                                     <td><?= htmlspecialchars($row['program_name']) ?></td>
