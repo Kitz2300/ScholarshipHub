@@ -11,13 +11,24 @@ if($_SESSION['role'] !== 'admin') {
 if(isset($_POST['delete_college'])) {
     $college_id = (int) $_POST['college_id'];
     if($college_id > 0) {
-        $sql = "DELETE FROM college WHERE id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $college_id);
-        if($stmt->execute()) {
-            $_SESSION['success'] = "College deleted successfully.";
+        // Check if there are programs linked to this college
+        $check_sql = "SELECT COUNT(*) AS total FROM program WHERE college_id = ?";
+        $check_stmt = $conn->prepare($check_sql);
+        $check_stmt->bind_param("i", $college_id);
+        $check_stmt->execute();
+        $prog_count = $check_stmt->get_result()->fetch_assoc()['total'];
+
+        if($prog_count > 0) {
+            $_SESSION['fail'] = "Cannot delete college. There are {$prog_count} program(s) assigned to it.";
         } else {
-            $_SESSION['fail'] = "Failed to delete college.";
+            $sql = "DELETE FROM college WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("i", $college_id);
+            if($stmt->execute()) {
+                $_SESSION['success'] = "College deleted successfully.";
+            } else {
+                $_SESSION['fail'] = "Failed to delete college.";
+            }
         }
     }
     header("Location: program_management.php");
@@ -65,7 +76,7 @@ $programs_result = $conn->query($programs_sql);
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <?php 
     if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : 
-        $_SESSION['fail'] = "You are no logged in!";
+        $_SESSION['fail'] = "You are not logged in!";
         header("Location: ../portal.php");
         exit();
     else : ?>
@@ -113,8 +124,9 @@ $programs_result = $conn->query($programs_sql);
                                                 <!-- Delete Form -->
                                                 <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                     <input type="hidden" name="college_id" value="<?= $college['id'] ?>">
+                                                    <input type="hidden" name="delete_college" value="1">
                                                     <?php if(hasPermission($conn, $_SESSION['user_id'], 'program_management', 'delete')) : ?>
-                                                        <button type="submit" name="delete_college" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Delete this college?', 'Delete', true)">Delete</button>
+                                                        <button type="submit" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Delete this college?', 'Delete', 'danger')">Delete</button>
                                                     <?php endif; ?>
                                                 </form>
                                             </div>
@@ -165,8 +177,9 @@ $programs_result = $conn->query($programs_sql);
                                                 <!-- Delete Form -->
                                                 <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" style="display: inline;">
                                                     <input type="hidden" name="program_id" value="<?= $program['program_id'] ?>">
+                                                    <input type="hidden" name="delete_program" value="1">
                                                     <?php if(hasPermission($conn, $_SESSION['user_id'], 'program_management', 'delete')) : ?>
-                                                        <button type="submit" name="delete_program" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Delete this program?', 'Delete', true)">Delete</button>
+                                                        <button type="submit" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Delete this program?', 'Delete', 'danger')">Delete</button>
                                                     <?php endif; ?>
                                                 </form>
                                             </div>
