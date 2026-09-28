@@ -83,7 +83,7 @@ $announcement_pages = [
 
 $management_pages = array_merge(
     $announcement_pages, 
-    ['program_management.php', 'account_management.php', 'staff_account.php', 'archive.php', 'audit_trail.php']
+    ['program_management.php', 'promote_scholars.php', 'account_management.php', 'staff_account.php', 'archive.php', 'audit_trail.php']
 );
 ?>
 
@@ -157,6 +157,7 @@ $management_pages = array_merge(
         <?php 
         $can_see_management = canAccessPage($conn, $_SESSION['user_id'], 'announcements') || 
                               canAccessPage($conn, $_SESSION['user_id'], 'program_management') || 
+                              canAccessPage($conn, $_SESSION['user_id'], 'promote_scholars') || 
                               ($_SESSION['role'] ?? '') === 'admin' ||
                               ($_SESSION['role'] ?? '') === 'staff';
         if($can_see_management) : 
@@ -177,6 +178,13 @@ $management_pages = array_merge(
                     <?php if(canAccessPage($conn, $_SESSION['user_id'], 'program_management')) : ?>
                         <li>
                             <a href="<?= $admin_path ?>program_management.php" class="<?= isActive('program_management.php', $current_page) ?>">Programs & Colleges</a>
+                        </li>
+                    <?php endif; ?>
+
+                    <!-- Promote Scholars -->
+                    <?php if(canAccessPage($conn, $_SESSION['user_id'], 'promote_scholars')) : ?>
+                        <li>
+                            <a href="<?= $admin_path ?>promote_scholars.php" class="<?= isActive('promote_scholars.php', $current_page) ?>">Promote Scholars</a>
                         </li>
                     <?php endif; ?>
 
