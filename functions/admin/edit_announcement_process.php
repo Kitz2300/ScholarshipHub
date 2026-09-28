@@ -7,11 +7,14 @@ if(isset($_POST['title'], $_POST['content'], $_POST['announcement_id'])) {
     $title = trim($_POST['title']);
     $content = trim($_POST['content']);
     $announcement_id = (int) $_POST['announcement_id'];
+    $scholarship_program_id = isset($_POST['scholarship_program_id']) && (int)$_POST['scholarship_program_id'] > 0 
+        ? (int)$_POST['scholarship_program_id'] 
+        : NULL;
 
     // update query
-    $update_sql = "UPDATE announcements SET title = ?, content = ? WHERE id = ?";
+    $update_sql = "UPDATE announcements SET title = ?, content = ?, scholarship_program_id = ? WHERE id = ?";
     $update_stmt = $conn->prepare($update_sql);
-    $update_stmt->bind_param("ssi", $title, $content, $announcement_id);
+    $update_stmt->bind_param("ssii", $title, $content, $scholarship_program_id, $announcement_id);
 
     // success/fail messages
     if($update_stmt->execute()) {

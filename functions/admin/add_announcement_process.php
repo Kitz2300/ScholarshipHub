@@ -9,14 +9,17 @@ if (isset($_POST['add'])) {
     // Trim input data
     $title = trim($_POST['title'] ?? '');
     $content = trim($_POST['content'] ?? '');
+    $scholarship_program_id = isset($_POST['scholarship_program_id']) && (int)$_POST['scholarship_program_id'] > 0 
+        ? (int)$_POST['scholarship_program_id'] 
+        : NULL;
 
     // Validate user authentication and non-empty form inputs
     if ($user_id > 0 && !empty($title) && !empty($content)) {    
 
         // Insert announcement record
-        $add_sql = "INSERT INTO announcements (title, content, is_active, user_id) VALUES (?, ?, 1, ?)";
+        $add_sql = "INSERT INTO announcements (title, content, is_active, user_id, scholarship_program_id) VALUES (?, ?, 1, ?, ?)";
         $add_stmt = $conn->prepare($add_sql);
-        $add_stmt->bind_param("ssi", $title, $content, $user_id);
+        $add_stmt->bind_param("ssii", $title, $content, $user_id, $scholarship_program_id);
     
         if ($add_stmt->execute()) {
             // Set success message
