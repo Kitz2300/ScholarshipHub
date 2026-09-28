@@ -1,6 +1,10 @@
 /* ============================================================
    GLOBAL VARIABLES & RESETS
    ============================================================ */
+html {
+    scroll-behavior: smooth;
+}
+
 :root {
     --primary-dark: #1e4628;
     --primary-main: #2a6b37;
@@ -71,7 +75,7 @@ body::before {
     border: var(--glass-border);
     border-radius: 12px;
     box-shadow: var(--glass-shadow);
-    overflow: hidden;
+    position: relative;
 }
 
 .layout-two-col,
@@ -87,10 +91,11 @@ body::before {
 }
 
 .mb-20 { margin-bottom: 20px; }
+.mb-10 { margin-bottom: 10px; }
 .mt-20 { margin-top: 20px; }
 
 /* ============================================================
-   HEADER & NAVIGATION
+   HEADER & STICKY NAVIGATION
    ============================================================ */
 .header {
     background: var(--primary-header) !important;
@@ -141,31 +146,39 @@ body::before {
 
 .logout-btn:hover { background: rgba(255, 255, 255, 0.3); }
 
+/* STICKY NAV BAR */
 .nav-bar {
-    background: var(--glass-bg-sub);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     padding: 10px 24px;
     border-bottom: 2px solid var(--primary-main);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .nav-bar ul {
     list-style: none;
     display: flex;
     gap: 20px;
+    flex-wrap: wrap;
 }
 
 .nav-bar ul li a {
     color: var(--text-label);
     text-decoration: none;
-    font-size: 16px;
+    font-size: 17px;
+    font-weight: 600;
     padding: 6px 0;
     border-bottom: 2px solid transparent;
-    transition: all 0.3s;
+    transition: all 0.25s ease;
 }
 
-.nav-bar ul li a.active {
+.nav-bar ul li a:hover {
     color: var(--primary-dark);
-    border-bottom-color: var(--primary-dark);
-    font-weight: bold;
+    border-bottom-color: var(--primary-main);
 }
 
 /* ============================================================
@@ -174,6 +187,7 @@ body::before {
 .page-content {
     background: var(--glass-bg-sub);
     padding: 20px;
+    border-radius: 0 0 12px 12px;
 }
 
 .hero-grid {
@@ -334,6 +348,7 @@ body::before {
     border-radius: 8px;
     padding: 18px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    scroll-margin-top: 70px; /* Offset for smooth scroll under sticky navbar */
 }
 
 .profile-card h3, .card-header {
@@ -382,6 +397,108 @@ body::before {
 }
 
 /* ============================================================
+   COMPACT SCHOLAR ANNOUNCEMENTS & MODAL STYLES
+   ============================================================ */
+.announcements-list-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.announcements-list-compact::-webkit-scrollbar {
+    width: 5px;
+}
+
+.announcements-list-compact::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.announcements-list-compact::-webkit-scrollbar-thumb {
+    background: var(--primary-main);
+    border-radius: 4px;
+}
+
+.announcement-title-item {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-left: 4px solid var(--primary-main);
+    border-radius: 6px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.announcement-title-item:hover {
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+.title-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 3px;
+    line-height: 1.3;
+}
+
+.title-date {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.detail-date-badge {
+    display: inline-block;
+    font-size: 12px;
+    color: #2a6b37;
+    background: #e8f5e9;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    border: 1px solid rgba(42, 107, 55, 0.2);
+}
+
+.detail-divider {
+    border: 0;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.08);
+    margin: 10px 0 14px;
+}
+
+.detail-content {
+    font-size: 14px;
+    color: var(--text-dark);
+    line-height: 1.6;
+    white-space: pre-wrap; /* Preserves newlines and indentation */
+    word-break: break-word;
+}
+
+.detail-content a {
+    color: #2980b9;
+    text-decoration: underline;
+}
+
+.detail-content a:hover {
+    color: #1a5276;
+}
+
+/* STICKY HEADER SPECIFIC TO ANNOUNCEMENT MODAL */
+#announcementModal .modal-header {
+    position: sticky;
+    top: -20px;
+    background: #ffffff;
+    z-index: 10;
+    margin: -20px -20px 10px -20px;
+    padding: 20px 20px 10px 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================================
    ACADEMIC TABLE
    ============================================================ */
 .academic-table-wrapper {
@@ -423,6 +540,27 @@ body::before {
 .req-met { color: #28a745; font-weight: bold; font-size: 12px; }
 .req-unmet { color: #dc3545; font-weight: bold; font-size: 12px; }
 
+/* ============================================================
+   GWA CHART TREND STYLING
+   ============================================================ */
+.gwa-chart-container {
+    position: relative;
+    width: 100%;
+    height: 320px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.03);
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .gwa-chart-container {
+        height: 260px;
+        padding: 10px;
+    }
+}
 /* ============================================================
    STATUS BADGES
    ============================================================ */
@@ -500,13 +638,14 @@ body::before {
 .modal-content {
     background: #ffffff;
     border-radius: 12px;
-    max-width: 450px;
+    max-width: 500px;
     width: 100%;
     padding: 20px;
     box-shadow: 0 10px 35px rgba(0, 0, 0, 0.25);
     animation: slideDown 0.25s ease;
     max-height: 90vh;
     overflow-y: auto;
+    position: relative;
 }
 
 @keyframes slideDown {
@@ -610,7 +749,6 @@ body::before {
     body { padding: 5px; }
     .container { border-radius: 8px; }
     
-    /* Header Responsive Stacking */
     .header {
         flex-direction: column;
         align-items: stretch;
@@ -632,10 +770,17 @@ body::before {
         border-top: 1px solid rgba(255, 255, 255, 0.15);
     }
     
-    .nav-bar { padding: 8px 16px; }
+    .nav-bar { 
+        padding: 8px 12px; 
+    }
+
+    .nav-bar ul {
+        gap: 10px;
+        justify-content: center;
+    }
+    
     .page-content { padding: 14px; }
     
-    /* Hero Info Card Mobile Layout */
     .hero-card-info {
         flex-direction: column;
         text-align: center;
@@ -647,7 +792,6 @@ body::before {
         width: 100%;
     }
     
-    /* Info Row Vertical Stacking on Mobile */
     .info-row {
         flex-direction: column;
         gap: 3px;
