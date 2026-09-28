@@ -83,7 +83,16 @@ function makeLinksClickable($text) {
                 </div>
                 
                 <?php 
-                $announcement_sql = "SELECT title, content, CAST(created_at AS DATE) AS created_at_date FROM announcements WHERE is_active = 1 ORDER BY created_at DESC LIMIT 5";
+                $announcement_sql = "SELECT 
+                                        announcements.title, 
+                                        announcements.content, 
+                                        CAST(announcements.created_at AS DATE) AS created_at_date,
+                                        sp.name AS scholarship_program_name
+                                     FROM announcements 
+                                     LEFT JOIN scholarship_program sp ON announcements.scholarship_program_id = sp.id
+                                     WHERE announcements.is_active = 1 
+                                     ORDER BY announcements.created_at DESC 
+                                     LIMIT 5";
                 $announcement_stmt = $conn->prepare($announcement_sql);
                 $announcement_stmt->execute();
                 $announcement_result = $announcement_stmt->get_result();
@@ -98,23 +107,27 @@ function makeLinksClickable($text) {
                     <div class="announcements-layout">
                         <!-- Left Column: Titles List -->
                         <div class="announcements-list">
-                            <?php foreach ($announcements as $index => $item) : ?>
+                            <?php foreach ($announcements as $index => $item) : 
+                                $addressed_to = !empty($item['scholarship_program_name']) ? $item['scholarship_program_name'] : "All Scholarship Programs";
+                            ?>
                                 <div class="announcement-title-item <?= $index === 0 ? 'active' : '' ?>" 
                                      onclick="selectAnnouncement(<?= $index ?>)" 
                                      id="title-item-<?= $index ?>">
                                     <div class="title-text"><?= htmlspecialchars($item['title']) ?></div>
-                                    <div class="title-date">Posted: <?= date('M d, Y', strtotime($item['created_at_date'])) ?></div>
+                                    <div class="title-date">Posted: <?= date('M d, Y', strtotime($item['created_at_date'])) ?> | Addressed To: <?= htmlspecialchars($addressed_to) ?></div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
 
                         <!-- Right Column: Content Viewer -->
                         <div class="announcement-content-viewer">
-                            <?php foreach ($announcements as $index => $item) : ?>
+                            <?php foreach ($announcements as $index => $item) : 
+                                $addressed_to = !empty($item['scholarship_program_name']) ? $item['scholarship_program_name'] : "All Scholarship Programs";
+                            ?>
                                 <div class="announcement-detail <?= $index === 0 ? 'active' : '' ?>" 
                                      id="content-item-<?= $index ?>">
                                     <h3><?= htmlspecialchars($item['title']) ?></h3>
-                                    <span class="detail-date-badge">Date Posted: <?= date('F d, Y', strtotime($item['created_at_date'])) ?></span>
+                                    <span class="detail-date-badge">Date Posted: <?= date('F d, Y', strtotime($item['created_at_date'])) ?> | Addressed To: <?= htmlspecialchars($addressed_to) ?></span>
                                     <hr class="detail-divider">
                                     <div class="detail-content"><?= makeLinksClickable($item['content']) ?></div>
                                 </div>

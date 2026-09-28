@@ -24,21 +24,24 @@ if (!function_exists('makeLinksClickable')) {
     }
 }
 
-// Query all announcements, active and inactive
+// Query all announcements with addressed scholarship program
 $announcement_sql = "SELECT
                         announcements.id AS announcement_id,
                         title, 
                         content, 
-                        is_active,
+                        announcements.is_active,
                         created_at,
                         scholarship_users.given_name, 
                         scholarship_users.middle_name, 
                         scholarship_users.last_name,
-                        scholarship_users.role
+                        scholarship_users.role,
+                        sp.name AS scholarship_program_name
                     FROM 
                         announcements 
                     INNER JOIN 
                         scholarship_users ON announcements.user_id = scholarship_users.id
+                    LEFT JOIN
+                        scholarship_program sp ON announcements.scholarship_program_id = sp.id
                     ORDER BY
                         is_active DESC,
                         created_at DESC
@@ -124,6 +127,7 @@ if (isset($_POST['delete']) && isset($_POST['announcement_id'])) {
                         $created_at = $row['created_at'];
                         $created_by = isset($row['middle_name']) ? $row['given_name'] . " " . $row['middle_name'] . " " . $row['last_name'] : $row['given_name'] . " " . $row['last_name'];
                         $role = $row['role'];
+                        $addressed_to = !empty($row['scholarship_program_name']) ? $row['scholarship_program_name'] : "All Scholarship Programs";
                     ?>
                         <div class="announcement-card <?= $is_active_class ?>">
                             <div class="announcement-header">
@@ -131,6 +135,7 @@ if (isset($_POST['delete']) && isset($_POST['announcement_id'])) {
                                 <span class="status-badge <?= $is_active_class ?>"><?= htmlspecialchars($is_active) ?></span>
                             </div>
                             <div class="announcement-meta">
+                                <span class="meta-item">Addressed To: <strong><?= htmlspecialchars($addressed_to) ?></strong></span>
                                 <span class="meta-item">Date Posted: <?= htmlspecialchars($created_at) ?></span>
                                 <span class="meta-item">Posted By: <?= htmlspecialchars($created_by) ?> (<?= htmlspecialchars($role) ?>)</span>
                             </div>

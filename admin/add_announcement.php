@@ -8,7 +8,9 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'announcements', 'add')) {
     exit();
 }
 
-
+// Fetch active scholarship programs
+$sp_sql = "SELECT id, name FROM scholarship_program WHERE is_archived = 0 ORDER BY name ASC";
+$sp_result = $conn->query($sp_sql);
 ?>
 
 <!DOCTYPE html>
@@ -25,7 +27,7 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'announcements', 'add')) {
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <?php
     if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) :
-        $_SESSION['fail'] = "You are no logged in!";
+        $_SESSION['fail'] = "You are not logged in!";
         header("Location: ../portal.php");
         exit();
     else : ?>
@@ -49,6 +51,20 @@ if(!hasPermission($conn, $_SESSION['user_id'], 'announcements', 'add')) {
                             <div class="form-group full-width">
                                 <label for="title">Title <span class="required">*</span></label>
                                 <input type="text" name="title" id="title" placeholder="Enter announcement title" required/>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="scholarship_program_id">Addressed To <span class="required">*</span></label>
+                                <select name="scholarship_program_id" id="scholarship_program_id" required>
+                                    <option value="0">All Scholarship Programs</option>
+                                    <?php if ($sp_result && $sp_result->num_rows > 0) : ?>
+                                        <?php while($sp = $sp_result->fetch_assoc()) : ?>
+                                            <option value="<?= $sp['id'] ?>"><?= htmlspecialchars($sp['name']) ?></option>
+                                        <?php endwhile; ?>
+                                    <?php endif; ?>
+                                </select>
                             </div>
                         </div>
 

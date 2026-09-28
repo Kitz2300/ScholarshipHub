@@ -20,13 +20,18 @@ $result = $announcement_stmt->get_result();
 $title = "";
 $content = "";
 $status = 0;
+$scholarship_program_id = 0;
 
 if($row=$result->fetch_assoc()) {
     $title = $row['title'];
     $content = $row['content'];
     $status = (int)$row['is_active'];
+    $scholarship_program_id = (int)($row['scholarship_program_id'] ?? 0);
 }
 
+// Fetch active scholarship programs
+$sp_sql = "SELECT id, name FROM scholarship_program WHERE is_archived = 0 ORDER BY name ASC";
+$sp_result = $conn->query($sp_sql);
 ?>
 
 <!DOCTYPE html>
@@ -43,7 +48,7 @@ if($row=$result->fetch_assoc()) {
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <?php
     if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : 
-        $_SESSION['fail'] = "You are no logged in!";
+        $_SESSION['fail'] = "You are not logged in!";
         header("Location: ../portal.php");
         exit();
     else : ?>
@@ -63,7 +68,6 @@ if($row=$result->fetch_assoc()) {
 
                 <!-- Edit Announcement Form -->
                 <form action="../functions/admin/edit_announcement_process.php" method="POST" class="reusable-form">
-                    <!-- every input has current values that are editable -->
                     <div class="form-section">
                         <div class="form-row">
                             <div class="form-group full-width">
@@ -74,21 +78,26 @@ if($row=$result->fetch_assoc()) {
 
                         <div class="form-row">
                             <div class="form-group full-width">
+                                <label for="scholarship_program_id">Addressed To <span class="required">*</span></label>
+                                <select name="scholarship_program_id" id="scholarship_program_id" required>
+                                    <option value="0" <?= $scholarship_program_id == 0 ? "selected" : "" ?>>All Scholarship Programs</option>
+                                    <?php if ($sp_result && $sp_result->num_rows > 0) : ?>
+                                        <?php while($sp = $sp_result->fetch_assoc()) : ?>
+                                            <option value="<?= $sp['id'] ?>" <?= $scholarship_program_id == $sp['id'] ? "selected" : "" ?>>
+                                                <?= htmlspecialchars($sp['name']) ?>
+                                            </option>
+                                        <?php endwhile; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group full-width">
                                 <label for="content">Content <span class="required">*</span></label>
                                 <textarea name="content" id="content" rows="8" required><?= htmlspecialchars($content) ?></textarea>
                             </div>
                         </div>
-
-                        <!-- <div class="form-row">
-                            <div class="form-group">
-                                <label for="status">Status <span class="required">*</span></label>
-                                <select name="status" id="status" required>
-                                    <option value="1" <?= $status == 1 ? "selected" : "" ?>>Active</option>
-                                    <option value="0" <?= $status == 0 ? "selected" : "" ?>>Not Active</option>
-                                </select>
-                                <small class="help-text">Active announcements will be displayed on the portal page.</small>
-                            </div>
-                        </div> -->
                     </div>
 
                     <input type="hidden" name="announcement_id" value="<?= htmlspecialchars($announcement_id) ?>"/>
