@@ -77,7 +77,13 @@ $column_map = [
     'mother_given' => 'scholar_info.mother_given_name',
     'mother_middle' => 'scholar_info.mother_middle_name',
     'mother_contact' => 'scholar_info.mother_contact',
-    'is_child_of_solo_parent' => 'scholar_info.is_child_of_solo_parent',
+    'is_solo_parent' => 'scholar_info.is_solo_parent',
+    'is_raised_by_solo_parent' => 'scholar_info.is_raised_by_solo_parent',
+    'is_child_of_solo_parent' => 'scholar_info.is_raised_by_solo_parent',
+    'is_gida' => 'scholar_info.is_gida',
+    'gida_details' => 'scholar_info.gida_details',
+    'is_farmer_fisherfolk' => 'scholar_info.is_farmer_fisherfolk',
+    'is_rebel_returnee' => 'scholar_info.is_rebel_returnee',
     'permanent_address' => 'scholar_info.permanent_address',
     'disability' => 'scholar_info.disability',
     'contact' => 'scholar_info.contact_num',
@@ -111,7 +117,13 @@ $display_headers = [
     'mother_given' => "Mother's Given Name",
     'mother_middle' => "Mother's Middle Name",
     'mother_contact' => "Mother's Contact Number",
-    'is_child_of_solo_parent' => 'Child of Solo Parent',
+    'is_solo_parent' => 'Solo Parent',
+    'is_raised_by_solo_parent' => 'Raised by Solo Parent',
+    'is_child_of_solo_parent' => 'Raised by Solo Parent',
+    'is_gida' => 'GIDA Resident',
+    'gida_details' => 'GIDA Details',
+    'is_farmer_fisherfolk' => 'Farmer / Fisherfolk Family',
+    'is_rebel_returnee' => 'Rebel Returnee Family',
     'permanent_address' => 'Permanent Address',
     'disability' => 'Disability',
     'contact' => 'Contact Number',
@@ -176,6 +188,9 @@ if($academic_status !== 'all') {
 }
 $sql .= " ORDER BY scholar_info.last_name ASC";
 
+// List of binary flag columns to format as Yes/No
+$flag_cols = ['is_solo_parent', 'is_raised_by_solo_parent', 'is_child_of_solo_parent', 'is_gida', 'is_farmer_fisherfolk', 'is_rebel_returnee'];
+
 // ===== If preview, return JSON =====
 if($isPreview) {
     $limitSql = $sql . " LIMIT 5";
@@ -185,8 +200,10 @@ if($isPreview) {
         if(isset($row['sex'])) {
             $row['sex'] = $row['sex'] == 0 ? 'Male' : 'Female';
         }
-        if(isset($row['is_child_of_solo_parent'])) {
-            $row['is_child_of_solo_parent'] = $row['is_child_of_solo_parent'] == 1 ? 'Yes' : 'No';
+        foreach($flag_cols as $fc) {
+            if(isset($row[$fc])) {
+                $row[$fc] = $row[$fc] == 1 ? 'Yes' : 'No';
+            }
         }
         // Decode notes for extra columns
         if($has_extra && isset($row['_notes'])) {
@@ -348,7 +365,7 @@ while($row = $result->fetch_assoc()) {
         if($colName === 'sex' && $value !== '') {
             $value = $value == 0 ? 'Male' : 'Female';
         }
-        if($colName === 'is_child_of_solo_parent' && $value !== '') {
+        if(in_array($colName, $flag_cols) && $value !== '') {
             $value = $value == 1 ? 'Yes' : 'No';
         }
         $cell = Coordinate::stringFromColumnIndex($col) . $rowNum;
