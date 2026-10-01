@@ -18,18 +18,80 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student') {
     exit();
 }
 
-$scholar_id = (int) ($_SESSION['user_id'] ?? 0);
+$session_scholar_id = (int) ($_SESSION['user_id'] ?? 0);
 
-if ($scholar_id === 0) {
+if ($session_scholar_id === 0) {
     $_SESSION['fail'] = "Invalid user session.";
     header("Location: login.php");
     exit();
 }
 
-// ─── FETCH SCHOLAR NOTES ───
-$notes_sql = "SELECT notes FROM scholar_notes WHERE scholar_id = ?";
+// ─── 1. FETCH STUDENT IDENTIFIER (student_id) ───
+$id_lookup_sql = "SELECT student_id FROM scholar_info WHERE id = ? LIMIT 1";
+$id_lookup_stmt = $conn->prepare($id_lookup_sql);
+$id_lookup_stmt->bind_param("i", $session_scholar_id);
+$id_lookup_stmt->execute();
+$id_lookup_res = $id_lookup_stmt->get_result();
+
+if ($id_row = $id_lookup_res->fetch_assoc()) {
+    $student_id_num = $id_row['student_id'];
+} else {
+    $_SESSION['fail'] = "Scholar record not found.";
+    header("Location: login.php");
+    exit();
+}
+$id_lookup_stmt->close();
+
+// ─── 2. FETCH ALL AVAILABLE TERM SNAPSHOTS ───
+$terms_sql = "SELECT id, school_year, semester, year_level, academic_status 
+              FROM scholar_info 
+              WHERE student_id = ? AND is_archived = 0 
+              ORDER BY REPLACE(school_year, ' ', '') DESC, 
+                       CASE 
+                           WHEN semester = 'Summer' THEN 3
+                           WHEN semester = '2nd Semester' THEN 2
+                           WHEN semester = '1st Semester' THEN 1
+                           ELSE 0
+                       END DESC";
+$terms_stmt = $conn->prepare($terms_sql);
+$terms_stmt->bind_param("s", $student_id_num);
+$terms_stmt->execute();
+$terms_res = $terms_stmt->get_result();
+
+$available_terms = [];
+while ($t_row = $terms_res->fetch_assoc()) {
+    $available_terms[] = $t_row;
+}
+$terms_stmt->close();
+
+if (empty($available_terms)) {
+    $_SESSION['fail'] = "No active term records found for this scholar.";
+    header("Location: login.php");
+    exit();
+}
+
+// ─── 3. DETERMINE SELECTED TERM SNAPSHOT ID ───
+$selected_scholar_id = isset($_GET['term_id']) ? (int)$_GET['term_id'] : 0;
+
+$valid_selected = false;
+foreach ($available_terms as $term) {
+    if ((int)$term['id'] === $selected_scholar_id) {
+        $valid_selected = true;
+        break;
+    }
+}
+
+if (!$valid_selected) {
+    $selected_scholar_id = (int)$available_terms[0]['id'];
+}
+
+// ─── 4. FETCH SCHOLAR NOTES ACROSS ALL TERMS ───
+$notes_sql = "SELECT sn.notes 
+              FROM scholar_notes sn 
+              INNER JOIN scholar_info si ON sn.scholar_id = si.id 
+              WHERE si.student_id = ?";
 $notes_stmt = $conn->prepare($notes_sql);
-$notes_stmt->bind_param("i", $scholar_id);
+$notes_stmt->bind_param("s", $student_id_num);
 $notes_stmt->execute();
 $notes_result = $notes_stmt->get_result();
 
@@ -43,7 +105,7 @@ while ($note_row = $notes_result->fetch_assoc()) {
 }
 $notes_stmt->close();
 
-// ─── FETCH SCHOLAR INFORMATION ───
+// ─── 5. FETCH SELECTED TERM SNAPSHOT INFORMATION ───
 $scholar_sql = "SELECT scholar_info.*, 
                 scholarship_program.name AS scholarship_program_name,
                 scholarship_program.min_gwa_req AS gwa_req,
@@ -59,7 +121,7 @@ $scholar_sql = "SELECT scholar_info.*,
                 INNER JOIN college ON program.college_id = college.id
                 WHERE scholar_info.id = ?";
 $scholar_stmt = $conn->prepare($scholar_sql);
-$scholar_stmt->bind_param('i', $scholar_id);
+$scholar_stmt->bind_param('i', $selected_scholar_id);
 $scholar_stmt->execute();
 $scholar_result = $scholar_stmt->get_result();
 
@@ -82,6 +144,7 @@ if ($row = $scholar_result->fetch_assoc()) {
     $college = $row['college_name'];
     $academic_status = $row['academic_status'];
     $school_year = $row['school_year'];
+    $semester = $row['semester'];
     $address = $row['permanent_address'];
     $zipcode = $row['zipcode'];
     $disability = empty($row['disability']) ? "Not Applicable" : $row['disability'];
@@ -99,9 +162,6 @@ if ($row = $scholar_result->fetch_assoc()) {
     
     $father_contact = trim($row['father_contact_num'] ?? $row['father_contact'] ?? '');
     $mother_contact = trim($row['mother_contact_num'] ?? $row['mother_contact'] ?? '');
-    
-    // Flag to check if password has been changed
-    $is_password_changed = (int) ($row['is_password_changed'] ?? $row['password_changed'] ?? 0);
 
     $philsys_id = trim($row['philsys_id'] ?? '');
     $lrn = trim($row['lrn'] ?? '');
@@ -111,19 +171,16 @@ if ($row = $scholar_result->fetch_assoc()) {
     $province = $row['province'] ?? '';
     $country = $row['country'] ?? 'Philippines';
 
-    // ─── PROFILE PICTURE RESOLUTION (CLOUDINARY / LOCAL FALLBACK) ───
+    // PROFILE PICTURE RESOLUTION
     $profile_pic = trim($row['profile_picture'] ?? '');
 
     if (!empty($profile_pic) && preg_match("~^https?://~i", $profile_pic)) {
-        // Stored as remote Cloudinary URL
         $pic_path = $profile_pic;
         $has_picture = true;
     } elseif (!empty($profile_pic) && file_exists(__DIR__ . '/../assets/images/profile_picture/' . $profile_pic)) {
-        // Stored locally in assets directory
         $pic_path = '../assets/images/profile_picture/' . $profile_pic . '?v=' . time();
         $has_picture = true;
     } else {
-        // Default avatar fallback
         $pic_path = '';
         $has_picture = false;
     }
@@ -143,7 +200,22 @@ if ($row = $scholar_result->fetch_assoc()) {
 }
 $scholar_stmt->close();
 
-// ─── FETCH ANNOUNCEMENTS FOR SCHOLAR ───
+// ─── 6. CHECK PASSWORD CHANGED STATUS ACROSS ALL SNAPSHOT ROWS ───
+$pass_check_sql = "SELECT MAX(COALESCE(is_password_changed, 0)) AS max_changed 
+                   FROM scholar_info 
+                   WHERE student_id = ?";
+$pass_check_stmt = $conn->prepare($pass_check_sql);
+$pass_check_stmt->bind_param("s", $student_id_num);
+$pass_check_stmt->execute();
+$pass_check_res = $pass_check_stmt->get_result();
+
+$is_password_changed = 0;
+if ($p_row = $pass_check_res->fetch_assoc()) {
+    $is_password_changed = (int) $p_row['max_changed'];
+}
+$pass_check_stmt->close();
+
+// ─── 7. FETCH ANNOUNCEMENTS & LATEST GWA ───
 $announcements_sql = "SELECT 
                         announcements.title, 
                         announcements.content, 
@@ -167,12 +239,15 @@ while ($ann = $announcements_result->fetch_assoc()) {
 }
 $announcements_stmt->close();
 
-// Check latest GWA for status alert
 $latest_gwa = null;
 $is_flagged = false;
-$gwa_sql = "SELECT gwa FROM academic_performance WHERE scholar_id = ? ORDER BY school_year DESC, semester DESC LIMIT 1";
+$gwa_sql = "SELECT ap.gwa 
+            FROM academic_performance ap
+            INNER JOIN scholar_info si ON ap.scholar_id = si.id
+            WHERE si.student_id = ? 
+            ORDER BY REPLACE(ap.school_year, ' ', '') DESC, ap.semester DESC LIMIT 1";
 $gwa_stmt = $conn->prepare($gwa_sql);
-$gwa_stmt->bind_param('i', $scholar_id);
+$gwa_stmt->bind_param('s', $student_id_num);
 $gwa_stmt->execute();
 $gwa_res = $gwa_stmt->get_result();
 if ($gwa_row = $gwa_res->fetch_assoc()) {
@@ -197,11 +272,9 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
     <link rel="stylesheet" href="../assets/css/profile.css?v=<?= filemtime('../assets/css/profile.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
     <link rel="stylesheet" href="../assets/css/modals.css">
-    <!-- Chart.js Library for GWA Trend -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <!-- alert messages -->
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <div class="container">
         <!-- Header -->
@@ -221,14 +294,14 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
             </div>
         </header>
 
-        <!-- Sticky Auto-Scroll Navigation Bar -->
+        <!-- Sticky Navigation Bar -->
         <nav class="nav-bar">
             <ul>
                 <li><a href="#sec-personal">Personal Info</a></li>
                 <li><a href="#sec-announcements">Announcements</a></li>
                 <li><a href="#sec-contact">Contact Details</a></li>
                 <li><a href="#sec-family-notes">Family Background & Notes</a></li>
-                <li><a href="#sec-academic">Academic Perormance</a></li>
+                <li><a href="#sec-academic">Academic Performance</a></li>
             </ul>
         </nav>
 
@@ -237,7 +310,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
             
             <!-- Hero Scholar Cards Grid -->
             <div class="hero-grid">
-                <!-- Left Hero Card: Scholar Details -->
+                <!-- Left Hero Card (Profile Picture, Details & Actions) -->
                 <div class="hero-card hero-card-info">
                     <div class="avatar-wrapper" onclick="openPhotoModal()" title="Click to change photo">
                         <?php if ($has_picture): ?>
@@ -252,22 +325,57 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                         <p><strong>Student ID:</strong> <?= htmlspecialchars($id_num) ?></p>
                         <p><strong>College:</strong> <?= htmlspecialchars($college) ?></p>
                         <p><strong>Program:</strong> <?= htmlspecialchars($program) ?></p>
+
+                        <!-- Academic Status Indicator, Flagged Badge & Password Change Button -->
+                        <div class="hero-details-action-row">
+                            <span class="status-badge status-<?= $status_slug ?>">
+                                <?= htmlspecialchars($academic_status) ?>
+                            </span>
+                            <?php if ($is_flagged): ?>
+                                <span class="status-badge status-flagged">
+                                    ⚠️ Below GWA Requirement
+                                </span>
+                            <?php endif; ?>
+                            <button type="button" class="btn btn-warning btn-password-change" onclick="openPasswordModal()">🔒 Change Password</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Right Hero Card: Statuses & Password -->
+                <!-- Right Hero Card (Redesigned Term Snapshot Selector) -->
                 <div class="hero-card hero-card-actions">
-                    <div class="hero-status-group">
-                        <span class="status-badge status-<?= $status_slug ?>">
-                            <?= htmlspecialchars($academic_status) ?>
-                        </span>
-                        <?php if ($is_flagged): ?>
-                            <span class="status-badge status-flagged">
-                                ⚠️ Below GWA Requirement
-                            </span>
-                        <?php endif; ?>
-                    </div>
-                    <button type="button" class="btn btn-warning btn-password-change" onclick="openPasswordModal()">🔒 Change Password</button>
+                    <form action="profile.php" method="GET" class="term-selector-form">
+                        <div class="hero-term-selector">
+                            <div class="term-selector-header">
+                                <div class="term-icon-box">📅</div>
+                                <div class="term-header-text">
+                                    <span class="term-subtitle">Academic View</span>
+                                    <h3>Term Snapshot</h3>
+                                </div>
+                            </div>
+
+                            <div class="select-wrapper">
+                                <select name="term_id" id="term_id" onchange="this.form.submit()">
+                                    <?php foreach ($available_terms as $t) : 
+                                        $t_yl = match ((int)$t['year_level']) {
+                                            1 => "1st Yr",
+                                            2 => "2nd Yr",
+                                            3 => "3rd Yr",
+                                            default => $t['year_level'] . "th Yr"
+                                        };
+                                    ?>
+                                        <option value="<?= $t['id'] ?>" <?= $t['id'] == $selected_scholar_id ? 'selected' : '' ?>>
+                                            SY <?= htmlspecialchars($t['school_year']) ?> — <?= htmlspecialchars($t['semester']) ?> (<?= $t_yl ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <span class="select-arrow">▼</span>
+                            </div>
+
+                            <div class="term-selector-footer">
+                                <span class="pulse-dot"></span> Viewing records for this snapshot
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -286,7 +394,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 <div class="kpi-card">
                     <div class="kpi-title">Academic Standing</div>
                     <div class="kpi-value"><?= htmlspecialchars($year_lvl) ?></div>
-                    <div class="kpi-sub">SY <?= htmlspecialchars($school_year) ?></div>
+                    <div class="kpi-sub">SY <?= htmlspecialchars($school_year) ?> (<?= htmlspecialchars($semester) ?>)</div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-title">GWA Requirement</div>
@@ -297,10 +405,8 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 </div>
             </div>
 
-            <!-- Two-Column Layout 1: Personal Info (Left) | Announcements & Contact Details (Right) -->
+            <!-- Two-Column Layout 1 -->
             <div class="layout-two-col mb-20">
-                
-                <!-- Personal & Identification Details (Left Column) -->
                 <div class="profile-card" id="sec-personal">
                     <h3>Personal Information & IDs</h3>
                     <div class="info-group">
@@ -335,10 +441,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                     </div>
                 </div>
 
-                <!-- Right Column Stack: Announcements (Top) + Contact & Address Details (Bottom) -->
                 <div class="right-column-stack">
-                    
-                    <!-- Announcements Selection Card -->
                     <div class="profile-card mb-20" id="sec-announcements">
                         <div class="card-header mb-10">
                             <h3>📢 Announcements</h3>
@@ -365,12 +468,11 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                             </div>
                         <?php else : ?>
                             <div class="no-data">
-                                <p>No active announcements available.</p>
+                                <p>No active announcements available for your scholarship program.</p>
                             </div>
                         <?php endif; ?>
                     </div>
 
-                    <!-- Contact & Address Details -->
                     <div class="profile-card" id="sec-contact">
                         <h3>Contact & Address Details</h3>
                         <div class="info-group">
@@ -395,9 +497,8 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 </div>
             </div>
 
-            <!-- Two-Column Layout 2: Family Background (Left) | Additional Notes & Information (Right) -->
+            <!-- Two-Column Layout 2 -->
             <div class="layout-two-col mb-20" id="sec-family-notes">
-                <!-- Family Background -->
                 <div class="profile-card">
                     <h3>Family Background</h3>
                     <div class="info-group">
@@ -429,7 +530,6 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                     </div>
                 </div>
 
-                <!-- Additional Notes & Information -->
                 <div class="profile-card">
                     <h3>Additional Notes & Information</h3>
                     <div class="info-group">
@@ -451,26 +551,26 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 </div>
             </div>
 
-            <!-- Full-Width Academic Performance (GWA Trend Chart & History) -->
+            <!-- Full-Width Academic Performance across all terms -->
             <div class="profile-card mt-20" id="sec-academic">
                 <div class="card-header mb-20">
                     <h3>📈 Academic Performance & GWA Trend</h3>
                 </div>
 
                 <?php 
-                // Fetch chronological academic performance for trend graph
-                $academic_sql = "SELECT *,
+                $academic_sql = "SELECT ap.*, 
                                     CASE 
-                                        WHEN semester LIKE '%1st%' THEN 1 
-                                        WHEN semester LIKE '%2nd%' THEN 2 
-                                        WHEN semester LIKE '%Summer%' THEN 3 
+                                        WHEN ap.semester LIKE '%1st%' THEN 1 
+                                        WHEN ap.semester LIKE '%2nd%' THEN 2 
+                                        WHEN ap.semester LIKE '%Summer%' THEN 3 
                                         ELSE 4 
                                     END as sem_order 
-                                 FROM academic_performance 
-                                 WHERE scholar_id = ? 
-                                 ORDER BY school_year ASC, sem_order ASC";
+                                 FROM academic_performance ap
+                                 INNER JOIN scholar_info si ON ap.scholar_id = si.id
+                                 WHERE si.student_id = ? 
+                                 ORDER BY REPLACE(ap.school_year, ' ', '') ASC, sem_order ASC";
                 $academic_stmt = $conn->prepare($academic_sql);
-                $academic_stmt->bind_param('i', $scholar_id);
+                $academic_stmt->bind_param('s', $student_id_num);
                 $academic_stmt->execute();
                 $academic_result = $academic_stmt->get_result();
 
@@ -491,12 +591,10 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 ?>
 
                 <?php if (!empty($academic_history)) : ?>
-                    <!-- GWA Trend Chart Canvas Box -->
                     <div class="gwa-chart-container">
                         <canvas id="gwaTrendChart"></canvas>
                     </div>
 
-                    <!-- Historical Data Table -->
                     <div class="academic-table-wrapper mt-20">
                         <table class="responsive-table">
                             <thead>
@@ -542,7 +640,6 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
 
         </main>
 
-        <!-- Footer -->
         <footer class="footer">
             © 2026 PIT ScholarshipHub. All rights reserved.
         </footer>
@@ -688,7 +785,6 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
     </script>
 
     <?php if (!empty($academic_history)): ?>
-    <!-- GWA Chart Initialization Script -->
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         const gwaLabels = <?= json_encode($gwa_labels) ?>;
@@ -698,7 +794,6 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
 
         const ctx = document.getElementById('gwaTrendChart').getContext('2d');
         
-        // Gradient fill under the GWA trend line
         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
         gradient.addColorStop(0, 'rgba(42, 107, 55, 0.35)');
         gradient.addColorStop(1, 'rgba(42, 107, 55, 0.0)');
@@ -760,7 +855,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 },
                 scales: {
                     y: {
-                        reverse: true, // Inverted scale: 1.00 is at the top, 3.00 is lower
+                        reverse: true,
                         min: 1.0,
                         max: 3.5,
                         title: {
@@ -768,9 +863,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                             text: 'GWA (1.00 Highest - 3.00 Passing)',
                             font: { weight: 'bold', size: 12 }
                         },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
                     },
                     x: {
                         title: {
@@ -778,9 +871,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                             text: 'Academic Term Progress',
                             font: { weight: 'bold', size: 12 }
                         },
-                        grid: {
-                            display: false
-                        }
+                        grid: { display: false }
                     }
                 }
             }
