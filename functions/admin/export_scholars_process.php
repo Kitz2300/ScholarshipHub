@@ -1,17 +1,25 @@
 <?php
+// Start output buffering to catch any unexpected warnings/notices
+ob_start();
+
 include __DIR__ . "/../../includes/conn.php";
-require_once "../../lib/vendor/autoload.php";
+require_once "../../vendor/autoload.php";
+
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+
 session_start();
 
 // ===== Authorization =====
 if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    die("Unauthorized access.");
+    ob_clean();
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Unauthorized access.']);
+    exit();
 }
 
 // ===== Handle AJAX Preview request =====
@@ -38,7 +46,7 @@ foreach($selected_cols as $col) {
         $main_cols[] = "mother_given";
         $main_cols[] = "mother_middle";
     } elseif(strpos($col, 'extra_') === 0) {
-        $extra_cols[] = $col; // keep full name e.g., "extra_Remarks"
+        $extra_cols[] = $col;
     } else {
         $main_cols[] = $col;
     }
@@ -77,13 +85,13 @@ $column_map = [
     'mother_given' => 'scholar_info.mother_given_name',
     'mother_middle' => 'scholar_info.mother_middle_name',
     'mother_contact' => 'scholar_info.mother_contact',
-    'is_solo_parent' => 'scholar_info.is_solo_parent',
-    'is_raised_by_solo_parent' => 'scholar_info.is_raised_by_solo_parent',
-    'is_child_of_solo_parent' => 'scholar_info.is_raised_by_solo_parent',
-    'is_gida' => 'scholar_info.is_gida',
+    'is_solo_parent' => 'COALESCE(scholar_info.is_solo_parent, 0)',
+    'is_raised_by_solo_parent' => 'COALESCE(scholar_info.is_raised_by_solo_parent, scholar_info.is_child_of_solo_parent, 0)',
+    'is_child_of_solo_parent' => 'COALESCE(scholar_info.is_raised_by_solo_parent, scholar_info.is_child_of_solo_parent, 0)',
+    'is_gida' => 'COALESCE(scholar_info.is_gida, 0)',
     'gida_details' => 'scholar_info.gida_details',
-    'is_farmer_fisherfolk' => 'scholar_info.is_farmer_fisherfolk',
-    'is_rebel_returnee' => 'scholar_info.is_rebel_returnee',
+    'is_farmer_fisherfolk' => 'COALESCE(scholar_info.is_farmer_fisherfolk, 0)',
+    'is_rebel_returnee' => 'COALESCE(scholar_info.is_rebel_returnee, 0)',
     'permanent_address' => 'scholar_info.permanent_address',
     'disability' => 'scholar_info.disability',
     'contact' => 'scholar_info.contact_num',
@@ -137,13 +145,9 @@ $display_headers = [
     'loa_school_year' => 'LOA School Year',
 ];
 
-// Build the list of all columns (main + extra) for final ordering
 $all_selected = array_merge($main_cols, $extra_cols);
-
-// Determine if we need to join scholar_notes
 $has_extra = !empty($extra_cols);
 
-// Build SELECT part for main columns
 $select_parts = [];
 foreach($main_cols as $col) {
     if(isset($column_map[$col])) {
@@ -155,7 +159,6 @@ if($has_extra) {
 }
 $select_sql = implode(', ', $select_parts);
 
-// Build FROM and WHERE
 $sql = "SELECT $select_sql 
         FROM scholar_info
         LEFT JOIN program ON scholar_info.program_id = program.id
@@ -188,13 +191,22 @@ if($academic_status !== 'all') {
 }
 $sql .= " ORDER BY scholar_info.last_name ASC";
 
-// List of binary flag columns to format as Yes/No
 $flag_cols = ['is_solo_parent', 'is_raised_by_solo_parent', 'is_child_of_solo_parent', 'is_gida', 'is_farmer_fisherfolk', 'is_rebel_returnee'];
 
 // ===== If preview, return JSON =====
 if($isPreview) {
     $limitSql = $sql . " LIMIT 5";
     $result = $conn->query($limitSql);
+
+    if (!$result) {
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'error' => 'Database Query Error: ' . $conn->error
+        ]);
+        exit;
+    }
+
     $rows = [];
     while($row = $result->fetch_assoc()) {
         if(isset($row['sex'])) {
@@ -215,7 +227,6 @@ if($isPreview) {
             }
         }
 
-        // Decode notes for extra columns
         if($has_extra && isset($row['_notes'])) {
             $notes = json_decode($row['_notes'], true);
             if(is_array($notes)) {
@@ -231,7 +242,6 @@ if($isPreview) {
             unset($row['_notes']);
         }
 
-        // Convert any remaining NULL or null-equivalent values to empty strings
         foreach($row as $k => $v) {
             if($v === null) {
                 $row[$k] = '';
@@ -256,6 +266,8 @@ if($isPreview) {
         }
         $columns_for_preview = $ordered;
     }
+
+    ob_clean();
     header('Content-Type: application/json');
     echo json_encode([
         'columns' => $columns_for_preview,
@@ -282,7 +294,6 @@ if(!empty($column_order)) {
     $final_cols = $ordered;
 }
 
-// Execute full query
 $result = $conn->query($sql);
 if(!$result || $result->num_rows === 0) {
     $_SESSION['fail'] = "No records found to export.";
@@ -290,7 +301,6 @@ if(!$result || $result->num_rows === 0) {
     exit();
 }
 
-// Fetch Scholarship Program Details for Row 1 Header Banner
 $sp_title = "ALL SCHOLARSHIP PROGRAMS";
 $sp_school_year = "";
 if ($scholarship_program !== 'all' && !empty($scholarship_program)) {
@@ -306,17 +316,14 @@ if ($scholarship_program !== 'all' && !empty($scholarship_program)) {
     }
 }
 
-// Build Row 1 Banner Text
 $banner_text = strtoupper($sp_title);
 if (!empty($sp_school_year)) {
     $banner_text .= " (" . $sp_school_year . ")";
 }
 
-// Create spreadsheet
 $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
 
-// Define styles
 $bannerStyle = [
     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1E4628']],
@@ -338,7 +345,7 @@ $dataStyle = [
 $totalCols = count($final_cols);
 $lastColLetter = Coordinate::stringFromColumnIndex($totalCols);
 
-// ===== ROW 1: SCHOLARSHIP PROGRAM & SCHOOL YEAR HEADER BANNER =====
+// ===== ROW 1: HEADER BANNER =====
 $sheet->mergeCells("A1:{$lastColLetter}1");
 $sheet->setCellValue('A1', $banner_text);
 $sheet->getStyle("A1:{$lastColLetter}1")->applyFromArray($bannerStyle);
@@ -400,12 +407,10 @@ while($row = $result->fetch_assoc()) {
     $rowNum++;
 }
 
-// Auto-size columns
 for($c = 1; $c <= $totalCols; $c++) {
     $sheet->getColumnDimensionByColumn($c)->setAutoSize(true);
 }
 
-// Apply borders to data rows (starting at Row 3)
 $lastRow = $rowNum - 1;
 if($lastRow >= 3) {
     $firstData = 'A3';
@@ -413,10 +418,8 @@ if($lastRow >= 3) {
     $sheet->getStyle($firstData . ':' . $lastData)->applyFromArray($dataStyle);
 }
 
-// Freeze top two header rows (Freeze below Row 2)
 $sheet->freezePane('A3');
 
-// Set filename and download
 $filename = !empty($_POST['filename']) ? $_POST['filename'] : 'scholars_export_' . date('Y-m-d');
 $fullFilename = $filename . '.xlsx';
 
@@ -429,6 +432,7 @@ $audit_stmt = $conn->prepare($audit_sql);
 $audit_stmt->bind_param("is", $user_id, $action);
 $audit_stmt->execute();
 
+ob_clean();
 $writer = new Xlsx($spreadsheet);
 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 header('Content-Disposition: attachment; filename="' . $fullFilename . '"');
