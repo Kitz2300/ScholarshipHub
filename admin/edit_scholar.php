@@ -38,7 +38,14 @@ $disability = "";
 $contact_num = "";
 $email = "";
 $ip_group = "";
-$is_child_of_solo_parent = 0;
+
+$is_solo_parent = 0;
+$is_raised_by_solo_parent = 0;
+$is_gida = 0;
+$gida_details = "";
+$is_farmer_fisherfolk = 0;
+$is_rebel_returnee = 0;
+
 $father_last = "";
 $father_given = "";
 $father_middle = "";
@@ -83,7 +90,14 @@ if($row = $scholar_result->fetch_assoc()) {
     $contact_num = $row['contact_num'];
     $email = $row['email'];
     $ip_group = $row['ip_group'];
-    $is_child_of_solo_parent = (int) ($row['is_child_of_solo_parent'] ?? 0);
+
+    $is_solo_parent = (int) ($row['is_solo_parent'] ?? 0);
+    $is_raised_by_solo_parent = (int) ($row['is_raised_by_solo_parent'] ?? $row['is_child_of_solo_parent'] ?? 0);
+    $is_gida = (int) ($row['is_gida'] ?? 0);
+    $gida_details = $row['gida_details'] ?? '';
+    $is_farmer_fisherfolk = (int) ($row['is_farmer_fisherfolk'] ?? 0);
+    $is_rebel_returnee = (int) ($row['is_rebel_returnee'] ?? 0);
+
     $father_last = $row['father_last_name'];
     $father_given = $row['father_given_name'];
     $father_middle = $row['father_middle_name'];
@@ -214,7 +228,7 @@ if($row = $scholar_result->fetch_assoc()) {
                                 </select>
                             </div>
 
-                            <!-- Birth Date Field with Clean Hidden Picker -->
+                            <!-- Birth Date Field -->
                             <div class="form-group">
                                 <label for="birth_date">Birth Date (YYYY-MM-DD) <span class="required">*</span></label>
                                 <div style="display: flex; gap: 6px; align-items: center; position: relative;">
@@ -225,7 +239,7 @@ if($row = $scholar_result->fetch_assoc()) {
                             </div>
 
                             <div class="form-group">
-                                <label for="disability">Disability</label>
+                                <label for="disability">Disability (PWD)</label>
                                 <input type="text" name="disability" id="disability" placeholder="e.g., Visual impairment, Dyslexia" value="<?= htmlspecialchars($disability) ?>" list="disability-list"/>
                                 <datalist id="disability-list">
                                     <option value="Not applicable"></option>
@@ -237,7 +251,6 @@ if($row = $scholar_result->fetch_assoc()) {
                             </div>
                         </div>
 
-                        <!-- IP Group Aligned with Checkbox -->
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="ip_group">IP Group</label>
@@ -251,10 +264,42 @@ if($row = $scholar_result->fetch_assoc()) {
                                     <option value="Teduray"></option>
                                 </datalist>
                             </div>
-                            
-                            <div class="form-group checkbox-group" style="display: flex; align-items: center; gap: 8px; padding-top: 25px;">
-                                <input type="checkbox" name="is_child_of_solo_parent" id="is_child_of_solo_parent" value="1" <?= $is_child_of_solo_parent === 1 ? 'checked' : '' ?> style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
-                                <label for="is_child_of_solo_parent" style="cursor: pointer; font-weight: bold; margin-bottom: 0;">Child of a Solo Parent</label>
+                        </div>
+
+                        <!-- Special Classifications & Sectoral Groups -->
+                        <div class="form-row" style="margin-top: 15px;">
+                            <div class="form-group full-width">
+                                <label style="font-weight: bold; margin-bottom: 10px; display: block; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Special Classifications & Sectoral Groups</label>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" name="is_solo_parent" id="is_solo_parent" value="1" <?= $is_solo_parent === 1 ? 'checked' : '' ?> style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
+                                        <label for="is_solo_parent" style="cursor: pointer; font-weight: 600; margin: 0;">Solo Parent</label>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" name="is_raised_by_solo_parent" id="is_raised_by_solo_parent" value="1" <?= $is_raised_by_solo_parent === 1 ? 'checked' : '' ?> style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
+                                        <label for="is_raised_by_solo_parent" style="cursor: pointer; font-weight: 600; margin: 0;">Raised by a Single / Solo Parent</label>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" name="is_gida" id="is_gida" value="1" <?= $is_gida === 1 ? 'checked' : '' ?> onchange="toggleGidaDetails(this)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
+                                        <label for="is_gida" style="cursor: pointer; font-weight: 600; margin: 0;">Living in GIDA (Geographically Isolated Area)</label>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" name="is_farmer_fisherfolk" id="is_farmer_fisherfolk" value="1" <?= $is_farmer_fisherfolk === 1 ? 'checked' : '' ?> style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
+                                        <label for="is_farmer_fisherfolk" style="cursor: pointer; font-weight: 600; margin: 0;">Family of Subsistence Farmer / Fisherfolk</label>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" name="is_rebel_returnee" id="is_rebel_returnee" value="1" <?= $is_rebel_returnee === 1 ? 'checked' : '' ?> style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
+                                        <label for="is_rebel_returnee" style="cursor: pointer; font-weight: 600; margin: 0;">Family of Rebel Returnee</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GIDA Details Field -->
+                        <div class="form-row" id="gida_details_container" style="display: <?= $is_gida === 1 ? 'flex' : 'none' ?>;">
+                            <div class="form-group full-width">
+                                <label for="gida_details">Please specify GIDA Area / Details</label>
+                                <input type="text" name="gida_details" id="gida_details" value="<?= htmlspecialchars($gida_details) ?>" placeholder="e.g., Island Barangay / Mountainous Remote Area">
                             </div>
                         </div>
                     </div>
@@ -496,6 +541,17 @@ if($row = $scholar_result->fetch_assoc()) {
             </div>
         </div>
 
+        <script>
+        function toggleGidaDetails(checkbox) {
+            const container = document.getElementById('gida_details_container');
+            if (container) {
+                container.style.display = checkbox.checked ? 'flex' : 'none';
+                if (!checkbox.checked) {
+                    document.getElementById('gida_details').value = '';
+                }
+            }
+        }
+        </script>
         <script src="../assets/js/add_scholar.js"></script>
     <?php endif; ?>
 </body>

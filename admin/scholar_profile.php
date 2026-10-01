@@ -102,7 +102,22 @@ if($row = $scholar_result->fetch_assoc()) {
     $contact_num = $row['contact_num'];
     $email = $row['email'];
     $ip_group = empty($row['ip_group']) ? "Not Applicable" : $row['ip_group'];
-    $is_child_of_solo_parent = (int) ($row['is_child_of_solo_parent'] ?? 0);
+    
+    // Classifications
+    $solo_parent = ((int)($row['is_solo_parent'] ?? 0) === 1) ? "Yes" : "No";
+    $raised_by_solo_parent = ((int)($row['is_raised_by_solo_parent'] ?? $row['is_child_of_solo_parent'] ?? 0) === 1) ? "Yes" : "No";
+
+    $gida_raw = (int)($row['is_gida'] ?? 0);
+    $gida_details = trim($row['gida_details'] ?? '');
+    if ($gida_raw === 1) {
+        $gida = "Yes" . (!empty($gida_details) ? " (" . htmlspecialchars($gida_details) . ")" : "");
+    } else {
+        $gida = "Not Applicable";
+    }
+
+    $farmer_fisherfolk = ((int)($row['is_farmer_fisherfolk'] ?? 0) === 1) ? "Yes" : "No";
+    $rebel_returnee = ((int)($row['is_rebel_returnee'] ?? 0) === 1) ? "Yes" : "No";
+
     $father_last = $row['father_last_name'];
     $father_given = $row['father_given_name'];
     $father_middle = $row['father_middle_name'];
@@ -287,7 +302,7 @@ while($c_row = $chart_res->fetch_assoc()) {
                         </div>
                     </div>
 
-                    <h3>Personal Information</h3>
+                    <h3>Personal Information & Classifications</h3>
                     <div class="info-group">
                         <div class="info-row">
                             <span class="info-label">Student ID</span>
@@ -334,7 +349,7 @@ while($c_row = $chart_res->fetch_assoc()) {
                             <span class="info-value"><?= htmlspecialchars($birthdate) ?></span>
                         </div>
                         <div class="info-row">
-                            <span class="info-label">Disability</span>
+                            <span class="info-label">Disability (PWD)</span>
                             <span class="info-value"><?= htmlspecialchars($disability) ?></span>
                         </div>
                         <div class="info-row">
@@ -342,8 +357,24 @@ while($c_row = $chart_res->fetch_assoc()) {
                             <span class="info-value"><?= htmlspecialchars($ip_group) ?></span>
                         </div>
                         <div class="info-row">
-                            <span class="info-label">Child of Solo Parent</span>
-                            <span class="info-value"><?= $is_child_of_solo_parent === 1 ? 'Yes' : 'No' ?></span>
+                            <span class="info-label">Solo Parent</span>
+                            <span class="info-value"><?= htmlspecialchars($solo_parent) ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Raised by Solo Parent</span>
+                            <span class="info-value"><?= htmlspecialchars($raised_by_solo_parent) ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">GIDA Resident</span>
+                            <span class="info-value"><?= $gida ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Farmer / Fisherfolk Family</span>
+                            <span class="info-value"><?= htmlspecialchars($farmer_fisherfolk) ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Rebel Returnee Family</span>
+                            <span class="info-value"><?= htmlspecialchars($rebel_returnee) ?></span>
                         </div>
                     </div>
                 </div>

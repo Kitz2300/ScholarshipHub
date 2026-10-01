@@ -148,7 +148,7 @@ $barangays_result = $stmt->get_result();
                                 </select>
                             </div>
 
-                            <!-- Birth Date Field with Clean Hidden Picker -->
+                            <!-- Birth Date Field -->
                             <div class="form-group">
                                 <label for="birth_date">Birth Date (YYYY-MM-DD) <span class="required">*</span></label>
                                 <div style="display: flex; gap: 6px; align-items: center; position: relative;">
@@ -159,7 +159,7 @@ $barangays_result = $stmt->get_result();
                             </div>
 
                             <div class="form-group">
-                                <label for="disability">Disability</label>
+                                <label for="disability">Disability (PWD)</label>
                                 <input type="text" name="disability" id="disability" placeholder="e.g., Visual impairment, Dyslexia, Mobility impairment" list="disability-list" />
                                 <datalist id="disability-list">
                                     <option value="Not applicable"></option>
@@ -171,7 +171,6 @@ $barangays_result = $stmt->get_result();
                             </div>
                         </div>
 
-                        <!-- IP Group Aligned with Checkbox -->
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="ip_group">IP Group</label>
@@ -185,10 +184,42 @@ $barangays_result = $stmt->get_result();
                                     <option value="Teduray"></option>
                                 </datalist>
                             </div>
-                            
-                            <div class="form-group checkbox-group" style="display: flex; align-items: center; gap: 8px; padding-top: 25px;">
-                                <input type="checkbox" name="is_child_of_solo_parent" id="is_child_of_solo_parent" value="1" style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
-                                <label for="is_child_of_solo_parent" style="cursor: pointer; font-weight: bold; margin-bottom: 0;">Child of a Solo Parent</label>
+                        </div>
+
+                        <!-- Special Classifications & Sectoral Groups -->
+                        <div class="form-row" style="margin-top: 15px;">
+                            <div class="form-group full-width">
+                                <label style="font-weight: bold; margin-bottom: 10px; display: block; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Special Classifications & Sectoral Groups</label>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" name="is_solo_parent" id="is_solo_parent" value="1" style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
+                                        <label for="is_solo_parent" style="cursor: pointer; font-weight: 600; margin: 0;">Solo Parent</label>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" name="is_raised_by_solo_parent" id="is_raised_by_solo_parent" value="1" style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
+                                        <label for="is_raised_by_solo_parent" style="cursor: pointer; font-weight: 600; margin: 0;">Raised by a Single / Solo Parent</label>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" name="is_gida" id="is_gida" value="1" onchange="toggleGidaDetails(this)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
+                                        <label for="is_gida" style="cursor: pointer; font-weight: 600; margin: 0;">Living in GIDA (Geographically Isolated Area)</label>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" name="is_farmer_fisherfolk" id="is_farmer_fisherfolk" value="1" style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
+                                        <label for="is_farmer_fisherfolk" style="cursor: pointer; font-weight: 600; margin: 0;">Family of Subsistence Farmer / Fisherfolk</label>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" name="is_rebel_returnee" id="is_rebel_returnee" value="1" style="width: 18px; height: 18px; cursor: pointer; accent-color: #1e4628;">
+                                        <label for="is_rebel_returnee" style="cursor: pointer; font-weight: 600; margin: 0;">Family of Rebel Returnee</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GIDA Details Field (Hidden by default) -->
+                        <div class="form-row" id="gida_details_container" style="display: none;">
+                            <div class="form-group full-width">
+                                <label for="gida_details">Please specify GIDA Area / Details</label>
+                                <input type="text" name="gida_details" id="gida_details" placeholder="e.g., Island Barangay / Mountainous Remote Area">
                             </div>
                         </div>
                     </div>
@@ -429,6 +460,17 @@ $barangays_result = $stmt->get_result();
             </div>
         </div>
 
+        <script>
+        function toggleGidaDetails(checkbox) {
+            const container = document.getElementById('gida_details_container');
+            if (container) {
+                container.style.display = checkbox.checked ? 'flex' : 'none';
+                if (!checkbox.checked) {
+                    document.getElementById('gida_details').value = '';
+                }
+            }
+        }
+        </script>
         <script src="../assets/js/add_scholar.js"></script>
     <?php endif; ?>
 </body>

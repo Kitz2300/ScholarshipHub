@@ -152,6 +152,26 @@ if ($row = $scholar_result->fetch_assoc()) {
     $email = $row['email'];
     $ip_group = empty($row['ip_group']) ? "Not Applicable" : $row['ip_group'];
     
+    // Classifications
+    $solo_parent_raw = $row['is_solo_parent'] ?? $row['solo_parent'] ?? 0;
+    $solo_parent = ($solo_parent_raw == 1 || strtolower((string)$solo_parent_raw) === 'yes') ? "Yes" : "No";
+
+    $raised_solo_parent_raw = $row['is_raised_by_solo_parent'] ?? $row['raised_by_solo_parent'] ?? $row['is_child_of_solo_parent'] ?? 0;
+    $raised_solo_parent = ($raised_solo_parent_raw == 1 || strtolower((string)$raised_solo_parent_raw) === 'yes') ? "Yes" : "No";
+
+    $gida_raw = $row['gida'] ?? $row['is_gida'] ?? $row['gida_details'] ?? '';
+    if (!empty($gida_raw) && $gida_raw !== '0') {
+        $gida = (is_numeric($gida_raw) && (int)$gida_raw === 1) ? "Yes" : $gida_raw;
+    } else {
+        $gida = "Not Applicable";
+    }
+
+    $farmer_fisherfolk_raw = $row['farmer_fisherfolk'] ?? $row['is_farmer_fisherfolk'] ?? $row['is_farmer_fisherfolks'] ?? 0;
+    $farmer_fisherfolk = ($farmer_fisherfolk_raw == 1 || strtolower((string)$farmer_fisherfolk_raw) === 'yes') ? "Yes" : "No";
+
+    $rebel_returnee_raw = $row['rebel_returnee'] ?? $row['is_rebel_returnee'] ?? 0;
+    $rebel_returnee = ($rebel_returnee_raw == 1 || strtolower((string)$rebel_returnee_raw) === 'yes') ? "Yes" : "No";
+
     // Family & Parents Details
     $father_last = $row['father_last_name'] ?? '';
     $father_given = $row['father_given_name'] ?? '';
@@ -341,7 +361,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                     </div>
                 </div>
 
-                <!-- Right Hero Card (Redesigned Term Snapshot Selector) -->
+                <!-- Right Hero Card (Term Snapshot Selector Widget) -->
                 <div class="hero-card hero-card-actions">
                     <form action="profile.php" method="GET" class="term-selector-form">
                         <div class="hero-term-selector">
@@ -408,7 +428,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
             <!-- Two-Column Layout 1 -->
             <div class="layout-two-col mb-20">
                 <div class="profile-card" id="sec-personal">
-                    <h3>Personal Information & IDs</h3>
+                    <h3>Personal Information & Classifications</h3>
                     <div class="info-group">
                         <div class="info-row">
                             <span class="info-label">PhilSys ID</span>
@@ -431,12 +451,32 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                             <span class="info-value"><?= htmlspecialchars($birthdate) ?></span>
                         </div>
                         <div class="info-row">
-                            <span class="info-label">Disability</span>
+                            <span class="info-label">Disability (PWD)</span>
                             <span class="info-value"><?= htmlspecialchars($disability) ?></span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">IP Group</span>
                             <span class="info-value"><?= htmlspecialchars($ip_group) ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Solo Parent</span>
+                            <span class="info-value"><?= htmlspecialchars($solo_parent) ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Raised by Solo Parent</span>
+                            <span class="info-value"><?= htmlspecialchars($raised_solo_parent) ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">GIDA Resident</span>
+                            <span class="info-value"><?= htmlspecialchars($gida) ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Farmer / Fisherfolk Family</span>
+                            <span class="info-value"><?= htmlspecialchars($farmer_fisherfolk) ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Rebel Returnee Family</span>
+                            <span class="info-value"><?= htmlspecialchars($rebel_returnee) ?></span>
                         </div>
                     </div>
                 </div>
