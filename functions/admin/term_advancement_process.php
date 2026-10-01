@@ -127,8 +127,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['advance_scholars'])) 
         }
 
         $advance_sql = "INSERT INTO scholar_info (
-                            student_id, philsys_id, lrn, four_ps_id, last_name, given_name, middle_name, ext_name,
-                            sex, birthdate, disability, ip_group, is_child_of_solo_parent, permanent_address,
+                            student_id, username, philsys_id, lrn, four_ps_id, last_name, given_name, middle_name, ext_name,
+                            sex, birthdate, disability, ip_group, is_child_of_solo_parent, is_solo_parent, is_gida, gida_details,
+                            is_farmer_fisherfolk, is_rebel_returnee, permanent_address,
                             street, barangay_id, city_id, province_id, region_id, town_city, province, zipcode,
                             country, contact_num, email, father_last_name, father_given_name, father_middle_name,
                             father_contact, mother_last_name, mother_given_name, mother_middle_name, mother_contact,
@@ -136,8 +137,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['advance_scholars'])) 
                             academic_status, loa_semester, loa_school_year, is_archived
                         )
                         SELECT 
-                            student_id, philsys_id, lrn, four_ps_id, last_name, given_name, middle_name, ext_name,
-                            sex, birthdate, disability, ip_group, is_child_of_solo_parent, permanent_address,
+                            student_id, COALESCE(username, student_id), philsys_id, lrn, four_ps_id, last_name, given_name, middle_name, ext_name,
+                            sex, birthdate, disability, ip_group, is_child_of_solo_parent,
+                            COALESCE(is_solo_parent, 0), COALESCE(is_gida, 0), gida_details,
+                            COALESCE(is_farmer_fisherfolk, 0), COALESCE(is_rebel_returnee, 0), permanent_address,
                             street, barangay_id, city_id, province_id, region_id, town_city, province, zipcode,
                             country, contact_num, email, father_last_name, father_given_name, father_middle_name,
                             father_contact, mother_last_name, mother_given_name, mother_middle_name, mother_contact,
