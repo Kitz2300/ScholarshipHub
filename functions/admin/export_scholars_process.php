@@ -1,6 +1,6 @@
 <?php
 include __DIR__ . "/../../includes/conn.php";
-require_once "../../vendor/autoload.php";
+require_once "../../lib/vendor/autoload.php";
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -198,13 +198,23 @@ if($isPreview) {
     $rows = [];
     while($row = $result->fetch_assoc()) {
         if(isset($row['sex'])) {
-            $row['sex'] = $row['sex'] == 0 ? 'Male' : 'Female';
-        }
-        foreach($flag_cols as $fc) {
-            if(isset($row[$fc])) {
-                $row[$fc] = $row[$fc] == 1 ? 'Yes' : 'No';
+            if($row['sex'] !== null && $row['sex'] !== '') {
+                $row['sex'] = ((int)$row['sex'] === 0) ? 'Male' : 'Female';
+            } else {
+                $row['sex'] = '';
             }
         }
+        
+        foreach($flag_cols as $fc) {
+            if(isset($row[$fc])) {
+                if($row[$fc] !== null && $row[$fc] !== '') {
+                    $row[$fc] = ((int)$row[$fc] === 1) ? 'Yes' : 'No';
+                } else {
+                    $row[$fc] = '';
+                }
+            }
+        }
+
         // Decode notes for extra columns
         if($has_extra && isset($row['_notes'])) {
             $notes = json_decode($row['_notes'], true);
@@ -220,6 +230,14 @@ if($isPreview) {
             }
             unset($row['_notes']);
         }
+
+        // Convert any remaining NULL or null-equivalent values to empty strings
+        foreach($row as $k => $v) {
+            if($v === null) {
+                $row[$k] = '';
+            }
+        }
+
         $rows[] = $row;
     }
     
@@ -362,12 +380,19 @@ while($row = $result->fetch_assoc()) {
     $col = 1;
     foreach($final_cols as $colName) {
         $value = $row[$colName] ?? '';
+        
+        if($value === null) {
+            $value = '';
+        }
+
         if($colName === 'sex' && $value !== '') {
-            $value = $value == 0 ? 'Male' : 'Female';
+            $value = ((int)$value === 0) ? 'Male' : 'Female';
         }
+        
         if(in_array($colName, $flag_cols) && $value !== '') {
-            $value = $value == 1 ? 'Yes' : 'No';
+            $value = ((int)$value === 1) ? 'Yes' : 'No';
         }
+
         $cell = Coordinate::stringFromColumnIndex($col) . $rowNum;
         $sheet->setCellValue($cell, $value);
         $col++;
