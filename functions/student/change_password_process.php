@@ -17,43 +17,45 @@ if (isset($_POST['change_password'])) {
     // 1. Check if new password is the same as the current password
     if ($current_password === $new_password) {
         $_SESSION['fail'] = "New password cannot be the same as your current password.";
-        header("Location: ../../pages/profile.php");
+        header("Location: ../../student/profile.php");
         exit();
     }
 
     // 2. Check if new password and confirmation match
     if ($new_password !== $confirm_password) {
         $_SESSION['fail'] = "New password and confirmation do not match.";
-        header("Location: ../../pages/profile.php");
+        header("Location: ../../student/profile.php");
         exit();
     }
 
     // 3. Length check
     if (strlen($new_password) < 8) {
         $_SESSION['fail'] = "New password must be at least 8 characters long.";
-        header("Location: ../../pages/profile.php");
+        header("Location: ../../student/profile.php");
         exit();
     }
 
-    // 4. Verify existing password against DB
-    $sql = "SELECT password FROM scholar_info WHERE id = ?";
+    // 4. Verify existing password & retrieve student_id
+    $sql = "SELECT password, student_id FROM scholar_info WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $scholar_id);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($row = $result->fetch_assoc()) {
+        $student_id = $row['student_id'];
+
         if (!password_verify($current_password, $row['password'])) {
             $_SESSION['fail'] = "Incorrect current password.";
-            header("Location: ../../pages/profile.php");
+            header("Location: ../../student/profile.php");
             exit();
         }
 
-        // 5. Update password and mark as changed
+        // 5. Update password and set is_password_changed = 1 across ALL term snapshot rows for this student
         $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-        $update_sql = "UPDATE scholar_info SET password = ?, is_password_changed = 1 WHERE id = ?";
+        $update_sql = "UPDATE scholar_info SET password = ?, is_password_changed = 1 WHERE student_id = ?";
         $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("si", $hashed_password, $scholar_id);
+        $update_stmt->bind_param("ss", $hashed_password, $student_id);
 
         if ($update_stmt->execute()) {
             $_SESSION['success'] = "Password updated successfully!";
