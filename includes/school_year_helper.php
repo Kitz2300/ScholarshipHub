@@ -45,4 +45,15 @@ function getSelectedSchoolYear() {
 function setSelectedSchoolYear($year) {
     $_SESSION['selected_school_year'] = $year;
 }
+if (!function_exists('getSelectedSemester')) {
+    function getSelectedSemester() {
+        return $_SESSION['selected_semester'] ?? '1st Semester';
+    }
+}
+
+if (!function_exists('setSelectedSemester')) {
+    function setSelectedSemester($semester) {
+        $_SESSION['selected_semester'] = $semester;
+    }
+}
 ?>

@@ -29,9 +29,9 @@ if(isset($_POST['remove_academic']) && isset($_POST['record_id'])) {
         $record_id = (int) $_POST['record_id'];
 
         if($record_id > 0) {
-            $delete_sql = "DELETE FROM academic_performance WHERE id = ? AND scholar_id = ?";
+            $delete_sql = "DELETE FROM academic_performance WHERE id = ?";
             $delete_stmt = $conn->prepare($delete_sql);
-            $delete_stmt->bind_param('ii', $record_id, $scholar_id);
+            $delete_stmt->bind_param('i', $record_id);
             
             if($delete_stmt->execute()) {
                 $_SESSION['success'] = "Academic record removed successfully!";
@@ -58,23 +58,7 @@ if (isset($_SESSION['redirect_back_url'])) {
     $back_url = $_SESSION['redirect_back_url'];
 }
 
-// Fetch scholar notes
-$notes_sql = "SELECT notes FROM scholar_notes WHERE scholar_id = ?";
-$notes_stmt = $conn->prepare($notes_sql);
-$notes_stmt->bind_param("i", $scholar_id);
-$notes_stmt->execute();
-$notes_result = $notes_stmt->get_result();
-
-$scholar_notes = [];
-while($note_row = $notes_result->fetch_assoc()) {
-    $note_content = json_decode($note_row['notes'], true);
-    if(!is_array($note_content)) {
-        $note_content = ['Note' => $note_row['notes']];
-    }
-    $scholar_notes[] = $note_content;
-}
-
-// Scholar info query with Funding Provider JOIN
+// Fetch scholar info
 $scholar_sql = "SELECT scholar_info.*, 
                 scholarship_program.name AS scholarship_program_name,
                 scholarship_program.min_gwa_req AS gwa_req,
@@ -92,63 +76,6 @@ $scholar_stmt = $conn->prepare($scholar_sql);
 $scholar_stmt->bind_param('i', $scholar_id);
 $scholar_stmt->execute();
 $scholar_result = $scholar_stmt->get_result();
-
-// initialize variables
-$last_name = "";
-$given_name = "";
-$ext_name = "";
-$middle_name = "";
-$id_num = "";
-$sex = "";
-$birthdate = "";
-$scholarship_program = "";
-$provider_display = "";
-$gwa_req = 0.00;
-$program = "";
-$year_lvl = "";
-$college = "";
-$academic_status = "";
-$loa_semester = "";
-$loa_school_year = "";
-$school_year = "";
-$address = "";
-$zipcode = "";
-$disability = "";
-$contact_num = "";
-$email = "";
-$ip_group = "";
-$is_child_of_solo_parent = 0;
-$father_last = "";
-$father_given = "";
-$father_middle = "";
-$father_contact = "";
-$mother_last = "";
-$mother_given = "";
-$mother_middle = "";
-$mother_contact = "";
-
-$philsys_id = "";
-$lrn = "";
-$four_ps_id = "";
-$street = "";
-$town_city = "";
-$province = "";
-$country = "";
-
-$barangay_id = 0;
-$city_id = 0;
-$province_id = 0;
-$region_id = 0;
-
-$barangay_name = "";
-$city_name = "";
-$province_name = "";
-$region_name = "";
-
-$profile_pic = "";
-$pic_path = "";
-$has_picture = false;
-$initials = "";
 
 if($row = $scholar_result->fetch_assoc()) {
     $last_name = $row['last_name'];
@@ -193,19 +120,15 @@ if($row = $scholar_result->fetch_assoc()) {
     $province = $row['province'] ?? '';
     $country = $row['country'] ?? 'Philippines';
 
-    // ─── PROFILE PICTURE RESOLUTION (CLOUDINARY / LOCAL FALLBACK) ───
     $profile_pic = trim($row['profile_picture'] ?? '');
 
     if (!empty($profile_pic) && preg_match("~^https?://~i", $profile_pic)) {
-        // Stored as remote Cloudinary URL
         $pic_path = $profile_pic;
         $has_picture = true;
     } elseif (!empty($profile_pic) && file_exists(__DIR__ . '/../assets/images/profile_picture/' . $profile_pic)) {
-        // Stored locally in assets directory
         $pic_path = '../assets/images/profile_picture/' . $profile_pic . '?v=' . time();
         $has_picture = true;
     } else {
-        // Default avatar fallback
         $pic_path = '';
         $has_picture = false;
     }
@@ -254,17 +177,12 @@ if($row = $scholar_result->fetch_assoc()) {
         }
     }
 
-    if($year == 1) {
-        $year_lvl = "1st Year";
-    } elseif($year == 2) {
-        $year_lvl = "2nd Year";
-    } elseif($year == 3) {
-        $year_lvl = "3rd Year";
-    } elseif($year >= 4 && $year <= 6) {
-        $year_lvl = $year . "th Year";
-    } else {
-        $year_lvl = "Not specified";
-    }
+    $year_lvl = match((int)$year) {
+        1 => "1st Year",
+        2 => "2nd Year",
+        3 => "3rd Year",
+        default => ($year >= 4) ? $year . "th Year" : "Not specified"
+    };
 
 } else {
     $_SESSION['fail'] = "Scholar not available";
@@ -272,20 +190,41 @@ if($row = $scholar_result->fetch_assoc()) {
     exit();
 }
 
-// ─── Fetch Chronological Academic Data for Chart (Summer is latest) ───
+// Fetch scholar notes across all term snapshots of this student
+$notes_sql = "SELECT sn.notes 
+              FROM scholar_notes sn 
+              INNER JOIN scholar_info si ON sn.scholar_id = si.id 
+              WHERE si.student_id = ?";
+$notes_stmt = $conn->prepare($notes_sql);
+$notes_stmt->bind_param("s", $id_num);
+$notes_stmt->execute();
+$notes_result = $notes_stmt->get_result();
+
+$scholar_notes = [];
+while($note_row = $notes_result->fetch_assoc()) {
+    $note_content = json_decode($note_row['notes'], true);
+    if(!is_array($note_content)) {
+        $note_content = ['Note' => $note_row['notes']];
+    }
+    $scholar_notes[] = $note_content;
+}
+
+// Fetch Chronological Academic Data across ALL term snapshots for Chart and History Table
 $chart_labels = [];
 $chart_gwa = [];
-$chart_sql = "SELECT * FROM academic_performance 
-              WHERE scholar_id = ? 
-              ORDER BY school_year ASC, 
+$chart_sql = "SELECT ap.* 
+              FROM academic_performance ap
+              INNER JOIN scholar_info si ON ap.scholar_id = si.id
+              WHERE si.student_id = ?
+              ORDER BY ap.school_year ASC, 
                        CASE 
-                           WHEN semester = '1st Semester' THEN 1
-                           WHEN semester = '2nd Semester' THEN 2
-                           WHEN semester = 'Summer' THEN 3
+                           WHEN ap.semester = '1st Semester' THEN 1
+                           WHEN ap.semester = '2nd Semester' THEN 2
+                           WHEN ap.semester = 'Summer' THEN 3
                            ELSE 4
-                       END ASC, id ASC";
+                       END ASC, ap.id ASC";
 $chart_stmt = $conn->prepare($chart_sql);
-$chart_stmt->bind_param('i', $scholar_id);
+$chart_stmt->bind_param('s', $id_num);
 $chart_stmt->execute();
 $chart_res = $chart_stmt->get_result();
 while($c_row = $chart_res->fetch_assoc()) {
@@ -311,7 +250,7 @@ while($c_row = $chart_res->fetch_assoc()) {
     <script src="../assets/js/gwa_chart.js?v=<?= filemtime('../assets/js/gwa_chart.js') ?>" defer></script>
 </head>
 <body>
-    <!-- Modal Alert System (Success & Fail Notifications) -->
+    <!-- Modal Alert System -->
     <?php include __DIR__ . '/../includes/modal_alerts.php'; ?>
 
     <div class="container">
@@ -320,7 +259,6 @@ while($c_row = $chart_res->fetch_assoc()) {
 
         <!-- Page Content -->
         <div class="page-content">
-            <!-- Page Header -->
             <div class="page-header">
                 <h2>Scholar Profile / <?= htmlspecialchars($last_name) ?>, <?= htmlspecialchars($given_name) ?> <?= htmlspecialchars($middle_name) ?> <?= htmlspecialchars($ext_name) ?></h2>
                 <div class="page-actions">
@@ -335,7 +273,6 @@ while($c_row = $chart_res->fetch_assoc()) {
             <div class="profile-grid">
                 <!-- Personal Information -->
                 <div class="profile-card">
-                    <!-- Scholar Avatar Header Banner -->
                     <div class="scholar-avatar-banner">
                         <?php if ($has_picture): ?>
                             <img src="<?= htmlspecialchars($pic_path) ?>" alt="Profile Picture" class="scholar-avatar-img" onclick="openImageLightbox('<?= htmlspecialchars($pic_path, ENT_QUOTES) ?>')" title="Click to view photo">
@@ -359,35 +296,17 @@ while($c_row = $chart_res->fetch_assoc()) {
                         
                         <div class="info-row">
                             <span class="info-label">PHILSYS ID</span>
-                            <span class="info-value">
-                                <?php if (!empty($philsys_id)) : ?>
-                                    <?= htmlspecialchars($philsys_id) ?>
-                                <?php else : ?>
-                                    <span class="info-value">N/A</span>
-                                <?php endif; ?>
-                            </span>
+                            <span class="info-value"><?= !empty($philsys_id) ? htmlspecialchars($philsys_id) : 'N/A' ?></span>
                         </div>
 
                         <div class="info-row">
                             <span class="info-label">LRN</span>
-                            <span class="info-value">
-                                <?php if (!empty($lrn)) : ?>
-                                    <?= htmlspecialchars($lrn) ?>
-                                <?php else : ?>
-                                    <span class="info-value">N/A</span>
-                                <?php endif; ?>
-                            </span>
+                            <span class="info-value"><?= !empty($lrn) ? htmlspecialchars($lrn) : 'N/A' ?></span>
                         </div>
 
                         <div class="info-row">
                             <span class="info-label">4P's ID</span>
-                            <span class="info-value">
-                                <?php if (!empty($four_ps_id)) : ?>
-                                    <?= htmlspecialchars($four_ps_id) ?>
-                                <?php else : ?>
-                                    <span class="info-value">N/A</span>
-                                <?php endif; ?>
-                            </span>
+                            <span class="info-value"><?= !empty($four_ps_id) ? htmlspecialchars($four_ps_id) : 'N/A' ?></span>
                         </div>
 
                         <div class="info-row">
@@ -462,7 +381,6 @@ while($c_row = $chart_res->fetch_assoc()) {
                             <span class="info-value"><?= htmlspecialchars($academic_status) ?></span>
                         </div>
                         
-                        <!-- LOA Details (Displayed if Academic Status is Leave of Absence) -->
                         <?php if($academic_status === 'Leave of Absence') : ?>
                             <div class="info-row">
                                 <span class="info-label">LOA Semester</span>
@@ -495,7 +413,6 @@ while($c_row = $chart_res->fetch_assoc()) {
                         <?php endif; ?>
                     </div>
 
-                    <!-- Historical Records Header with Title, Add Button on Right, and Legend with Min GWA Req on Right -->
                     <div class="historical-header-wrapper">
                         <div class="historical-title-row">
                             <h4 class="sub-section-title">Historical Records</h4>
@@ -523,17 +440,19 @@ while($c_row = $chart_res->fetch_assoc()) {
                     <!-- Academic Performance Table -->
                     <div class="academic-table-wrapper">
                         <?php 
-                        $academic_sql = "SELECT * FROM academic_performance 
-                                        WHERE scholar_id = ? 
-                                        ORDER BY school_year DESC, 
+                        $academic_sql = "SELECT ap.* 
+                                        FROM academic_performance ap
+                                        INNER JOIN scholar_info si ON ap.scholar_id = si.id
+                                        WHERE si.student_id = ? 
+                                        ORDER BY ap.school_year DESC, 
                                                  CASE 
-                                                     WHEN semester = 'Summer' THEN 3
-                                                     WHEN semester = '2nd Semester' THEN 2
-                                                     WHEN semester = '1st Semester' THEN 1
+                                                     WHEN ap.semester = 'Summer' THEN 3
+                                                     WHEN ap.semester = '2nd Semester' THEN 2
+                                                     WHEN ap.semester = '1st Semester' THEN 1
                                                      ELSE 0
-                                                 END DESC, id DESC";
+                                                 END DESC, ap.id DESC";
                         $academic_stmt = $conn->prepare($academic_sql);
-                        $academic_stmt->bind_param('i', $scholar_id);
+                        $academic_stmt->bind_param('s', $id_num);
                         $academic_stmt->execute();
                         $academic_result = $academic_stmt->get_result();
                         ?>

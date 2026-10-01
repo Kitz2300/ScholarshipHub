@@ -59,7 +59,7 @@ body::before {
     min-height: calc(100vh - 20px);
 }
 
-/* ========== HEADER ========== */
+/* ========== HEADER & NAVIGATION ========== */
 .header {
     background: rgba(26, 59, 34, 0.9) !important;
     backdrop-filter: blur(10px);
@@ -124,7 +124,6 @@ body::before {
     background: rgba(255,255,255,0.3);
 }
 
-/* ========== NAVIGATION ========== */
 .nav-bar {
     background: rgba(255, 255, 255, 0.4);
     padding: 10px 25px;
@@ -157,7 +156,7 @@ body::before {
     font-weight: bold;
 }
 
-/* ========== DROPDOWN ========== */
+/* Dropdown Submenu */
 .nav-bar ul li {
     position: relative;
 }
@@ -209,6 +208,39 @@ body::before {
     display: block;
 }
 
+/* ========== PROMOTION SECTION TABS ========== */
+.promotion-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid rgba(42, 107, 55, 0.2);
+    padding-bottom: 8px;
+}
+
+.tab-link {
+    text-decoration: none;
+    padding: 9px 18px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #2a6b37;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(42, 107, 55, 0.2);
+    transition: all 0.25s ease;
+}
+
+.tab-link:hover {
+    background: rgba(42, 107, 55, 0.1);
+    transform: translateY(-1px);
+}
+
+.tab-link.active {
+    background: #2a6b37;
+    color: #ffffff;
+    border-color: #2a6b37;
+    box-shadow: 0 4px 10px rgba(42, 107, 55, 0.25);
+}
+
 /* ========== PAGE CONTENT ========== */
 .page-content {
     background: rgba(255, 255, 255, 0.4);
@@ -223,8 +255,8 @@ body::before {
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
     border-bottom: 2px solid rgba(0,0,0,0.08);
 }
 
@@ -522,6 +554,10 @@ body::before {
     .nav-bar ul {
         justify-content: center;
         gap: 15px;
+    }
+    
+    .promotion-tabs {
+        flex-direction: column;
     }
     
     .page-header {

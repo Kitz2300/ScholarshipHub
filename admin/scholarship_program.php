@@ -23,7 +23,6 @@ if (isset($_POST['apply_filters'])) {
 $selected_year = getSelectedSchoolYear();
 $available_years = getScholarshipSchoolYears($conn);
 
-// Fallback if selected year has no data
 if (!empty($available_years) && !in_array($selected_year, $available_years)) {
     $selected_year = $available_years[0];
     setSelectedSchoolYear($selected_year);
@@ -31,7 +30,6 @@ if (!empty($available_years) && !in_array($selected_year, $available_years)) {
     exit();
 }
 
-// Archive status filter (Default: '0' for Active programs)
 $archive_filter = $_SESSION['program_archive_filter'] ?? '0';
 
 // Archive/Unarchive Scholarship Program Process
@@ -57,22 +55,24 @@ if (isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
     exit();
 }
 
-// Build query with Provider JOIN based on archive filter
+// Flexible School Year matching to handle whitespace variations ("2025 - 2026" vs "2025-2026")
+$clean_year = str_replace(' ', '', $selected_year);
+
 $base_sql = "SELECT sp.*, p.name AS provider_name, p.code AS provider_code 
             FROM scholarship_program sp 
             LEFT JOIN providers p ON sp.provider_id = p.id 
-            WHERE sp.school_year = ?";
+            WHERE REPLACE(sp.school_year, ' ', '') = ?";
 
 if ($archive_filter === '1') {
     $scholarships_sql = $base_sql . " AND sp.is_archived = 1 ORDER BY sp.name ASC";
 } elseif ($archive_filter === 'all') {
     $scholarships_sql = $base_sql . " ORDER BY sp.name ASC";
-} else { // Default: Active only
+} else {
     $scholarships_sql = $base_sql . " AND sp.is_archived = 0 ORDER BY sp.name ASC";
 }
 
 $scholarships_stmt = $conn->prepare($scholarships_sql);
-$scholarships_stmt->bind_param('s', $selected_year);
+$scholarships_stmt->bind_param('s', $clean_year);
 $scholarships_stmt->execute();
 $scholarships_result = $scholarships_stmt->get_result();
 ?>
@@ -87,10 +87,9 @@ $scholarships_result = $scholarships_stmt->get_result();
     <link rel="stylesheet" href="../assets/css/modals.css">
 </head>
 <body>
-    <!-- alert messages -->
     <?php include __DIR__ . '/../includes/modal_alerts.php'; ?>
     <?php if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : 
-        $_SESSION['fail'] = "You are no logged in!";
+        $_SESSION['fail'] = "You are not logged in!";
         header("Location: ../portal.php");
         exit();    
     else : ?>
@@ -98,13 +97,10 @@ $scholarships_result = $scholarships_stmt->get_result();
 
             <?php include __DIR__ . "/../includes/navigation.php"; ?>
 
-            <!-- Page Content -->
             <div class="page-content">
-                <!-- Page Header -->
                 <div class="page-header">
                     <h2>Scholarship Management</h2>
                     
-                    <!-- Filters Form -->
                     <form action="scholarship_program.php" method="POST" class="school-year-selector">
                         <label for="school_year"><strong>School Year:</strong></label>
                         <select name="school_year" id="school_year">
@@ -130,7 +126,6 @@ $scholarships_result = $scholarships_stmt->get_result();
                     </form>
                 </div>
 
-                <!-- Mini Tab Navigation -->
                 <div class="sub-nav">
                     <a href="scholarship_program.php" class="sub-nav-item active">Scholarship Programs</a>
                     <a href="providers.php" class="sub-nav-item">Funding Providers</a>
@@ -144,7 +139,6 @@ $scholarships_result = $scholarships_stmt->get_result();
                     </div>
                 </div>
 
-                <!-- List of Scholarship Programs -->
                 <?php if ($scholarships_result->num_rows > 0) : ?>
                     <div class="programs-grid">
                         <?php while ($row = $scholarships_result->fetch_assoc()) : 
@@ -190,7 +184,6 @@ $scholarships_result = $scholarships_stmt->get_result();
                                     
                                     <?php if (hasPermission($conn, $_SESSION['user_id'], 'scholarship_programs', 'archive')) : ?>
                                         <form action="scholarship_program.php" method="POST" style="display: inline;">
-                                            <!-- Added hidden input so JS form.submit() includes $_POST['archive'] -->
                                             <input type="hidden" name="archive" value="1"/>
                                             <input type="hidden" name="scholarship_program_id" value="<?= $row['id'] ?>"/>
                                             
@@ -213,7 +206,6 @@ $scholarships_result = $scholarships_stmt->get_result();
                 <?php endif; ?>
             </div>
 
-            <!-- Footer -->
             <div class="footer">
                 © 2026 PIT ScholarshipHub. All rights reserved.
             </div>

@@ -81,9 +81,15 @@ $announcement_pages = [
     'edit_announcement.php'
 ];
 
+$promotion_pages = [
+    'promote_scholars.php',
+    'term_advancement.php'
+];
+
 $management_pages = array_merge(
     $announcement_pages, 
-    ['program_management.php', 'promote_scholars.php', 'account_management.php', 'staff_account.php', 'archive.php', 'audit_trail.php']
+    $promotion_pages,
+    ['program_management.php', 'account_management.php', 'staff_account.php', 'archive.php', 'audit_trail.php']
 );
 ?>
 
@@ -181,10 +187,10 @@ $management_pages = array_merge(
                         </li>
                     <?php endif; ?>
 
-                    <!-- Promote Scholars -->
+                    <!-- Promote Scholars / Term Management -->
                     <?php if(canAccessPage($conn, $_SESSION['user_id'], 'promote_scholars')) : ?>
                         <li>
-                            <a href="<?= $admin_path ?>promote_scholars.php" class="<?= isActive('promote_scholars.php', $current_page) ?>">Promote Scholars</a>
+                            <a href="<?= $admin_path ?>promote_scholars.php" class="<?= isActive($promotion_pages, $current_page) ?>">Promote Scholars</a>
                         </li>
                     <?php endif; ?>
 

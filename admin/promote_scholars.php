@@ -3,6 +3,17 @@ include __DIR__ . "/../includes/conn.php";
 include __DIR__ . "/../includes/check_permission.php";
 session_start();
 
+include __DIR__ . "/../includes/school_year_helper.php";
+
+// Helper function to calculate next school year (e.g. "2025 - 2026" -> "2026 - 2027")
+function getNextSchoolYear($sy) {
+    $parts = explode('-', str_replace(' ', '', $sy));
+    if (count($parts) === 2 && is_numeric($parts[0]) && is_numeric($parts[1])) {
+        return ((int)$parts[0] + 1) . ' - ' . ((int)$parts[1] + 1);
+    }
+    return $sy;
+}
+
 // Ensure user is logged in
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) {
     $_SESSION['fail'] = "You are not logged in.";
@@ -17,15 +28,24 @@ if ($_SESSION['role'] !== 'admin') {
 // Fetch filter selections
 $program_filter = (int) ($_GET['program_id'] ?? 0);
 $year_filter = (int) ($_GET['year_level'] ?? 0);
+$school_year_filter = $_GET['school_year'] ?? getSelectedSchoolYear();
+
+$next_school_year = getNextSchoolYear($school_year_filter);
+$available_years = getAvailableSchoolYears($conn);
 
 // Fetch active scholarship programs for dropdown
 $sp_sql = "SELECT id, name FROM scholarship_program WHERE is_archived = 0 ORDER BY name ASC";
 $sp_result = $conn->query($sp_sql);
 
-// Build query for scholars evaluation
-$where_clauses = ["si.is_archived = 0", "sp.is_archived = 0", "si.academic_status IN ('Enrolled', 'Below GWA Requirement')"];
-$params = [];
-$types = "";
+// Build query for scholars evaluation in selected school year
+$where_clauses = [
+    "si.is_archived = 0", 
+    "sp.is_archived = 0", 
+    "si.academic_status IN ('Enrolled', 'Below GWA Requirement')",
+    "si.school_year = ?"
+];
+$params = [$school_year_filter];
+$types = "s";
 
 if ($program_filter > 0) {
     $where_clauses[] = "si.scholarship_program_id = ?";
@@ -41,6 +61,7 @@ if ($year_filter > 0) {
 
 $where_sql = implode(" AND ", $where_clauses);
 
+// Joined query checking current term evaluation & whether scholar was already promoted to target year
 $scholars_sql = "SELECT 
                     si.id AS scholar_id,
                     si.student_id,
@@ -55,14 +76,19 @@ $scholars_sql = "SELECT
                     sp.min_gwa_req,
                     p.name AS program_name,
                     COUNT(DISTINCT CASE WHEN ap.semester IN ('1st Semester', '2nd Semester', '1st', '2nd') THEN ap.semester END) AS required_sems_count,
-                    MAX(ap.gwa) AS worst_gwa
+                    MAX(ap.gwa) AS worst_gwa,
+                    next_si.id AS already_promoted_id
                  FROM scholar_info si
                  INNER JOIN scholarship_program sp ON si.scholarship_program_id = sp.id
                  LEFT JOIN program p ON si.program_id = p.id
                  LEFT JOIN academic_performance ap ON si.id = ap.scholar_id AND ap.school_year = si.school_year
+                 LEFT JOIN scholar_info next_si ON next_si.student_id = si.student_id AND next_si.school_year = ?
                  WHERE $where_sql
                  GROUP BY si.id
                  ORDER BY sp.name ASC, si.year_level ASC, si.last_name ASC";
+
+array_unshift($params, $next_school_year);
+$types = "s" . $types;
 
 $stmt = $conn->prepare($scholars_sql);
 if (!empty($params)) {
@@ -80,12 +106,17 @@ while ($row = $scholars_result->fetch_assoc()) {
     $sems_count = (int) $row['required_sems_count'];
     $worst_gwa = (float) $row['worst_gwa'];
     $curr_year = (int) $row['year_level'];
+    $is_already_promoted = !empty($row['already_promoted_id']);
     
     $is_eligible = false;
     $status_reason = "";
     $badge_class = "";
 
-    if ($min_gwa <= 0) {
+    if ($is_already_promoted) {
+        $is_eligible = false;
+        $status_reason = "Already Promoted to $next_school_year";
+        $badge_class = "badge-secondary";
+    } elseif ($min_gwa <= 0) {
         $is_eligible = true;
         $status_reason = "Eligible (No Grade Required)";
         $badge_class = "badge-success";
@@ -112,18 +143,18 @@ while ($row = $scholars_result->fetch_assoc()) {
     }
 
     $row['is_eligible'] = $is_eligible;
+    $row['is_already_promoted'] = $is_already_promoted;
     $row['status_reason'] = $status_reason;
     $row['badge_class'] = $badge_class;
     
-    // Determine Target Standing
     if ($curr_year >= 4) {
-        $row['target_standing'] = "4th Year → Pending Graduation";
+        $row['target_standing'] = "4th Year → Pending Graduation ($next_school_year)";
     } else {
         $row['target_standing'] = ($curr_year + 1) . match ($curr_year + 1) {
             2 => "nd Year",
             3 => "rd Year",
             default => "th Year"
-        };
+        } . " ($next_school_year)";
     }
 
     $scholars_list[] = $row;
@@ -151,7 +182,15 @@ while ($row = $scholars_result->fetch_assoc()) {
                 <h2>Batch Year-Level Promotion</h2>
             </div>
 
-            <!-- Filter & Search Card -->
+            <div class="promotion-tabs">
+                <a href="promote_scholars.php" class="tab-link active">
+                    🎓 Year-Level Promotion
+                </a>
+                <a href="term_advancement.php" class="tab-link">
+                    📅 Term / Semester Advancement
+                </a>
+            </div>
+
             <div class="filter-card">
                 <form method="GET" action="<?= $_SERVER['PHP_SELF'] ?>" class="filter-form">
                     <div class="form-group search-group">
@@ -161,6 +200,17 @@ while ($row = $scholars_result->fetch_assoc()) {
                                placeholder="Search by Scholar Name or Student ID..." 
                                onkeyup="filterScholarsTable()" 
                                autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="school_year">Current School Year</label>
+                        <select name="school_year" id="school_year" onchange="this.form.submit()">
+                            <?php foreach ($available_years as $yr) : ?>
+                                <option value="<?= $yr ?>" <?= $school_year_filter == $yr ? 'selected' : '' ?>>
+                                    <?= $yr ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
 
                     <div class="form-group">
@@ -190,7 +240,6 @@ while ($row = $scholars_result->fetch_assoc()) {
                 </form>
             </div>
 
-            <!-- Promotion Form -->
             <form action="../functions/admin/promote_scholars_process.php" method="POST" id="promotionForm" onsubmit="return confirmPromotion(event)">
                 <div class="table-toolbar">
                     <div class="toolbar-left">
@@ -201,11 +250,10 @@ while ($row = $scholars_result->fetch_assoc()) {
                     <div class="toolbar-right">
                         <span class="stat-badge stat-eligible">Eligible: <?= $total_eligible ?></span>
                         <span class="stat-badge stat-ineligible">Ineligible: <?= $total_ineligible ?></span>
-                        <button type="submit" name="promote" class="btn btn-success">Execute Promotion</button>
+                        <button type="submit" name="promote" class="btn btn-success" <?= $total_eligible === 0 ? 'disabled' : '' ?>>Execute Promotion</button>
                     </div>
                 </div>
 
-                <!-- Fixed-Height & Scrollable Table Wrapper -->
                 <div class="table-wrapper">
                     <table class="promotion-table">
                         <thead>
@@ -228,6 +276,7 @@ while ($row = $scholars_result->fetch_assoc()) {
                                     $full_name = htmlspecialchars($scholar['last_name'] . ", " . $scholar['given_name'] . " " . $scholar['middle_name']);
                                     $student_id = htmlspecialchars($scholar['student_id']);
                                     $search_text = strtolower($full_name . " " . $student_id);
+                                    $is_eligible = $scholar['is_eligible'];
                                     $curr_year_str = $scholar['year_level'] . match ((int)$scholar['year_level']) {
                                         1 => "st Year",
                                         2 => "nd Year",
@@ -235,16 +284,17 @@ while ($row = $scholars_result->fetch_assoc()) {
                                         default => "th Year"
                                     };
                                 ?>
-                                    <tr class="scholar-row" data-search="<?= $search_text ?>">
+                                    <tr class="scholar-row <?= !$is_eligible ? 'row-ineligible' : '' ?>" data-search="<?= $search_text ?>">
                                         <td style="text-align: center;">
                                             <input type="checkbox" 
                                                    name="promote_scholars[]" 
                                                    value="<?= $scholar_id ?>" 
                                                    class="scholar-checkbox"
-                                                   data-eligible="<?= $scholar['is_eligible'] ? '1' : '0' ?>"
+                                                   data-eligible="<?= $is_eligible ? '1' : '0' ?>"
                                                    data-name="<?= $full_name ?>"
                                                    data-reason="<?= htmlspecialchars($scholar['status_reason']) ?>"
-                                                   <?= $scholar['is_eligible'] ? 'checked' : '' ?>
+                                                   <?= $is_eligible ? 'checked' : '' ?>
+                                                   <?= !$is_eligible ? 'disabled' : '' ?>
                                                    onchange="updateMasterCheckboxState()">
                                         </td>
                                         <td>
@@ -282,35 +332,32 @@ while ($row = $scholars_result->fetch_assoc()) {
     function filterScholarsTable() {
         const query = document.getElementById('searchQuery').value.toLowerCase().trim();
         const rows = document.querySelectorAll('.promotion-table tbody tr.scholar-row');
-        let visibleCount = 0;
 
         rows.forEach(row => {
             const searchText = row.getAttribute('data-search') || '';
             if (searchText.includes(query)) {
                 row.style.display = '';
-                visibleCount++;
             } else {
                 row.style.display = 'none';
             }
         });
 
-        // Update master checkbox based on visible rows
         updateMasterCheckboxState();
     }
 
     function toggleMasterCheckbox(master) {
-        const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox');
+        const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)');
         visibleCheckboxes.forEach(cb => cb.checked = master.checked);
     }
 
     function selectAll() {
-        const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox');
+        const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)');
         visibleCheckboxes.forEach(cb => cb.checked = true);
-        document.getElementById('masterCheckbox').checked = true;
+        updateMasterCheckboxState();
     }
 
     function selectEligibleOnly() {
-        const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox');
+        const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)');
         visibleCheckboxes.forEach(cb => {
             cb.checked = (cb.getAttribute('data-eligible') === '1');
         });
@@ -324,7 +371,7 @@ while ($row = $scholars_result->fetch_assoc()) {
     }
 
     function updateMasterCheckboxState() {
-        const visibleCheckboxes = Array.from(document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox'));
+        const visibleCheckboxes = Array.from(document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)'));
         if (visibleCheckboxes.length === 0) {
             document.getElementById('masterCheckbox').checked = false;
             return;
@@ -334,29 +381,17 @@ while ($row = $scholars_result->fetch_assoc()) {
     }
 
     function confirmPromotion(event) {
-        const selected = Array.from(document.querySelectorAll('.scholar-checkbox:checked'));
+        const selected = Array.from(document.querySelectorAll('.scholar-checkbox:checked:not(:disabled)'));
         if (selected.length === 0) {
             alert("Please select at least one scholar to promote.");
             event.preventDefault();
             return false;
         }
 
-        let overridesCount = 0;
-        selected.forEach(cb => {
-            if (cb.getAttribute('data-eligible') === '0') {
-                overridesCount++;
-            }
-        });
-
-        let msg = "Are you sure you want to promote " + selected.length + " scholar(s)?";
-        if (overridesCount > 0) {
-            msg += "\n\n⚠️ WARNING: " + overridesCount + " ineligible/flagged scholar(s) selected will be manually overridden and audited.";
-        }
-
-        return confirmAction(event, msg, 'Confirm Promotion', overridesCount > 0 ? 'warning' : 'primary');
+        let msg = "Are you sure you want to promote " + selected.length + " scholar(s) to SY <?= $next_school_year ?>?";
+        return confirmAction(event, msg, 'Confirm Promotion', 'primary');
     }
 
-    // Initialize state
     updateMasterCheckboxState();
     </script>
 </body>
