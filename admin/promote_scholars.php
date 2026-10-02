@@ -383,7 +383,7 @@ while ($row = $scholars_result->fetch_assoc()) {
     function confirmPromotion(event) {
         const selected = Array.from(document.querySelectorAll('.scholar-checkbox:checked:not(:disabled)'));
         if (selected.length === 0) {
-            alert("Please select at least one scholar to promote.");
+            showToast("Please select at least one scholar to promote.", "warning", 4000, "Selection Required");
             event.preventDefault();
             return false;
         }
