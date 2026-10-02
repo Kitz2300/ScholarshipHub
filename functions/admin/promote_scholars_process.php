@@ -12,7 +12,8 @@ function getNextSchoolYear($sy) {
 }
 
 // Helper function to get or duplicate scholarship program for target school year
-function getOrCreateProgramForSY($conn, $source_program_id, $target_sy) {
+function getOrCreateProgramForSY($conn, $source_program_id, $target_sy, &$was_duplicated = false) {
+    $was_duplicated = false;
     $sy_parts = explode('-', str_replace(' ', '', $target_sy));
     $formatted_sp_sy = (count($sy_parts) === 2) ? $sy_parts[0] . ' - ' . $sy_parts[1] : $target_sy;
     $raw_sp_sy = (count($sy_parts) === 2) ? $sy_parts[0] . '-' . $sy_parts[1] : $target_sy;
@@ -63,6 +64,7 @@ function getOrCreateProgramForSY($conn, $source_program_id, $target_sy) {
         if ($dup_sp_stmt->execute()) {
             $new_id = (int)$dup_sp_stmt->insert_id;
             $dup_sp_stmt->close();
+            $was_duplicated = true;
             return $new_id;
         }
     }
@@ -117,6 +119,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
         $promoted_count = 0;
         $pending_grad_count = 0;
         $overrides_count = 0;
+        $duplicated_programs = [];
+        $target_sy_recorded = '';
 
         foreach ($selected_ids as $scholar_id) {
             $eval_sql = "SELECT 
@@ -126,6 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
                             si.year_level, 
                             si.school_year,
                             si.scholarship_program_id,
+                            sp.name AS scholarship_program_name,
                             sp.min_gwa_req,
                             COUNT(DISTINCT CASE WHEN ap.semester IN ('1st Semester', '2nd Semester', '1st', '2nd') THEN ap.semester END) AS required_sems_count,
                             MAX(ap.gwa) AS worst_gwa
@@ -143,10 +148,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
                 $curr_year = (int) $s_row['year_level'];
                 $curr_sy = $s_row['school_year'];
                 $next_sy = getNextSchoolYear($curr_sy);
+                $target_sy_recorded = $next_sy;
                 $source_sp_id = (int)$s_row['scholarship_program_id'];
+                $sp_name = $s_row['scholarship_program_name'] ?? 'Scholarship Program';
 
                 // Ensure scholarship program snapshot exists for target school year
-                $target_sp_id = getOrCreateProgramForSY($conn, $source_sp_id, $next_sy);
+                $was_duplicated = false;
+                $target_sp_id = getOrCreateProgramForSY($conn, $source_sp_id, $next_sy, $was_duplicated);
+                if ($was_duplicated) {
+                    $duplicated_programs[$sp_name] = $next_sy;
+                }
 
                 $min_gwa = (float) $s_row['min_gwa_req'];
                 $sems_count = (int) $s_row['required_sems_count'];
@@ -193,7 +204,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
         $audit_stmt->close();
 
         $conn->commit();
-        $_SESSION['success'] = "Successfully promoted " . count($selected_ids) . " scholar(s) and created corresponding term snapshots.";
+
+        $_SESSION['toasts'] = [];
+
+        // 1. Toaster notification when a scholar is moved to next year level
+        if ($promoted_count > 0 && $pending_grad_count > 0) {
+            $scholar_toast_msg = "Successfully moved $promoted_count scholar(s) to the next year level and $pending_grad_count to Pending Graduation for SY $target_sy_recorded.";
+        } elseif ($pending_grad_count > 0) {
+            $scholar_toast_msg = "Successfully moved $pending_grad_count scholar(s) to Pending Graduation for SY $target_sy_recorded.";
+        } elseif ($promoted_count === 1) {
+            $scholar_toast_msg = "Scholar has been successfully moved to the next year level for SY $target_sy_recorded.";
+        } else {
+            $scholar_toast_msg = "Successfully moved $promoted_count scholars to the next year level for SY $target_sy_recorded.";
+        }
+
+        $_SESSION['toasts'][] = [
+            'title' => 'Year Level Promoted',
+            'message' => $scholar_toast_msg,
+            'type' => 'success',
+            'duration' => 5000
+        ];
+
+        // 2. Toaster notification when duplicate of scholarship program has been made for a new school year
+        if (!empty($duplicated_programs)) {
+            $dup_names = array_keys($duplicated_programs);
+            $dup_sy = reset($duplicated_programs);
+            if (count($dup_names) === 1) {
+                $dup_toast_msg = "A duplicate of scholarship program '{$dup_names[0]}' has been made for the new school year ($dup_sy).";
+            } else {
+                $dup_toast_msg = "Duplicates of " . count($dup_names) . " scholarship programs (" . implode(', ', $dup_names) . ") have been made for the new school year ($dup_sy).";
+            }
+
+            $_SESSION['toasts'][] = [
+                'title' => 'Program Duplicated',
+                'message' => $dup_toast_msg,
+                'type' => 'info',
+                'duration' => 6500
+            ];
+        }
+
+        $_SESSION['success'] = $scholar_toast_msg;
 
     } catch (Exception $e) {
         $conn->rollback();
