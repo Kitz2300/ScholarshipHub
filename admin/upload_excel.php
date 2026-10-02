@@ -528,14 +528,14 @@ unset($_SESSION['upload_error']);
                     <h3>Import History</h3>
                     <?php 
                     $history_sql = "SELECT 
-                                    imported_at, 
-                                    filename, 
-                                    scholarship_users.role, 
-                                    CONCAT_WS(' ', scholarship_users.given_name, scholarship_users.middle_name, scholarship_users.last_name) AS name
+                                    import_history.imported_at, 
+                                    import_history.filename, 
+                                    COALESCE(import_history.role, scholarship_users.role, 'N/A') AS role, 
+                                    COALESCE(NULLIF(import_history.user_name, ''), CONCAT_WS(' ', scholarship_users.given_name, scholarship_users.middle_name, scholarship_users.last_name), 'Deleted User') AS name
                                     FROM import_history 
                                     LEFT JOIN 
                                         scholarship_users ON import_history.user_id = scholarship_users.id 
-                                    ORDER BY imported_at DESC";
+                                    ORDER BY import_history.imported_at DESC";
                     $history_stmt = $conn->prepare($history_sql);
                     ?>
                     <div class="table-wrapper">
@@ -557,7 +557,7 @@ unset($_SESSION['upload_error']);
                                                 <td><?= htmlspecialchars($row['filename']) ?></td>
                                                 <td><?= htmlspecialchars($row['imported_at']) ?></td>
                                                 <td><?= htmlspecialchars($row['name']) ?></td>
-                                                <td><?= htmlspecialchars($row['role']) ?></td>
+                                                <td><?= htmlspecialchars(ucfirst($row['role'])) ?></td>
                                             </tr>
                                         <?php endwhile;
                                     else:?>

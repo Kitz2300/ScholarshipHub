@@ -182,9 +182,27 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
             }
         }
 
-        $history_sql = "INSERT INTO import_history(user_id, filename) VALUES(?, ?)";
+        // Fetch user details for import history log
+        $u_id = $_SESSION['user_id'] ?? null;
+        $u_name = null;
+        $u_role = $_SESSION['role'] ?? null;
+        if ($u_id) {
+            $u_stmt = $conn->prepare("SELECT CONCAT_WS(' ', given_name, middle_name, last_name) AS full_name, role FROM scholarship_users WHERE id = ?");
+            $u_stmt->bind_param("i", $u_id);
+            $u_stmt->execute();
+            $u_res = $u_stmt->get_result();
+            if ($u_row = $u_res->fetch_assoc()) {
+                $u_name = $u_row['full_name'];
+                if (empty($u_role)) {
+                    $u_role = $u_row['role'];
+                }
+            }
+            $u_stmt->close();
+        }
+
+        $history_sql = "INSERT INTO import_history(user_id, user_name, role, filename) VALUES(?, ?, ?, ?)";
         $history_stmt = $conn->prepare($history_sql);
-        $history_stmt->bind_param('is', $_SESSION['user_id'], $file_name);
+        $history_stmt->bind_param('isss', $u_id, $u_name, $u_role, $file_name);
         $history_stmt->execute();
 
         $user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
