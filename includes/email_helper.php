@@ -2,7 +2,7 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../lib/vendor/autoload.php';
 
 function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
     if (empty($to_email) || !filter_var($to_email, FILTER_VALIDATE_EMAIL)) {
@@ -10,7 +10,7 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
     }
 
     // Determine site URL dynamically from environment variable or fallback to Railway production URL
-    $app_url = getenv('APP_URL') ?: ($_ENV['APP_URL'] ?? 'https://pitscholarshiphub.up.railway.app/portal.php');
+    $app_url = getenv('APP_URL') ?: ($_ENV['APP_URL'] ?? 'https://pitscholarshiphub.up.railway.app');
     $login_url = rtrim($app_url, '/') . '/portal.php';
 
     $subject = 'Account Created - PIT ScholarshipHub';
