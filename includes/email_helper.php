@@ -2,7 +2,7 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require_once __DIR__ . '/../lib/vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
     if (empty($to_email) || !filter_var($to_email, FILTER_VALIDATE_EMAIL)) {
