@@ -11,7 +11,7 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
 
     // Determine site URL dynamically from environment variable or fallback to Railway production URL
     $app_url = getenv('APP_URL') ?: ($_ENV['APP_URL'] ?? 'https://pitscholarshiphub.up.railway.app');
-    $login_url = rtrim($app_url, '/') . '/portal.php';
+    $login_url = rtrim($app_url, '/');
 
     $subject = 'Account Created - PIT ScholarshipHub';
     
