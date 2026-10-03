@@ -2,12 +2,16 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../lib/vendor/autoload.php';
 
 function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
     if (empty($to_email) || !filter_var($to_email, FILTER_VALIDATE_EMAIL)) {
         return false;
     }
+
+    // Determine site URL dynamically from environment variable or fallback to Railway production URL
+    $app_url = getenv('APP_URL') ?: ($_ENV['APP_URL'] ?? 'https://pitscholarshiphub.up.railway.app/portal.php');
+    $login_url = rtrim($app_url, '/') . '/portal.php';
 
     $subject = 'Account Created - PIT ScholarshipHub';
     
@@ -19,6 +23,10 @@ function sendAccountCreatedEmail($to_email, $first_name, $student_id) {
     $body .= "<p style='margin:0 0 5px 0;'><strong>Username:</strong> " . htmlspecialchars($student_id) . "</p>";
     $body .= "<p style='margin:0;'><strong>Temporary Password:</strong> " . htmlspecialchars($student_id) . "</p>";
     $body .= "</div>";
+    $body .= "<p style='margin: 20px 0;'>";
+    $body .= "<a href='" . htmlspecialchars($login_url) . "' style='background-color: #1e4628; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;'>Login to ScholarshipHub Portal</a>";
+    $body .= "</p>";
+    $body .= "<p style='font-size: 13px; color: #555;'>Direct link: <a href='" . htmlspecialchars($login_url) . "' style='color: #1e4628;'>" . htmlspecialchars($login_url) . "</a></p>";
     $body .= "<p><em>Note: Please log in and update your password as soon as possible.</em></p>";
     $body .= "<p>Best regards,<br>PIT Scholarship Office</p>";
 

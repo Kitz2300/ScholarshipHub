@@ -2,8 +2,12 @@
 // Capture session messages if present
 $success_msg = $_SESSION['success'] ?? null;
 $fail_msg = $_SESSION['fail'] ?? null;
+$session_toasts = $_SESSION['toasts'] ?? [];
+if (!is_array($session_toasts)) {
+    $session_toasts = [];
+}
 
-unset($_SESSION['success'], $_SESSION['fail']);
+unset($_SESSION['success'], $_SESSION['fail'], $_SESSION['toasts']);
 ?>
 
 <!-- 1. TOAST NOTIFICATION CONTAINER -->
@@ -33,7 +37,14 @@ let pendingFormSubmission = null;
 function closeSysMsgModal() {}
 
 // ─── TOAST NOTIFICATION SYSTEM ───
-function showToast(message, type = 'success', duration = 4500) {
+function showToast(message, type = 'success', duration = 4500, customTitle = null) {
+    if (typeof message === 'object' && message !== null) {
+        customTitle = message.title || customTitle;
+        duration = message.duration || duration;
+        type = message.type || type;
+        message = message.message || '';
+    }
+
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
@@ -57,11 +68,24 @@ function showToast(message, type = 'success', duration = 4500) {
     const toast = document.createElement('div');
     toast.className = `toast-notification toast-${toastType}`;
 
-    const iconSvg = isSuccess 
-        ? `<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
-        : `<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+    let iconSvg = '';
+    let defaultTitle = 'Attention';
 
-    const title = isSuccess ? 'Success' : 'Attention';
+    if (toastType === 'success') {
+        defaultTitle = 'Success';
+        iconSvg = `<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    } else if (toastType === 'info') {
+        defaultTitle = 'Notice';
+        iconSvg = `<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+    } else if (toastType === 'warning') {
+        defaultTitle = 'Warning';
+        iconSvg = `<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+    } else {
+        defaultTitle = 'Attention';
+        iconSvg = `<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+    }
+
+    const title = customTitle || defaultTitle;
 
     toast.innerHTML = `
         <div class="toast-icon">${iconSvg}</div>
@@ -201,7 +225,18 @@ document.getElementById('sysConfirmBtn').addEventListener('click', function() {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    <?php if ($success_msg): ?>
+    <?php if (!empty($session_toasts)): ?>
+        <?php foreach ($session_toasts as $index => $t): 
+            $tMsg = is_array($t) ? ($t['message'] ?? '') : $t;
+            $tType = is_array($t) ? ($t['type'] ?? 'success') : 'success';
+            $tDuration = is_array($t) ? ($t['duration'] ?? 5000) : 5000;
+            $tTitle = is_array($t) ? ($t['title'] ?? null) : null;
+        ?>
+            setTimeout(function() {
+                showToast(<?= json_encode($tMsg) ?>, <?= json_encode($tType) ?>, <?= (int)$tDuration ?>, <?= json_encode($tTitle) ?>);
+            }, <?= $index * 350 ?>);
+        <?php endforeach; ?>
+    <?php elseif ($success_msg): ?>
         showNotification(<?= json_encode($success_msg) ?>, true);
     <?php elseif ($fail_msg): ?>
         showNotification(<?= json_encode($fail_msg) ?>, false);
