@@ -200,7 +200,7 @@ $stmt->close();
                 <!-- Target Term Config Bar -->
                 <div class="target-term-card">
                     <div class="target-term-title">
-                        <strong>🎯 Select Target Term for Selected Scholars:</strong>
+                        <strong>Select Target Term for Selected Scholars:</strong>
                     </div>
                     <div class="target-term-controls">
                         <div class="target-group">
