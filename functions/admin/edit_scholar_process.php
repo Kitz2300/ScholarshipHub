@@ -76,7 +76,7 @@ if(isset($_POST['update'])) {
 
     $sex = $_POST['sex'] == 'Male' ? 0 : 1;
     $birth_date = $_POST['birth_date'];
-    $year_lvl = (int) ($_POST['year_lvl'] ?? 0);
+    $year_lvl = trim($_POST['year_lvl'] ?? '');
     
     // Student contact regex validation
     $student_contact = trim($_POST['student_contact']);
@@ -223,7 +223,7 @@ if(isset($_POST['update'])) {
     $scholar_stmt = $conn->prepare($scholar_sql);
     
     // Exactly 41 type specifiers matching 41 bound variables
-    $types = "sssssisiiisssssssssssssiiiissssssissssssi";
+    $types = "sssssisiisssssssssssssiiiissssssissssssi";
     
     $scholar_stmt->bind_param(
         $types, 

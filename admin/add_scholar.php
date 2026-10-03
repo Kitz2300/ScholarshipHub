@@ -8,9 +8,6 @@ if(!(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'add'))) {
     exit();
 }
 
-// initialize year variable
-$year = "";
-
 // Get all regions
 $regions_sql = "SELECT id, name FROM psgc WHERE is_reg = 1 ORDER BY name";
 $regions_result = $conn->query($regions_sql);
@@ -351,16 +348,11 @@ $barangays_result = $stmt->get_result();
                                 <label for="year_lvl">Year Level <span class="required">*</span></label>
                                 <select name="year_lvl" id="year_lvl" required>
                                     <option value="" selected disabled>Select Year Level</option>
-                                    <?php for($i = 1; $i <= 6; $i++) : 
-                                        switch ($i) {
-                                            case 1: $year = "1st Year"; break;
-                                            case 2: $year = "2nd Year"; break;
-                                            case 3: $year = "3rd Year"; break;
-                                            default: $year = $i . "th Year"; break;
-                                        }
-                                    ?>
-                                        <option value="<?= $i ?>"><?= $year ?></option>
-                                    <?php endfor; ?>
+                                    <option value="1st Year">1st Year</option>
+                                    <option value="2nd Year">2nd Year</option>
+                                    <option value="3rd Year">3rd Year</option>
+                                    <option value="4th Year">4th Year</option>
+                                    <option value="Irregular">Irregular</option>
                                 </select>
                             </div>
                             <div class="form-group">

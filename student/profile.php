@@ -140,7 +140,7 @@ if ($row = $scholar_result->fetch_assoc()) {
     $gwa_req = (float) $row['gwa_req'];
     $allowance = (float) ($row['pay_amount'] ?? 0);
     $program = $row['program_name'];
-    $year = (int) ($row['year_level'] ?? 0);
+    $year_lvl = !empty($row['year_level']) ? $row['year_level'] : "Not specified";
     $college = $row['college_name'];
     $academic_status = $row['academic_status'];
     $school_year = $row['school_year'];
@@ -204,14 +204,6 @@ if ($row = $scholar_result->fetch_assoc()) {
         $pic_path = '';
         $has_picture = false;
     }
-
-    $year_lvl = match ($year) {
-        1 => "1st Year",
-        2 => "2nd Year",
-        3 => "3rd Year",
-        4, 5, 6 => $year . "th Year",
-        default => "Not specified",
-    };
 
 } else {
     $_SESSION['fail'] = "Scholar information not available.";
@@ -376,15 +368,10 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                             <div class="select-wrapper">
                                 <select name="term_id" id="term_id" onchange="this.form.submit()">
                                     <?php foreach ($available_terms as $t) : 
-                                        $t_yl = match ((int)$t['year_level']) {
-                                            1 => "1st Yr",
-                                            2 => "2nd Yr",
-                                            3 => "3rd Yr",
-                                            default => $t['year_level'] . "th Yr"
-                                        };
+                                        $t_yl = str_replace(' Year', ' Yr', $t['year_level'] ?? '');
                                     ?>
                                         <option value="<?= $t['id'] ?>" <?= $t['id'] == $selected_scholar_id ? 'selected' : '' ?>>
-                                            SY <?= htmlspecialchars($t['school_year']) ?> — <?= htmlspecialchars($t['semester']) ?> (<?= $t_yl ?>)
+                                            SY <?= htmlspecialchars($t['school_year']) ?> — <?= htmlspecialchars($t['semester']) ?> (<?= htmlspecialchars($t_yl) ?>)
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -621,7 +608,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
 
                 while ($acad_row = $academic_result->fetch_assoc()) {
                     $academic_history[] = $acad_row;
-                    $gwa_labels[] = $acad_row['year_level'] . " Yr - " . $acad_row['semester'];
+                    $gwa_labels[] = str_replace(' Year', ' Yr', $acad_row['year_level']) . " - " . $acad_row['semester'];
                     $gwa_values[] = (float) $acad_row['gwa'];
                     if ($gwa_req > 0) {
                         $req_values[] = $gwa_req;

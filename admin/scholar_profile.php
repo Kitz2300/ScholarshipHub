@@ -90,7 +90,6 @@ if($row = $scholar_result->fetch_assoc()) {
     $provider_display = !empty($row['provider_name']) ? $row['provider_name'] . ' (' . $row['provider_code'] . ')' : 'Not Specified';
     $gwa_req = (float) $row['gwa_req'];
     $program = $row['program_name'];
-    $year = $row['year_level'] ?? 0;
     $college = $row['college_name'];
     $academic_status = $row['academic_status'];
     $loa_semester = $row['loa_semester'] ?? '';
@@ -192,12 +191,7 @@ if($row = $scholar_result->fetch_assoc()) {
         }
     }
 
-    $year_lvl = match((int)$year) {
-        1 => "1st Year",
-        2 => "2nd Year",
-        3 => "3rd Year",
-        default => ($year >= 4) ? $year . "th Year" : "Not specified"
-    };
+    $year_lvl = !empty($row['year_level']) ? $row['year_level'] : "Not specified";
 
 } else {
     $_SESSION['fail'] = "Scholar not available";
