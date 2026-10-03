@@ -184,10 +184,10 @@ while ($row = $scholars_result->fetch_assoc()) {
 
             <div class="promotion-tabs">
                 <a href="promote_scholars.php" class="tab-link active">
-                    🎓 Year-Level Promotion
+                    Year-Level Promotion
                 </a>
                 <a href="term_advancement.php" class="tab-link">
-                    📅 Term / Semester Advancement
+                    Term / Semester Advancement
                 </a>
             </div>
 
