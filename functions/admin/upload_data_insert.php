@@ -43,7 +43,8 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
     $conn->begin_transaction();
 
     try {
-        $types = 'ssssssss' . 'i' . 's' . 'iii' . 'sssssss' . 'iiii' . 'sssssssssss'; 
+        // Types string: year_level is string 's' ('iis' instead of 'iii')
+        $types = 'ssssssss' . 'i' . 's' . 'iis' . 'sssssss' . 'iiii' . 'sssssssssss'; 
         $insert_sql = "INSERT INTO scholar_info(
             student_id, philsys_id, lrn, four_ps_id,
             last_name, given_name, ext_name, middle_name,
@@ -74,6 +75,25 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
 
         $note_sql = "INSERT INTO scholar_notes(scholar_id, notes) VALUES(?, ?)";
         $note_stmt = $conn->prepare($note_sql);
+
+        // Fallback translation mapping for year level
+        $yl_map = [
+            '1' => '1st Year',
+            '2' => '2nd Year',
+            '3' => '3rd Year',
+            '4' => '4th Year',
+            '5' => 'Irregular',
+            '6' => 'Irregular',
+            '1st' => '1st Year',
+            '2nd' => '2nd Year',
+            '3rd' => '3rd Year',
+            '4th' => '4th Year',
+            '1st year' => '1st Year',
+            '2nd year' => '2nd Year',
+            '3rd year' => '3rd Year',
+            '4th year' => '4th Year',
+            'irregular' => 'Irregular'
+        ];
 
         foreach($valid_rows as $rows => $rowData) {
             $data = [];
@@ -107,6 +127,12 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
             $contact_num   = $data['contact_num'] ?? '';
             $email         = $data['email'] ?? '';
             $ip_group      = empty($data['ip_group']) ? "Not applicable" : $data['ip_group'];
+
+            // Translate year level if passed as raw digit or unformatted string
+            $clean_yl = strtolower(trim((string)$year_lvl));
+            if (isset($yl_map[$clean_yl])) {
+                $year_lvl = $yl_map[$clean_yl];
+            }
 
             if (is_numeric($sex)) {
                 $sex = (int)$sex;

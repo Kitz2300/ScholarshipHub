@@ -140,14 +140,40 @@ function validateProgram($value, $conn) {
     return $errors;
 }
 
-function validateYearLevel($value) {
+function validateYearLevel(&$value) {
     $errors = [];
     if ($value === '' || $value === null) {
         $errors[] = "Year Level is required.";
         return $errors;
     }
-    if (!is_numeric($value) || $value < 1 || $value > 6) {
-        $errors[] = "Year Level must be a number between 1 and 6.";
+    
+    // Map numeric integers/strings to standard year level labels
+    $map = [
+        '1' => '1st Year',
+        '2' => '2nd Year',
+        '3' => '3rd Year',
+        '4' => '4th Year',
+        '5' => 'Irregular',
+        '6' => 'Irregular',
+        '1st' => '1st Year',
+        '2nd' => '2nd Year',
+        '3rd' => '3rd Year',
+        '4th' => '4th Year',
+        '1st year' => '1st Year',
+        '2nd year' => '2nd Year',
+        '3rd year' => '3rd Year',
+        '4th year' => '4th Year',
+        'irregular' => 'Irregular'
+    ];
+
+    $clean_val = strtolower(trim((string)$value));
+    if (isset($map[$clean_val])) {
+        $value = $map[$clean_val];
+    }
+    
+    $allowed_levels = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Irregular'];
+    if (!in_array($value, $allowed_levels)) {
+        $errors[] = "Year Level must be 1, 2, 3, 4, Irregular, or 1st Year - 4th Year.";
     }
     return $errors;
 }
@@ -307,8 +333,14 @@ function validateFullRow(&$rowData, $conn, $mapped_columns) {
     }
     
     if(isset($data['year_level'])) {
-        $errors = validateYearLevel($data['year_level']);
-        if(!empty($errors)) $allErrors['year_level'] = $errors;
+        $yl_val = $data['year_level'];
+        $errors = validateYearLevel($yl_val);
+        if(!empty($errors)) {
+            $allErrors['year_level'] = $errors;
+        } else {
+            // Write back normalized string format ("1st Year", etc.) to rowData
+            $rowData[$mapped_columns['year_level']] = $yl_val;
+        }
     }
     
     if(isset($data['street'])) {
