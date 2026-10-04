@@ -172,7 +172,7 @@ while ($row = $status_result->fetch_assoc()) {
                 </div>
 
                 <!-- School Year & Semester Selector -->
-                <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" class="school-year-selector" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" class="school-year-selector">
                     <label for="school_year"><strong>School Year:</strong></label>
                     <select name="school_year" id="school_year">
                         <?php if(!empty($available_years)) : ?>
@@ -257,7 +257,12 @@ while ($row = $status_result->fetch_assoc()) {
 
             <!-- Scholars per Scholarship Program -->
             <div class="section-card">
-                <h3>Scholars per Scholarship Program</h3>
+                <div class="section-card-header">
+                    <h3>Scholars per Scholarship Program</h3>
+                    <a href="generate_summary_pdf.php?school_year=<?= urlencode($selected_year) ?>&semester=<?= urlencode($selected_sem) ?>" target="_blank" class="btn btn-sm btn-success">
+                        Generate Printable Report
+                    </a>
+                </div>
                 <div class="program-list">
                     <?php if(!empty($scholarship_data)) : ?>
                         <?php foreach($scholarship_data as $program) : 
