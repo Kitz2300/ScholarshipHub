@@ -119,8 +119,13 @@ if(isset($_POST['update'])) {
     $ip_group = !empty(trim($_POST['ip_group'])) ? trim($_POST['ip_group']) : "Not applicable";
     $disability = !empty(trim($_POST['disability'])) ? trim($_POST['disability']) : "Not applicable";
     
-    // Checkbox flag
-    $is_child_of_solo_parent = isset($_POST['is_child_of_solo_parent']) ? 1 : 0;
+    // Special Classifications & Sectoral Groups
+    $is_solo_parent = isset($_POST['is_solo_parent']) ? 1 : 0;
+    $is_raised_by_solo_parent = isset($_POST['is_raised_by_solo_parent']) ? 1 : 0;
+    $is_gida = isset($_POST['is_gida']) ? 1 : 0;
+    $gida_details = !empty(trim($_POST['gida_details'] ?? '')) ? trim($_POST['gida_details']) : NULL;
+    $is_farmer_fisherfolk = isset($_POST['is_farmer_fisherfolk']) ? 1 : 0;
+    $is_rebel_returnee = isset($_POST['is_rebel_returnee']) ? 1 : 0;
     
     // Password hash
     $hashed_pass = password_hash($student_id, PASSWORD_BCRYPT);
@@ -131,7 +136,7 @@ if(isset($_POST['update'])) {
     $father_middle_name = trim($_POST['father_middle']);
     $father_contact = !empty(trim($_POST['father_contact'] ?? '')) ? trim($_POST['father_contact']) : NULL;
     
-    // Mother information with key fallbacks
+    // Mother information
     $mother_last_name = trim($_POST['mother_last']);
     $mother_first_name = trim($_POST['mother_first'] ?? $_POST['mother_given'] ?? $_POST['mother_first_name'] ?? $_POST['mother_given_name'] ?? '');
     $mother_middle_name = trim($_POST['mother_middle']);
@@ -176,7 +181,7 @@ if(isset($_POST['update'])) {
 
     $permanent_address = implode(', ', $address_parts);
 
-    // ─── UPDATE QUERY ───
+    // ─── UPDATE QUERY (45 updated columns + 1 WHERE parameter) ───
     $scholar_sql = "UPDATE scholar_info SET 
                     student_id = ?, 
                     last_name = ?, 
@@ -211,7 +216,12 @@ if(isset($_POST['update'])) {
                     contact_num = ?, 
                     email = ?,
                     ip_group = ?,
-                    is_child_of_solo_parent = ?,
+                    is_solo_parent = ?,
+                    is_raised_by_solo_parent = ?,
+                    is_gida = ?,
+                    gida_details = ?,
+                    is_farmer_fisherfolk = ?,
+                    is_rebel_returnee = ?,
                     username = ?,
                     password = ?,
                     school_year = ?,
@@ -222,8 +232,8 @@ if(isset($_POST['update'])) {
     
     $scholar_stmt = $conn->prepare($scholar_sql);
     
-    // Exactly 41 type specifiers matching 41 bound variables
-    $types = "sssssisiissssssssssssssiiiissssssissssssi";
+    // Exactly 46 type specifiers matching 46 bound variables
+    $types = "sssssisiissssssssssssssiiiissssssiiisiissssssi";
     
     $scholar_stmt->bind_param(
         $types, 
@@ -260,7 +270,12 @@ if(isset($_POST['update'])) {
         $student_contact, 
         $email, 
         $ip_group,
-        $is_child_of_solo_parent,
+        $is_solo_parent,
+        $is_raised_by_solo_parent,
+        $is_gida,
+        $gida_details,
+        $is_farmer_fisherfolk,
+        $is_rebel_returnee,
         $student_id,
         $hashed_pass,
         $school_year,

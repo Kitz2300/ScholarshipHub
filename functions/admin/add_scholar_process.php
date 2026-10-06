@@ -132,8 +132,13 @@ if (isset($_POST['add'])) {
     $ip_group = !empty(trim($_POST['ip_group'])) ? trim($_POST['ip_group']) : "Not applicable";
     $disability = !empty(trim($_POST['disability'])) ? trim($_POST['disability']) : "Not applicable";
     
-    // Checkbox flag
-    $is_child_of_solo_parent = isset($_POST['is_child_of_solo_parent']) ? 1 : 0;
+    // Special Classifications & Sectoral Groups
+    $is_solo_parent = isset($_POST['is_solo_parent']) ? 1 : 0;
+    $is_raised_by_solo_parent = isset($_POST['is_raised_by_solo_parent']) ? 1 : 0;
+    $is_gida = isset($_POST['is_gida']) ? 1 : 0;
+    $gida_details = !empty(trim($_POST['gida_details'] ?? '')) ? trim($_POST['gida_details']) : NULL;
+    $is_farmer_fisherfolk = isset($_POST['is_farmer_fisherfolk']) ? 1 : 0;
+    $is_rebel_returnee = isset($_POST['is_rebel_returnee']) ? 1 : 0;
 
     // BCrypt password hash (Default password = Student ID)
     $hashed_pass = password_hash($student_id, PASSWORD_BCRYPT);
@@ -144,7 +149,7 @@ if (isset($_POST['add'])) {
     $father_middle_name = trim($_POST['father_middle']);
     $father_contact = !empty(trim($_POST['father_contact'] ?? '')) ? trim($_POST['father_contact']) : "N/A";
     
-    // Mother information with key fallbacks
+    // Mother information
     $mother_last_name = trim($_POST['mother_last']);
     $mother_first_name = trim($_POST['mother_first'] ?? $_POST['mother_given'] ?? $_POST['mother_first_name'] ?? $_POST['mother_given_name'] ?? '');
     $mother_middle_name = trim($_POST['mother_middle']);
@@ -188,7 +193,7 @@ if (isset($_POST['add'])) {
 
     $permanent_address = implode(', ', $address_parts);
 
-    // ─── INSERT QUERY (39 columns) ───
+    // ─── INSERT QUERY (44 columns) ───
     $scholar_sql = "INSERT INTO scholar_info (
                     student_id, 
                     last_name, 
@@ -222,19 +227,24 @@ if (isset($_POST['add'])) {
                     contact_num, 
                     email,
                     ip_group,
-                    is_child_of_solo_parent,
+                    is_solo_parent,
+                    is_raised_by_solo_parent,
+                    is_gida,
+                    gida_details,
+                    is_farmer_fisherfolk,
+                    is_rebel_returnee,
                     username,
                     password,
                     school_year,
                     philsys_id,
                     lrn,
                     four_ps_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $scholar_stmt = $conn->prepare($scholar_sql);
     
-    // Exactly 39 type specifiers matching 39 bound variables
-    $types = "sssssisiisssssssssssssiiiissssssissssss";
+    // Exactly 44 type specifiers matching 44 bound variables
+    $types = "sssssisiisssssssssssssiiiissssssiiisiissssss";
     
     $scholar_stmt->bind_param(
         $types, 
@@ -270,7 +280,12 @@ if (isset($_POST['add'])) {
         $student_contact, 
         $email, 
         $ip_group,
-        $is_child_of_solo_parent,
+        $is_solo_parent,
+        $is_raised_by_solo_parent,
+        $is_gida,
+        $gida_details,
+        $is_farmer_fisherfolk,
+        $is_rebel_returnee,
         $student_id,
         $hashed_pass,
         $school_year,
