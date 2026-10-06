@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
         // SQL to insert new term snapshot row for promoted scholars
         $duplicate_sql = "INSERT INTO scholar_info (
                             student_id, username, philsys_id, lrn, four_ps_id, last_name, given_name, middle_name, ext_name,
-                            sex, birthdate, disability, ip_group, is_child_of_solo_parent, is_solo_parent, is_gida, gida_details,
+                            sex, birthdate, disability, ip_group, is_solo_parent, is_raised_by_solo_parent, is_gida, gida_details,
                             is_farmer_fisherfolk, is_rebel_returnee, permanent_address,
                             street, barangay_id, city_id, province_id, region_id, town_city, province, zipcode,
                             country, contact_num, email, father_last_name, father_given_name, father_middle_name,
@@ -100,8 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
                           )
                           SELECT 
                             student_id, COALESCE(username, student_id), philsys_id, lrn, four_ps_id, last_name, given_name, middle_name, ext_name,
-                            sex, birthdate, disability, ip_group, is_child_of_solo_parent,
-                            COALESCE(is_solo_parent, 0), COALESCE(is_gida, 0), gida_details,
+                            sex, birthdate, disability, ip_group,
+                            COALESCE(is_solo_parent, 0), COALESCE(is_raised_by_solo_parent, 0), COALESCE(is_gida, 0), gida_details,
                             COALESCE(is_farmer_fisherfolk, 0), COALESCE(is_rebel_returnee, 0), permanent_address,
                             street, barangay_id, city_id, province_id, region_id, town_city, province, zipcode,
                             country, contact_num, email, father_last_name, father_given_name, father_middle_name,
@@ -207,7 +207,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
 
         $_SESSION['toasts'] = [];
 
-        // 1. Toaster notification when a scholar is moved to next year level
         if ($promoted_count > 0 && $pending_grad_count > 0) {
             $scholar_toast_msg = "Successfully moved $promoted_count scholar(s) to the next year level and $pending_grad_count to Pending Graduation for SY $target_sy_recorded.";
         } elseif ($pending_grad_count > 0) {
@@ -225,7 +224,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
             'duration' => 5000
         ];
 
-        // 2. Toaster notification when duplicate of scholarship program has been made for a new school year
         if (!empty($duplicated_programs)) {
             $dup_names = array_keys($duplicated_programs);
             $dup_sy = reset($duplicated_programs);
