@@ -368,13 +368,24 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                         <?php if($result->num_rows > 0) : ?>
                             <?php while($row = $result->fetch_assoc()) : 
                                 $ext_name = ($row['ext_name'] == 'N/A' || empty($row['ext_name'])) ? "" : $row['ext_name'];
-                                $year = $row['year_level'];
-                                $year_lvl = match((int)$year) {
-                                    1 => "1st Year",
-                                    2 => "2nd Year",
-                                    3 => "3rd Year",
-                                    default => ($year >= 4) ? $year . "th Year" : "Not specified"
-                                };
+                                
+                                // Clean year level formatting
+                                $raw_year = trim($row['year_level'] ?? '');
+                                if (empty($raw_year)) {
+                                    $year_lvl = "Not specified";
+                                } elseif (is_numeric($raw_year)) {
+                                    $int_year = (int)$raw_year;
+                                    $year_lvl = match($int_year) {
+                                        1 => "1st Year",
+                                        2 => "2nd Year",
+                                        3 => "3rd Year",
+                                        4 => "4th Year",
+                                        default => ($int_year >= 5) ? $int_year . "th Year" : "Not specified"
+                                    };
+                                } else {
+                                    $year_lvl = $raw_year;
+                                }
+
                                 $is_archived = (int)$row['is_archived'] === 1;
                                 $is_flagged = (int)$row['is_flagged'] === 1;
 
