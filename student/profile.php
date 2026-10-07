@@ -404,7 +404,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                     <div class="kpi-sub">SY <?= htmlspecialchars($school_year) ?> (<?= htmlspecialchars($semester) ?>)</div>
                 </div>
                 <div class="kpi-card">
-                    <div class="kpi-title">GWA Requirement</div>
+                    <div class="kpi-title">General Weighted Average (GWA)</div>
                     <div class="kpi-value"><?= $latest_gwa !== null ? htmlspecialchars($latest_gwa) : 'No Record' ?></div>
                     <div class="kpi-sub">
                         <?= $gwa_req > 0 ? 'Min Required: ' . htmlspecialchars($gwa_req) : 'No GWA Limit' ?>
