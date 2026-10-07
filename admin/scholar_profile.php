@@ -95,6 +95,7 @@ if($row = $scholar_result->fetch_assoc()) {
     $loa_semester = $row['loa_semester'] ?? '';
     $loa_school_year = $row['loa_school_year'] ?? '';
     $school_year = $row['school_year'];
+    $current_semester = !empty($row['semester']) ? $row['semester'] : '1st Semester';
     $address = $row['permanent_address'];
     $zipcode = $row['zipcode'];
     $disability = empty($row['disability']) ? "Not Applicable" : $row['disability'];
@@ -198,6 +199,14 @@ if($row = $scholar_result->fetch_assoc()) {
     header("Location: scholar_list.php");
     exit();
 }
+
+// ─── Check if an Academic Record already exists for the scholar's Active Term ───
+$check_existing_gwa_sql = "SELECT id FROM academic_performance WHERE scholar_id = ? AND school_year = ? AND semester = ?";
+$check_gwa_stmt = $conn->prepare($check_existing_gwa_sql);
+$check_gwa_stmt->bind_param("iss", $scholar_id, $school_year, $current_semester);
+$check_gwa_stmt->execute();
+$has_current_sem_record = ($check_gwa_stmt->get_result()->num_rows > 0);
+$check_gwa_stmt->close();
 
 // Fetch scholar notes across all term snapshots of this student
 $notes_sql = "SELECT sn.notes 
@@ -419,33 +428,35 @@ while($c_row = $chart_res->fetch_assoc()) {
                     </div>
                 </div>
 
-                <!-- Combined Academic Performance & Progress Profile Card -->
-                <div class="profile-card">
-                    <div class="card-header acad-card-header">
-                        <h3>Academic Performance & Progress</h3>
-                    </div>
+                <!-- Combined Academic Performance & Progress Profile Card (Rendered only if Program Has GWA Requirement) -->
+                <?php if($gwa_req > 0) : ?>
+                    <div class="profile-card">
+                        <div class="card-header acad-card-header">
+                            <h3>Academic Performance & Progress</h3>
+                        </div>
 
-                    <!-- GWA Trend Line Chart -->
-                    <div class="chart-container">
-                        <?php if(!empty($chart_gwa)) : ?>
-                            <canvas id="gwaProgressChart" 
-                                data-labels='<?= json_encode($chart_labels, JSON_HEX_APOS | JSON_HEX_QUOT) ?>'
-                                data-gwa='<?= json_encode($chart_gwa) ?>'
-                                data-req='<?= $gwa_req ?>'>
-                            </canvas>
-                        <?php else : ?>
-                            <p class="no-data">No academic performance records available to plot progress.</p>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="historical-header-wrapper">
-                        <div class="historical-title-row">
-                            <h4 class="sub-section-title">Historical Records</h4>
-                            <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
-                                <button type="button" class="btn btn-sm btn-primary" onclick="openAddAcadModal()">+ Add GWA</button>
+                        <!-- GWA Trend Line Chart -->
+                        <div class="chart-container">
+                            <?php if(!empty($chart_gwa)) : ?>
+                                <canvas id="gwaProgressChart" 
+                                    data-labels='<?= json_encode($chart_labels, JSON_HEX_APOS | JSON_HEX_QUOT) ?>'
+                                    data-gwa='<?= json_encode($chart_gwa) ?>'
+                                    data-req='<?= $gwa_req ?>'>
+                                </canvas>
+                            <?php else : ?>
+                                <p class="no-data">No academic performance records available to plot progress.</p>
                             <?php endif; ?>
                         </div>
-                        <?php if($gwa_req > 0) : ?>
+
+                        <div class="historical-header-wrapper">
+                            <div class="historical-title-row">
+                                <h4 class="sub-section-title">Historical Records</h4>
+                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
+                                    <?php if(!$has_current_sem_record) : ?>
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="openAddAcadModal()">+ Add GWA</button>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
                             <div class="gwa-legend">
                                 <div class="legend-left-group">
                                     <span class="legend-item legend-pass">
@@ -459,90 +470,86 @@ while($c_row = $chart_res->fetch_assoc()) {
                                     Min GWA Requirement: <?= htmlspecialchars(number_format($gwa_req, 2)) ?>
                                 </span>
                             </div>
-                        <?php endif; ?>
-                    </div>
+                        </div>
 
-                    <!-- Academic Performance Table -->
-                    <div class="academic-table-wrapper">
-                        <?php 
-                        $academic_sql = "SELECT ap.* 
-                                        FROM academic_performance ap
-                                        INNER JOIN scholar_info si ON ap.scholar_id = si.id
-                                        WHERE si.student_id = ? 
-                                        ORDER BY ap.school_year DESC, 
-                                                 CASE 
-                                                     WHEN ap.semester = 'Summer' THEN 3
-                                                     WHEN ap.semester = '2nd Semester' THEN 2
-                                                     WHEN ap.semester = '1st Semester' THEN 1
-                                                     ELSE 0
-                                                 END DESC, ap.id DESC";
-                        $academic_stmt = $conn->prepare($academic_sql);
-                        $academic_stmt->bind_param('s', $id_num);
-                        $academic_stmt->execute();
-                        $academic_result = $academic_stmt->get_result();
-                        ?>
+                        <!-- Academic Performance Table -->
+                        <div class="academic-table-wrapper">
+                            <?php 
+                            $academic_sql = "SELECT ap.* 
+                                            FROM academic_performance ap
+                                            INNER JOIN scholar_info si ON ap.scholar_id = si.id
+                                            WHERE si.student_id = ? 
+                                            ORDER BY ap.school_year DESC, 
+                                                     CASE 
+                                                         WHEN ap.semester = 'Summer' THEN 3
+                                                         WHEN ap.semester = '2nd Semester' THEN 2
+                                                         WHEN ap.semester = '1st Semester' THEN 1
+                                                         ELSE 0
+                                                     END DESC, ap.id DESC";
+                            $academic_stmt = $conn->prepare($academic_sql);
+                            $academic_stmt->bind_param('s', $id_num);
+                            $academic_stmt->execute();
+                            $academic_result = $academic_stmt->get_result();
+                            ?>
 
-                        <?php if($academic_result->num_rows > 0) : ?>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Semester</th>
-                                        <th>GWA</th>
-                                        <th>Units</th>
-                                        <th>Year Level</th>
-                                        <th>School Year</th>
-                                        <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
-                                            <th>Actions</th>
-                                        <?php endif; ?>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php while($acad_row = $academic_result->fetch_assoc()) : ?>
+                            <?php if($academic_result->num_rows > 0) : ?>
+                                <table>
+                                    <thead>
                                         <tr>
-                                            <td><?= htmlspecialchars($acad_row['semester']) ?></td>
-                                            <td>
-                                                <?php if($gwa_req > 0) : ?>
+                                            <th>Semester</th>
+                                            <th>GWA</th>
+                                            <th>Units</th>
+                                            <th>Year Level</th>
+                                            <th>School Year</th>
+                                            <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
+                                                <th>Actions</th>
+                                            <?php endif; ?>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php while($acad_row = $academic_result->fetch_assoc()) : ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($acad_row['semester']) ?></td>
+                                                <td>
                                                     <?php if((float)$acad_row['gwa'] > $gwa_req) : ?>
                                                         <span class="gwa-val gwa-fail"><?= htmlspecialchars($acad_row['gwa']) ?></span>
                                                     <?php else : ?>
                                                         <span class="gwa-val gwa-pass"><?= htmlspecialchars($acad_row['gwa']) ?></span>
                                                     <?php endif; ?>
-                                                <?php else : ?>
-                                                    <span class="gwa-val"><?= htmlspecialchars($acad_row['gwa']) ?></span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td><?= htmlspecialchars($acad_row['units']) ?></td>
-                                            <td><?= htmlspecialchars($acad_row['year_level']) ?></td>
-                                            <td><?= htmlspecialchars($acad_row['school_year']) ?></td>
-                                            <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
-                                                <td>
-                                                    <div class="action-buttons">
-                                                        <button type="button" class="btn-sm btn-edit" 
-                                                            onclick="openEditAcadModal(<?= $acad_row['id'] ?>, '<?= htmlspecialchars($acad_row['semester'], ENT_QUOTES) ?>', '<?= htmlspecialchars($acad_row['gwa'], ENT_QUOTES) ?>', '<?= htmlspecialchars($acad_row['units'], ENT_QUOTES) ?>')">
-                                                            Edit
-                                                        </button>
-                                                        <form action="scholar_profile.php?scholar_id=<?= $scholar_id ?>" method="POST" style="display: inline;">
-                                                            <input type="hidden" name="remove_academic" value="1">
-                                                            <input type="hidden" name="record_id" value="<?= $acad_row['id'] ?>">
-                                                            <button type="submit" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Are you sure you want to delete this academic record?', 'Delete', true)">Delete</button>
-                                                        </form>
-                                                    </div>
                                                 </td>
-                                            <?php endif; ?>
-                                        </tr>
-                                    <?php endwhile; ?>
-                                </tbody>
-                            </table>
-                        <?php else : ?>
-                            <div class="no-data">
-                                <p>No academic performance records found for this scholar.</p>
-                            </div>
-                        <?php endif; ?>
+                                                <td><?= htmlspecialchars($acad_row['units']) ?></td>
+                                                <td><?= htmlspecialchars($acad_row['year_level']) ?></td>
+                                                <td><?= htmlspecialchars($acad_row['school_year']) ?></td>
+                                                <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
+                                                    <td>
+                                                        <div class="action-buttons">
+                                                            <button type="button" class="btn-sm btn-edit" 
+                                                                onclick="openEditAcadModal(<?= $acad_row['id'] ?>, '<?= htmlspecialchars($acad_row['semester'], ENT_QUOTES) ?>', '<?= htmlspecialchars($acad_row['gwa'], ENT_QUOTES) ?>', '<?= htmlspecialchars($acad_row['units'], ENT_QUOTES) ?>')">
+                                                                Edit
+                                                            </button>
+                                                            <form action="scholar_profile.php?scholar_id=<?= $scholar_id ?>" method="POST" style="display: inline;">
+                                                                <input type="hidden" name="remove_academic" value="1">
+                                                                <input type="hidden" name="record_id" value="<?= $acad_row['id'] ?>">
+                                                                <button type="submit" class="btn-sm btn-delete" onclick="return confirmAction(event, 'Are you sure you want to delete this academic record?', 'Delete', true)">Delete</button>
+                                                            </form>
+                                                        </div>
+                                                    </td>
+                                                <?php endif; ?>
+                                            </tr>
+                                        <?php endwhile; ?>
+                                    </tbody>
+                                </table>
+                            <?php else : ?>
+                                <div class="no-data">
+                                    <p>No academic performance records found for this scholar.</p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                </div>
+                <?php endif; ?>
 
-                <!-- Contact Information -->
-                <div class="profile-card">
+                <!-- Contact Information (Expands to full width when GWA Section is hidden) -->
+                <div class="profile-card" <?= ($gwa_req <= 0) ? 'style="grid-column: 1 / -1;"' : '' ?>>
                     <h3>Contact Information</h3>
                     <div class="info-group">
                         <div class="info-row">
@@ -721,8 +728,8 @@ while($c_row = $chart_res->fetch_assoc()) {
         </div>
     </div>
 
-    <!-- Add Academic Performance Modal -->
-    <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
+    <!-- Add & Edit Academic Performance Modals (Rendered only if Program Has GWA Requirement) -->
+    <?php if($gwa_req > 0 && hasPermission($conn, $_SESSION['user_id'], 'scholars', 'GWA & units')) : ?>
         <div id="addAcadModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -731,15 +738,21 @@ while($c_row = $chart_res->fetch_assoc()) {
                 </div>
                 <form action="../functions/admin/add_academic_performance_process.php" method="POST">
                     <input type="hidden" name="scholar_id" value="<?= $scholar_id ?>">
+                    
+                    <!-- Locked Semester Selection -->
                     <div class="form-group">
                         <label for="add_sem">Semester <span class="required">*</span></label>
-                        <select name="sem" id="add_sem" required>
-                            <option value="" selected disabled>--Select Semester--</option>
-                            <option value="1st Semester">1st Semester</option>
-                            <option value="2nd Semester">2nd Semester</option>
-                            <option value="Summer">Summer</option>
+                        <input type="hidden" name="sem" value="<?= htmlspecialchars($current_semester) ?>">
+                        <select id="add_sem" disabled style="background-color: #e9ecef; cursor: not-allowed; opacity: 0.85;">
+                            <option value="1st Semester" <?= ($current_semester === '1st Semester') ? 'selected' : '' ?>>1st Semester</option>
+                            <option value="2nd Semester" <?= ($current_semester === '2nd Semester') ? 'selected' : '' ?>>2nd Semester</option>
+                            <option value="Summer" <?= ($current_semester === 'Summer') ? 'selected' : '' ?>>Summer</option>
                         </select>
+                        <small style="color: #6c757d; font-size: 0.82rem; margin-top: 4px; display: block;">
+                            🔒 Locked to the scholar's currently active term (<?= htmlspecialchars($current_semester) ?>).
+                        </small>
                     </div>
+
                     <div class="form-group">
                         <label for="add_gwa">General Weighted Average (GWA) <span class="required">*</span></label>
                         <input type="number" name="gwa" id="add_gwa" step="0.01" min="1.00" max="4.00" placeholder="e.g., 1.75" required/>
@@ -766,13 +779,19 @@ while($c_row = $chart_res->fetch_assoc()) {
                 <form action="../functions/admin/edit_academic_performance_process.php" method="POST">
                     <input type="hidden" name="scholar_id" value="<?= $scholar_id ?>">
                     <input type="hidden" name="record_id" id="edit_acad_record_id">
+                    <input type="hidden" name="sem" id="edit_sem_hidden">
+                    
+                    <!-- Locked Semester Selection for Edit -->
                     <div class="form-group">
                         <label for="edit_sem">Semester <span class="required">*</span></label>
-                        <select name="sem" id="edit_sem" required>
+                        <select id="edit_sem" disabled style="background-color: #e9ecef; cursor: not-allowed; opacity: 0.85;">
                             <option value="1st Semester">1st Semester</option>
                             <option value="2nd Semester">2nd Semester</option>
                             <option value="Summer">Summer</option>
                         </select>
+                        <small style="color: #6c757d; font-size: 0.82rem; margin-top: 4px; display: block;">
+                            🔒 Semester cannot be changed during record edit.
+                        </small>
                     </div>
                     <div class="form-group">
                         <label for="edit_gwa">General Weighted Average (GWA) <span class="required">*</span></label>
@@ -792,6 +811,23 @@ while($c_row = $chart_res->fetch_assoc()) {
     <?php endif; ?>
 
     <script>
+    function openEditAcadModal(id, sem, gwa, units) {
+        const recordInput = document.getElementById('edit_acad_record_id');
+        const semSelect = document.getElementById('edit_sem');
+        const semHidden = document.getElementById('edit_sem_hidden');
+        const gwaInput = document.getElementById('edit_gwa');
+        const unitsInput = document.getElementById('edit_units');
+        const modal = document.getElementById('editAcadModal');
+
+        if (recordInput) recordInput.value = id;
+        if (semSelect) semSelect.value = sem;
+        if (semHidden) semHidden.value = sem;
+        if (gwaInput) gwaInput.value = gwa;
+        if (unitsInput) unitsInput.value = units;
+
+        if (modal) modal.classList.add('show');
+    }
+
     function openImageLightbox(src) {
         const modal = document.getElementById('imageLightboxModal');
         const img = document.getElementById('lightboxImage');
