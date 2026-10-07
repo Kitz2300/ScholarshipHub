@@ -313,7 +313,9 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 <li><a href="#sec-announcements">Announcements</a></li>
                 <li><a href="#sec-contact">Contact Details</a></li>
                 <li><a href="#sec-family-notes">Family Background & Notes</a></li>
-                <li><a href="#sec-academic">Academic Performance</a></li>
+                <?php if ($gwa_req > 0) : ?>
+                    <li><a href="#sec-academic">Academic Performance</a></li>
+                <?php endif; ?>
             </ul>
         </nav>
 
@@ -403,13 +405,13 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                     <div class="kpi-value"><?= htmlspecialchars($year_lvl) ?></div>
                     <div class="kpi-sub">SY <?= htmlspecialchars($school_year) ?> (<?= htmlspecialchars($semester) ?>)</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-title">General Weighted Average (GWA)</div>
-                    <div class="kpi-value"><?= $latest_gwa !== null ? htmlspecialchars($latest_gwa) : 'No Record' ?></div>
-                    <div class="kpi-sub">
-                        <?= $gwa_req > 0 ? 'Min Required: ' . htmlspecialchars($gwa_req) : 'No GWA Limit' ?>
+                <?php if ($gwa_req > 0) : ?>
+                    <div class="kpi-card">
+                        <div class="kpi-title">General Weighted Average (GWA)</div>
+                        <div class="kpi-value"><?= $latest_gwa !== null ? htmlspecialchars($latest_gwa) : 'No Record' ?></div>
+                        <div class="kpi-sub">Min Required: <?= htmlspecialchars($gwa_req) ?></div>
                     </div>
-                </div>
+                <?php endif; ?>
             </div>
 
             <!-- Two-Column Layout 1 -->
@@ -578,92 +580,88 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 </div>
             </div>
 
-            <!-- Full-Width Academic Performance across all terms -->
-            <div class="profile-card mt-20" id="sec-academic">
-                <div class="card-header mb-20">
-                    <h3>📈 Academic Performance & GWA Trend</h3>
-                </div>
-
-                <?php 
-                $academic_sql = "SELECT ap.*, 
-                                    CASE 
-                                        WHEN ap.semester LIKE '%1st%' THEN 1 
-                                        WHEN ap.semester LIKE '%2nd%' THEN 2 
-                                        WHEN ap.semester LIKE '%Summer%' THEN 3 
-                                        ELSE 4 
-                                    END as sem_order 
-                                 FROM academic_performance ap
-                                 INNER JOIN scholar_info si ON ap.scholar_id = si.id
-                                 WHERE si.student_id = ? 
-                                 ORDER BY REPLACE(ap.school_year, ' ', '') ASC, sem_order ASC";
-                $academic_stmt = $conn->prepare($academic_sql);
-                $academic_stmt->bind_param('s', $student_id_num);
-                $academic_stmt->execute();
-                $academic_result = $academic_stmt->get_result();
-
-                $gwa_labels = [];
-                $gwa_values = [];
-                $req_values = [];
-                $academic_history = [];
-
-                while ($acad_row = $academic_result->fetch_assoc()) {
-                    $academic_history[] = $acad_row;
-                    $gwa_labels[] = str_replace(' Year', ' Yr', $acad_row['year_level']) . " - " . $acad_row['semester'];
-                    $gwa_values[] = (float) $acad_row['gwa'];
-                    if ($gwa_req > 0) {
-                        $req_values[] = $gwa_req;
-                    }
-                }
-                $academic_stmt->close();
-                ?>
-
-                <?php if (!empty($academic_history)) : ?>
-                    <div class="gwa-chart-container">
-                        <canvas id="gwaTrendChart"></canvas>
+            <!-- Full-Width Academic Performance across all terms (Rendered only if Program Has GWA Requirement) -->
+            <?php if ($gwa_req > 0) : ?>
+                <div class="profile-card mt-20" id="sec-academic">
+                    <div class="card-header mb-20">
+                        <h3>📈 Academic Performance & GWA Trend</h3>
                     </div>
 
-                    <div class="academic-table-wrapper mt-20">
-                        <table class="responsive-table">
-                            <thead>
-                                <tr>
-                                    <th>Semester</th>
-                                    <th>GWA</th>
-                                    <th>Units Completed</th>
-                                    <th>Year Level</th>
-                                    <th>School Year</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach (array_reverse($academic_history) as $acad_row) : ?>
+                    <?php 
+                    $academic_sql = "SELECT ap.*, 
+                                        CASE 
+                                            WHEN ap.semester LIKE '%1st%' THEN 1 
+                                            WHEN ap.semester LIKE '%2nd%' THEN 2 
+                                            WHEN ap.semester LIKE '%Summer%' THEN 3 
+                                            ELSE 4 
+                                        END as sem_order 
+                                     FROM academic_performance ap
+                                     INNER JOIN scholar_info si ON ap.scholar_id = si.id
+                                     WHERE si.student_id = ? 
+                                     ORDER BY REPLACE(ap.school_year, ' ', '') ASC, sem_order ASC";
+                    $academic_stmt = $conn->prepare($academic_sql);
+                    $academic_stmt->bind_param('s', $student_id_num);
+                    $academic_stmt->execute();
+                    $academic_result = $academic_stmt->get_result();
+
+                    $gwa_labels = [];
+                    $gwa_values = [];
+                    $req_values = [];
+                    $academic_history = [];
+
+                    while ($acad_row = $academic_result->fetch_assoc()) {
+                        $academic_history[] = $acad_row;
+                        $gwa_labels[] = str_replace(' Year', ' Yr', $acad_row['year_level']) . " - " . $acad_row['semester'];
+                        $gwa_values[] = (float) $acad_row['gwa'];
+                        $req_values[] = $gwa_req;
+                    }
+                    $academic_stmt->close();
+                    ?>
+
+                    <?php if (!empty($academic_history)) : ?>
+                        <div class="gwa-chart-container">
+                            <canvas id="gwaTrendChart"></canvas>
+                        </div>
+
+                        <div class="academic-table-wrapper mt-20">
+                            <table class="responsive-table">
+                                <thead>
                                     <tr>
-                                        <td data-label="Semester"><strong><?= htmlspecialchars($acad_row['semester']) ?></strong></td>
-                                        <td data-label="GWA"><strong><?= number_format((float)$acad_row['gwa'], 2) ?></strong></td>
-                                        <td data-label="Units"><?= htmlspecialchars($acad_row['units']) ?></td>
-                                        <td data-label="Year Level"><?= htmlspecialchars($acad_row['year_level']) ?></td>
-                                        <td data-label="School Year"><?= htmlspecialchars($acad_row['school_year']) ?></td>
-                                        <td data-label="Status">
-                                            <?php if ($gwa_req > 0) : ?>
+                                        <th>Semester</th>
+                                        <th>GWA</th>
+                                        <th>Units Completed</th>
+                                        <th>Year Level</th>
+                                        <th>School Year</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach (array_reverse($academic_history) as $acad_row) : ?>
+                                        <tr>
+                                            <td data-label="Semester"><strong><?= htmlspecialchars($acad_row['semester']) ?></strong></td>
+                                            <td data-label="GWA"><strong><?= number_format((float)$acad_row['gwa'], 2) ?></strong></td>
+                                            <td data-label="Units"><?= htmlspecialchars($acad_row['units']) ?></td>
+                                            <td data-label="Year Level"><?= htmlspecialchars($acad_row['year_level']) ?></td>
+                                            <td data-label="School Year"><?= htmlspecialchars($acad_row['school_year']) ?></td>
+                                            <td data-label="Status">
                                                 <?php if ((float)$acad_row['gwa'] > $gwa_req) : ?>
                                                     <span class="req-unmet">⚠️ Requirement Not Met</span>
                                                 <?php else : ?>
                                                     <span class="req-met">✓ Requirement Met</span>
                                                 <?php endif; ?>
-                                            <?php else: ?>
-                                                <span class="info-value">Passed</span>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php else : ?>
-                    <div class="no-data">
-                        <p>No academic performance records found to generate trend chart.</p>
-                    </div>
-                <?php endif; ?>
-            </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else : ?>
+                        <div class="no-data">
+                            <p>No academic performance records found to generate trend chart.</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
 
         </main>
 
@@ -811,7 +809,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
     };
     </script>
 
-    <?php if (!empty($academic_history)): ?>
+    <?php if ($gwa_req > 0 && !empty($academic_history)): ?>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         const gwaLabels = <?= json_encode($gwa_labels) ?>;
@@ -839,11 +837,8 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 pointHoverRadius: 8,
                 fill: true,
                 tension: 0.3
-            }
-        ];
-
-        if (gwaReqValue > 0) {
-            datasets.push({
+            },
+            {
                 label: 'Min Required GWA (' + gwaReqValue.toFixed(2) + ')',
                 data: reqValues,
                 borderColor: '#e74c3c',
@@ -852,8 +847,8 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 pointRadius: 0,
                 fill: false,
                 tension: 0
-            });
-        }
+            }
+        ];
 
         new Chart(ctx, {
             type: 'line',
