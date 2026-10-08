@@ -27,7 +27,15 @@
             <form method="post" action="../functions/student/scholar_login_process.php">
                 <div class="form-group">
                     <label for="username">Username (Student ID)</label>
-                    <input type="text" id="username" name="username" placeholder="Enter your student ID" autocomplete="username" required>
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
+                           placeholder="00-0000-000" 
+                           maxlength="11"
+                           pattern="\d{2}-\d{4}-\d{3}"
+                           title="Format must be 12-1234-123"
+                           autocomplete="username" 
+                           required>
                 </div>
 
                 <div class="form-group">
@@ -48,5 +56,34 @@
             © 2026 PIT ScholarshipHub. All rights reserved.
         </footer>
     </div>
+
+    <!-- Student ID Auto-Dash & Formatting Script -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const usernameInput = document.getElementById("username");
+
+        usernameInput.addEventListener("input", function(e) {
+            // Strip out non-digit characters
+            let digits = e.target.value.replace(/\D/g, "");
+
+            // Limit to max 9 digits
+            if (digits.length > 9) {
+                digits = digits.substring(0, 9);
+            }
+
+            // Format as XX-XXXX-XXX
+            let formatted = "";
+            if (digits.length > 6) {
+                formatted = digits.substring(0, 2) + "-" + digits.substring(2, 6) + "-" + digits.substring(6);
+            } else if (digits.length > 2) {
+                formatted = digits.substring(0, 2) + "-" + digits.substring(2);
+            } else {
+                formatted = digits;
+            }
+
+            e.target.value = formatted;
+        });
+    });
+    </script>
 </body>
 </html>

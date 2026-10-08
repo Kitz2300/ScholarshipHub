@@ -107,7 +107,14 @@ $barangays_result = $stmt->get_result();
                             </div>
                             <div class="form-group">
                                 <label for="student_id">Student ID <span class="required">*</span></label>
-                                <input type="tel" name="student_id" id="student_id" placeholder="12-3456-789" pattern="[0-9]{2}-[0-9]{4}-[0-9]{3}" required>
+                                <input type="text" 
+                                       name="student_id" 
+                                       id="student_id" 
+                                       placeholder="00-0000-000" 
+                                       maxlength="11" 
+                                       pattern="\d{2}-\d{4}-\d{3}" 
+                                       title="e.g. 12-3456-789" 
+                                       required>
                             </div>
                             <div class="form-group">
                                 <label for="student_contact">Contact Number <span class="required">*</span></label>
@@ -462,6 +469,27 @@ $barangays_result = $stmt->get_result();
                 }
             }
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const studentIdInput = document.getElementById("student_id");
+            if (studentIdInput) {
+                studentIdInput.addEventListener("input", function(e) {
+                    let digits = e.target.value.replace(/\D/g, "");
+                    if (digits.length > 9) {
+                        digits = digits.substring(0, 9);
+                    }
+                    let formatted = "";
+                    if (digits.length > 6) {
+                        formatted = digits.substring(0, 2) + "-" + digits.substring(2, 6) + "-" + digits.substring(6);
+                    } else if (digits.length > 2) {
+                        formatted = digits.substring(0, 2) + "-" + digits.substring(2);
+                    } else {
+                        formatted = digits;
+                    }
+                    e.target.value = formatted;
+                });
+            }
+        });
         </script>
         <script src="../assets/js/add_scholar.js"></script>
     <?php endif; ?>
