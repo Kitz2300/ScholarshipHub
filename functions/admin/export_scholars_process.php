@@ -1,10 +1,21 @@
 <?php
-// Start output buffering to catch any unexpected warnings/notices
+// Start output buffering and session
 ob_start();
+session_start();
+
+// Disable direct HTML error display to prevent corrupting JSON responses
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
 
 include __DIR__ . "/../../includes/conn.php";
 include __DIR__ . "/../../includes/check_permission.php";
-require_once "../../vendor/autoload.php";
+
+// Autoload composer vendor (supports both root vendor and lib/vendor paths)
+if (file_exists(__DIR__ . "/../../lib/vendor/autoload.php")) {
+    require_once __DIR__ . "/../../lib/vendor/autoload.php";
+} elseif (file_exists(__DIR__ . "/../../vendor/autoload.php")) {
+    require_once __DIR__ . "/../../vendor/autoload.php";
+}
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -13,11 +24,9 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
-session_start();
-
-// ===== Authorization (Allow Admin & Staff with Export Permission) =====
+// ===== Authorization (Admin & Staff with Export Permission) =====
 if(!isset($_SESSION['user_id']) || !hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
-    ob_clean();
+    while (ob_get_level()) { ob_end_clean(); }
     header('Content-Type: application/json');
     echo json_encode(['error' => 'Unauthorized access or insufficient permissions.']);
     exit();
@@ -55,7 +64,7 @@ foreach($selected_cols as $col) {
     }
 }
 
-// Fallback: If no main columns selected, default to basic student info to avoid empty SQL query
+// Fallback: Default core columns if none checked
 if (empty($main_cols)) {
     $main_cols = ['student_id', 'last_name', 'given_name', 'middle_name', 'program_name', 'scholarship_program', 'academic_status'];
 }
@@ -94,8 +103,7 @@ $column_map = [
     'mother_middle' => 'scholar_info.mother_middle_name',
     'mother_contact' => 'scholar_info.mother_contact',
     'is_solo_parent' => 'COALESCE(scholar_info.is_solo_parent, 0)',
-    'is_raised_by_solo_parent' => 'COALESCE(scholar_info.is_raised_by_solo_parent, scholar_info.is_child_of_solo_parent, 0)',
-    'is_child_of_solo_parent' => 'COALESCE(scholar_info.is_raised_by_solo_parent, scholar_info.is_child_of_solo_parent, 0)',
+    'is_raised_by_solo_parent' => 'COALESCE(scholar_info.is_raised_by_solo_parent, 0)',
     'is_gida' => 'COALESCE(scholar_info.is_gida, 0)',
     'gida_details' => 'scholar_info.gida_details',
     'is_farmer_fisherfolk' => 'COALESCE(scholar_info.is_farmer_fisherfolk, 0)',
@@ -135,7 +143,6 @@ $display_headers = [
     'mother_contact' => "Mother's Contact Number",
     'is_solo_parent' => 'Solo Parent',
     'is_raised_by_solo_parent' => 'Raised by Solo Parent',
-    'is_child_of_solo_parent' => 'Raised by Solo Parent',
     'is_gida' => 'GIDA Resident',
     'gida_details' => 'GIDA Details',
     'is_farmer_fisherfolk' => 'Farmer / Fisherfolk Family',
@@ -206,7 +213,7 @@ if($academic_status !== 'all' && !empty($academic_status)) {
 }
 $sql .= " ORDER BY scholar_info.last_name ASC";
 
-$flag_cols = ['is_solo_parent', 'is_raised_by_solo_parent', 'is_child_of_solo_parent', 'is_gida', 'is_farmer_fisherfolk', 'is_rebel_returnee'];
+$flag_cols = ['is_solo_parent', 'is_raised_by_solo_parent', 'is_gida', 'is_farmer_fisherfolk', 'is_rebel_returnee'];
 
 // ===== If preview, return JSON =====
 if($isPreview) {
@@ -214,7 +221,7 @@ if($isPreview) {
     $result = $conn->query($limitSql);
 
     if (!$result) {
-        ob_clean();
+        while (ob_get_level()) { ob_end_clean(); }
         header('Content-Type: application/json');
         echo json_encode([
             'error' => 'Database Query Error: ' . $conn->error
@@ -282,17 +289,24 @@ if($isPreview) {
         $columns_for_preview = $ordered;
     }
 
-    ob_clean();
+    $extra_headers = [];
+    if (!empty($extra_cols)) {
+        foreach ($extra_cols as $ec) {
+            $extra_headers[$ec] = substr($ec, 6);
+        }
+    }
+
+    while (ob_get_level()) { ob_end_clean(); }
     header('Content-Type: application/json');
     echo json_encode([
         'columns' => $columns_for_preview,
-        'display_headers' => array_merge($display_headers, array_combine($extra_cols, array_map(function($k) { return substr($k, 6); }, $extra_cols))),
+        'display_headers' => array_merge($display_headers, $extra_headers),
         'rows' => $rows
     ]);
     exit;
 }
 
-// ===== Otherwise, do full export =====
+// ===== Otherwise, do full Excel export =====
 $final_cols = $all_selected;
 if(!empty($column_order)) {
     $ordered = [];
@@ -449,7 +463,7 @@ $audit_stmt = $conn->prepare($audit_sql);
 $audit_stmt->bind_param("is", $user_id, $action);
 $audit_stmt->execute();
 
-ob_clean();
+while (ob_get_level()) { ob_end_clean(); }
 $writer = new Xlsx($spreadsheet);
 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 header('Content-Disposition: attachment; filename="' . $fullFilename . '"');
