@@ -1,5 +1,8 @@
-/* export_scholars.css - Export Scholar Records Page (Glassmorphism & Background Match) */
+/* export_scholars.css - Export Scholar Records Page Styling */
 
+/* ==========================================================================
+   1. GLOBAL RESETS & BASE LAYOUT
+   ========================================================================== */
 * {
     margin: 0;
     padding: 0;
@@ -11,8 +14,6 @@ body {
     color: #333;
     min-height: 100vh;
     position: relative;
-    
-    /* Aerial background from main portal */
     background-image: url('../images/background.png');
     background-repeat: no-repeat;
     background-size: cover;
@@ -22,10 +23,8 @@ body {
     align-items: stretch;
     justify-content: center;
     padding: 10px;
-    box-sizing: border-box;
 }
 
-/* Dark overlay to ensure text stands out */
 body::before {
     content: '';
     position: fixed;
@@ -38,12 +37,11 @@ body::before {
     pointer-events: none;
 }
 
-/* Main Glass Container */
 .container {
     max-width: 1500px;
     width: 100%;
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -51,20 +49,19 @@ body::before {
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    
-    /* Flex column to stretch height and push footer down */
     display: flex;
     flex-direction: column;
     min-height: calc(100vh - 20px);
 }
 
-/* ========== HEADER ========== */
+/* ==========================================================================
+   2. HEADER & NAVIGATION
+   ========================================================================== */
 .header {
     background: rgba(26, 59, 34, 0.9) !important;
     backdrop-filter: blur(10px);
     color: #fff;
     padding: 15px 25px;
-    border-radius: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -84,7 +81,7 @@ body::before {
     padding: 5px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255,255,255,0.5);
+    border: 2px solid rgba(255, 255, 255, 0.5);
     background-color: rgba(255, 255, 255, 0.8);
 }
 
@@ -109,9 +106,9 @@ body::before {
 }
 
 .logout-btn {
-    background: rgba(255,255,255,0.15);
+    background: rgba(255, 255, 255, 0.15);
     color: #fff;
-    border: 1px solid rgba(255,255,255,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     padding: 6px 14px;
     border-radius: 4px;
     cursor: pointer;
@@ -120,10 +117,9 @@ body::before {
 }
 
 .logout-btn:hover {
-    background: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.3);
 }
 
-/* ========== NAVIGATION ========== */
 .nav-bar {
     background: rgba(255, 255, 255, 0.4);
     padding: 10px 25px;
@@ -137,6 +133,10 @@ body::before {
     flex-wrap: wrap;
 }
 
+.nav-bar ul li {
+    position: relative;
+}
+
 .nav-bar ul li a {
     color: #444;
     text-decoration: none;
@@ -146,19 +146,14 @@ body::before {
     transition: all 0.3s;
 }
 
-.nav-bar ul li a:hover {
+.nav-bar ul li a:hover,
+.nav-bar ul li a.active {
     color: #1e4628;
 }
 
 .nav-bar ul li a.active {
-    color: #1e4628;
     border-bottom-color: #1e4628;
     font-weight: bold;
-}
-
-/* ========== DROPDOWN ========== */
-.nav-bar ul li {
-    position: relative;
 }
 
 .nav-bar ul li .dropdown-toggle {
@@ -172,7 +167,7 @@ body::before {
     left: 0;
     background: #338043;
     min-width: 200px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-radius: 4px;
     border: 1px solid #ddd;
     padding: 8px 0;
@@ -208,17 +203,15 @@ body::before {
     display: block;
 }
 
-/* ========== PAGE CONTENT ========== */
+/* ==========================================================================
+   3. PAGE CONTENT & HEADERS
+   ========================================================================== */
 .page-content {
     background: rgba(255, 255, 255, 0.4);
     padding: 25px;
-    border-radius: 0;
-    
-    /* Forces this section to stretch and push the footer down */
     flex: 1;
 }
 
-/* Page Header */
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -226,7 +219,7 @@ body::before {
     flex-wrap: wrap;
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 2px solid rgba(0,0,0,0.08);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.08);
 }
 
 .page-header h2 {
@@ -240,33 +233,9 @@ body::before {
     flex-wrap: wrap;
 }
 
-/* Buttons */
-.btn {
-    display: inline-block;
-    padding: 10px 16px;
-    border: none;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-    color: #fff;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-}
-
-.btn-secondary { background: #95a5a6; }
-.btn-secondary:hover { background: #7f8c8d; }
-
-.btn-success { background: #2ecc71; }
-.btn-success:hover { background: #27ae60; }
-
-.btn-cancel { background: #e74c3c; }
-.btn-cancel:hover { background: #c0392b; }
-
-/* ========== FORM SECTIONS ========== */
+/* ==========================================================================
+   4. FORM SECTIONS & INPUT CONTROLS
+   ========================================================================== */
 .export-form {
     margin-top: 10px;
 }
@@ -277,7 +246,7 @@ body::before {
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .form-section h3 {
@@ -311,7 +280,8 @@ body::before {
     margin-bottom: 4px;
 }
 
-.form-group label .required {
+.form-group label .required,
+.required-asterisk {
     color: #e74c3c;
     margin-left: 2px;
 }
@@ -319,7 +289,7 @@ body::before {
 .form-group input,
 .form-group select {
     padding: 8px 12px;
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 4px;
     font-size: 13px;
     background: rgba(255, 255, 255, 0.8);
@@ -340,17 +310,32 @@ body::before {
     margin-top: 3px;
 }
 
-/* ========== CHECKBOXES ========== */
+#no_program_msg {
+    color: #d9534f;
+    display: none;
+    margin-top: 4px;
+    font-size: 12px;
+}
+
+/* ==========================================================================
+   5. CHECKBOX GRID & GROUPS
+   ========================================================================== */
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 6px 12px;
+}
+
 .checkbox-group {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     margin-bottom: 4px;
 }
 
 .checkbox-group input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     margin: 0;
     cursor: pointer;
 }
@@ -362,21 +347,61 @@ body::before {
 
 .checkbox-group label {
     font-size: 13px;
+    font-weight: normal;
     color: #444;
     cursor: pointer;
+    margin: 0;
 }
 
 .checkbox-group label:hover {
     color: #1e4628;
 }
 
-/* ========== FORM ACTIONS ========== */
+.checkbox-group.full-width,
+#extra_fields_header {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+}
+
+#extra_fields_header,
+.extra-field-item {
+    display: none;
+}
+
+/* ==========================================================================
+   6. BUTTONS & FORM ACTIONS
+   ========================================================================== */
+.btn {
+    display: inline-block;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    color: #fff;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-secondary { background: #95a5a6; }
+.btn-secondary:hover { background: #7f8c8d; }
+
+.btn-success { background: #2ecc71; }
+.btn-success:hover { background: #27ae60; }
+
+.btn-cancel { background: #e74c3c; }
+.btn-cancel:hover { background: #c0392b; }
+
 .form-actions {
     display: flex;
     gap: 12px;
     margin-top: 10px;
     padding-top: 15px;
-    border-top: 1px solid rgba(0,0,0,0.05);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .form-actions .btn {
@@ -384,7 +409,98 @@ body::before {
     font-size: 14px;
 }
 
-/* ========== FOOTER ========== */
+#proceed-btn-wrapper {
+    margin-top: 20px;
+    margin-bottom: 30px;
+    display: block;
+}
+
+#proceed-btn {
+    width: 100%;
+    padding: 20px 16px;
+}
+
+.preview-actions {
+    margin-top: 15px;
+}
+
+/* ==========================================================================
+   7. PREVIEW SECTION & TABLE
+   ========================================================================== */
+#preview-section {
+    display: none;
+}
+
+#preview-section .table-wrapper {
+    overflow-x: auto;
+    max-height: 400px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+#preview-table th {
+    background: #1e4628;
+    color: #fff;
+    padding: 8px 12px;
+    cursor: grab;
+    user-select: none;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+#preview-table th:active {
+    cursor: grabbing;
+}
+
+#preview-table td {
+    padding: 6px 12px;
+    border-bottom: 1px solid #eee;
+}
+
+#preview-table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+/* ==========================================================================
+   8. EXPORT MODALS
+   ========================================================================== */
+.export-modal-content {
+    text-align: center;
+    padding: 35px 20px;
+}
+
+.export-modal-title {
+    margin-top: 18px;
+    color: #1e4628;
+    font-size: 18px;
+}
+
+.export-modal-desc {
+    color: #666;
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+.export-modal-actions {
+    margin-top: 20px;
+}
+
+#refreshPageBtn {
+    width: 100%;
+    padding: 10px 16px;
+}
+
+/* ==========================================================================
+   9. FOOTER
+   ========================================================================== */
 .footer {
     text-align: center;
     padding: 15px 25px;
@@ -394,36 +510,26 @@ body::before {
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* ========== RESPONSIVE ========== */
+/* ==========================================================================
+   10. RESPONSIVE DESIGN
+   ========================================================================== */
 @media (max-width: 768px) {
     .container {
         margin: 0;
     }
 
-    .header {
-        flex-direction: column;
-        text-align: center;
-        gap: 10px;
-    }
-    
-    .header-left {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .nav-bar ul {
-        justify-content: center;
-        gap: 15px;
-    }
-    
+    .header,
+    .header-left,
     .page-header {
         flex-direction: column;
-        gap: 10px;
         text-align: center;
+        gap: 10px;
     }
     
+    .nav-bar ul,
     .page-actions {
         justify-content: center;
+        gap: 15px;
     }
     
     .form-row {
@@ -449,124 +555,8 @@ body::before {
         border-radius: 8px;
     }
     
-    .page-content {
-        padding: 15px;
-    }
-    
+    .page-content,
     .form-section {
         padding: 15px;
     }
-}
-
-/* Preview table */
-#preview-section .table-wrapper {
-    overflow-x: auto;
-    max-height: 400px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-#preview-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-}
-
-#preview-table th {
-    background: #1e4628;
-    color: #fff;
-    padding: 8px 12px;
-    cursor: grab;
-    user-select: none;
-    white-space: nowrap;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-#preview-table th:active {
-    cursor: grabbing;
-}
-#preview-table td {
-    padding: 6px 12px;
-    border-bottom: 1px solid #eee;
-}
-#preview-table tr:nth-child(even) {
-    background: #f9f9f9;
-}
-.checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 6px 12px;
-}
-.checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.checkbox-group input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-}
-.checkbox-group label {
-    font-weight: normal;
-    margin: 0;
-}
-.checkbox-group.full-width {
-    grid-column: 1 / -1;
-    margin-top: 10px;
-}
-
-/* ========== EXTRACTED STYLES FROM EXPORT_SCHOLARS.PHP ========== */
-.required-asterisk {
-    color: red;
-}
-
-#no_program_msg {
-    color: #d9534f;
-    display: none;
-    margin-top: 4px;
-}
-
-#extra_fields_header {
-    display: none;
-}
-
-.extra-field-item {
-    display: none;
-}
-
-#proceed-btn-wrapper {
-    margin-top: 20px;
-    margin-bottom: 30px;
-    display: block;
-}
-
-#proceed-btn {
-    width: 100%;
-    padding: 20px 16px;
-}
-
-#preview-section {
-    display: none;
-}
-
-.preview-actions {
-    margin-top: 15px;
-}
-
-.export-modal-content {
-    text-align: center;
-    padding: 35px 20px;
-}
-
-.export-modal-title {
-    margin-top: 18px;
-    color: #1e4628;
-    font-size: 18px;
-}
-
-.export-modal-desc {
-    color: #666;
-    font-size: 13px;
-    margin-top: 6px;
 }

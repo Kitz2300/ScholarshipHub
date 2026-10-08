@@ -153,38 +153,34 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ===== Event: "Preview & Rearrange" button =====
-    if (proceedBtn) {
-        proceedBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const selected = getSelectedColumns();
-            if (selected.length === 0) {
-                alert('Please select at least one column to export.');
-                return;
-            }
-            fetchPreview();
-        });
-    }
+    proceedBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const selected = getSelectedColumns();
+        if (selected.length === 0) {
+            alert('Please select at least one column to export.');
+            return;
+        }
+        fetchPreview();
+    });
 
     // ===== Event: "Refresh Preview" button =====
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            fetchPreview();
-        });
-    }
+    refreshBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        fetchPreview();
+    });
 
     // ===== Event: "Export Now" button =====
-    if (exportBtn) {
-        exportBtn.addEventListener('click', function(e) {
-            const order = columnOrderInput.value;
-            if (!order || JSON.parse(order).length === 0) {
-                e.preventDefault();
-                e.stopPropagation();
-                alert('No columns selected. Please rearrange or refresh the preview.');
-                return false;
-            }
-            // Allow confirmAction(...) to open confirmation modal without calling form.submit() directly here
-        });
-    }
+    exportBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const order = columnOrderInput.value;
+        if (!order || JSON.parse(order).length === 0) {
+            alert('No columns selected. Please rearrange or refresh the preview.');
+            return;
+        }
+        // Debug: log the order being submitted
+        console.log('Submitting column order:', order);
+        // Submit the form directly (the hidden input already contains the order)
+        form.submit();
+    });
 
 });

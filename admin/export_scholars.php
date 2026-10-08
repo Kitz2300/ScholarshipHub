@@ -310,20 +310,23 @@ $selected_sem = getSelectedSemester();
                 </div>
             </div>
 
-            <!-- Download Loading Modal -->
-            <div id="exportDownloadModal" class="sys-modal">
-                <div class="sys-modal-content export-modal-content">
-                    <div class="sys-spinner"></div>
-                    <h3 class="export-modal-title">File is Downloading...</h3>
-                    <p class="export-modal-desc">Please wait while your Excel file is generated and downloaded.</p>
-                </div>
-            </div>
 
             <!-- Footer -->
             <div class="footer">
                 © 2026 PIT ScholarshipHub. All rights reserved.
             </div>
         </div>
+
+        <!-- Download Success / Refresh Modal -->
+            <div id="exportDownloadModal" class="sys-modal">
+                <div class="sys-modal-content export-modal-content">
+                    <h3 class="export-modal-title">File is Downloading</h3>
+                    <p class="export-modal-desc">Your scholar records export has started. Once your file download is complete, click the button below to reset the page.</p>
+                    <div class="export-modal-actions">
+                        <button type="button" id="refreshPageBtn" class="btn btn-success">Refresh Page</button>
+                    </div>
+                </div>
+            </div>
 
         <script>
         function filterProgramsBySYAndSemester() {

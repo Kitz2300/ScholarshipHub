@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewSection = document.getElementById('preview-section');
     const previewModal = document.getElementById('exportPreviewModal');
     const downloadModal = document.getElementById('exportDownloadModal');
-    const sysConfirmBtn = document.getElementById('sysConfirmBtn');
     const exportForm = document.getElementById('exportForm');
+    const refreshPageBtn = document.getElementById('refreshPageBtn');
 
     // LOA Checkbox logic: Always disabled, checked only if 'Leave of Absence' is selected
     function toggleLoaColumns() {
@@ -62,28 +62,42 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Show Download Loading Modal for 5 seconds and refresh page upon confirmation
-    function triggerDownloadLoading() {
-        if (downloadModal) {
-            document.querySelectorAll('.sys-modal.sys-show').forEach(m => m.classList.remove('sys-show'));
-            downloadModal.classList.add('sys-show');
-        }
-        setTimeout(function() {
-            window.location.reload();
-        }, 5000);
-    }
-
-    if (sysConfirmBtn) {
-        sysConfirmBtn.addEventListener('click', function() {
-            if (typeof pendingFormSubmission !== 'undefined' && pendingFormSubmission === exportForm) {
-                setTimeout(triggerDownloadLoading, 100);
-            }
+    // Manual Refresh Button Listener
+    if (refreshPageBtn) {
+        refreshPageBtn.addEventListener('click', function() {
+            window.location.href = window.location.pathname;
         });
     }
 
+    // Override programmatic form submit to guarantee download modal displays
     if (exportForm) {
-        exportForm.addEventListener('submit', function() {
-            setTimeout(triggerDownloadLoading, 100);
-        });
+        const originalSubmit = exportForm.submit;
+        exportForm.submit = function() {
+            setTimeout(function() {
+                if (downloadModal) {
+                    document.querySelectorAll('.sys-modal.sys-show').forEach(m => m.classList.remove('sys-show'));
+                    downloadModal.classList.add('sys-show');
+                }
+            }, 350);
+            return originalSubmit.apply(exportForm, arguments);
+        };
+    }
+});
+
+// Document-level event delegation for system confirm button click
+document.addEventListener('click', function(e) {
+    const confirmBtn = e.target.closest('#sysConfirmBtn');
+    const exportForm = document.getElementById('exportForm');
+    const downloadModal = document.getElementById('exportDownloadModal');
+
+    if (confirmBtn && exportForm) {
+        if (typeof pendingFormSubmission !== 'undefined' && (pendingFormSubmission === exportForm || pendingFormSubmission?.id === 'exportForm')) {
+            setTimeout(function() {
+                if (downloadModal) {
+                    document.querySelectorAll('.sys-modal.sys-show').forEach(m => m.classList.remove('sys-show'));
+                    downloadModal.classList.add('sys-show');
+                }
+            }, 350);
+        }
     }
 });
