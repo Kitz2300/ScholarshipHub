@@ -1,6 +1,7 @@
 <?php 
 include __DIR__ . '/../includes/conn.php';
 include __DIR__ . '/../includes/check_permission.php';
+include __DIR__ . '/../includes/school_year_helper.php';
 include __DIR__ . '/../functions/admin/upload_validation.php';
 session_start();
 
@@ -22,6 +23,8 @@ if(isset($_GET['clear'])) {
     unset($_SESSION['num_extra_cols']);
     unset($_SESSION['sample_row']);
     unset($_SESSION['scholarship_program_id']);
+    unset($_SESSION['school_year']);
+    unset($_SESSION['semester']);
     unset($_SESSION['file_name']);
     unset($_SESSION['data_rows']);
     unset($_SESSION['header_row_index']);
@@ -35,7 +38,7 @@ require '../vendor/autoload.php';
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Exception as ReaderException;
 
-// ─── Variables ───
+// ─── Variables & School Year / Semester Data ───
 $errors_by_row = [];
 $valid_rows = [];
 $import_processed = false;
@@ -46,6 +49,15 @@ $num_extra_cols = 0;
 $selected_columns = [];
 $user_skip = isset($_POST['headers']) ? (int)$_POST['headers'] : 3;
 $user_skip = max(0, $user_skip);
+
+$available_years = getScholarshipSchoolYears($conn);
+if (empty($available_years)) {
+    $available_years = getAvailableSchoolYears($conn);
+}
+$selected_sy = $_POST['school_year'] ?? ($_SESSION['school_year'] ?? getSelectedSchoolYear());
+
+$available_semesters = ['1st Semester', '2nd Semester', 'Summer'];
+$selected_sem = $_POST['semester'] ?? ($_SESSION['semester'] ?? getSelectedSemester());
 
 // ─── Field order ───
 $column_order = [
@@ -100,12 +112,12 @@ $default_checked = [
 ];
 
 // ─── Helper: process rows with given mapping ───
-function processRows($data_rows, $mapped_columns, $conn, $header_row_index) {
+function processRows($data_rows, $mapped_columns, $conn, $header_row_index, $school_year = '', $semester = '') {
     $valid_rows = [];
     $errors_by_row = [];
     foreach($data_rows as $row_idx => $rowData) {
         if(empty(array_filter($rowData))) continue;
-        $rowErrors = validateFullRow($rowData, $conn, $mapped_columns);
+        $rowErrors = validateFullRow($rowData, $conn, $mapped_columns, $school_year, $semester);
         if(empty($rowErrors)) {
             $valid_rows[] = $rowData;
         } else {
@@ -132,6 +144,12 @@ if(isset($_POST['select_columns'])) {
 
     $has_new_file = isset($_FILES['excel_file']) && $_FILES['excel_file']['error'] === UPLOAD_ERR_OK;
 
+    if (isset($_POST['school_year'])) $_SESSION['school_year'] = trim($_POST['school_year']);
+    if (isset($_POST['semester'])) $_SESSION['semester'] = trim($_POST['semester']);
+
+    $current_sy = $_SESSION['school_year'] ?? '';
+    $current_sem = $_SESSION['semester'] ?? '';
+
     if (!$has_new_file && isset($_SESSION['data_rows']) && !empty($_SESSION['data_rows'])) {
         $data_rows = $_SESSION['data_rows'];
         $header_row_index = $_SESSION['header_row_index'] ?? 3;
@@ -148,7 +166,7 @@ if(isset($_POST['select_columns'])) {
         }
         $_SESSION['mapped_columns'] = $mapped_columns;
 
-        list($valid_rows, $errors_by_row) = processRows($data_rows, $mapped_columns, $conn, $header_row_index);
+        list($valid_rows, $errors_by_row) = processRows($data_rows, $mapped_columns, $conn, $header_row_index, $current_sy, $current_sem);
 
         $max_columns = 0;
         foreach($data_rows as $rowData) {
@@ -209,7 +227,6 @@ if(isset($_POST['select_columns'])) {
                 }
 
                 if(!isset($_SESSION['upload_error'])) {
-                    // Automatically pick the sheet with the most rows (Data Sheet)
                     $worksheet = $spreadsheet->getActiveSheet();
                     foreach ($spreadsheet->getAllSheets() as $sheet) {
                         if ($sheet->getHighestRow() > $worksheet->getHighestRow()) {
@@ -219,7 +236,6 @@ if(isset($_POST['select_columns'])) {
 
                     $raw_all_rows = $worksheet->toArray();
                     
-                    // Clean cell values (floats to string integers, nulls to empty string)
                     $all_rows = [];
                     foreach($raw_all_rows as $r_idx => $r_val) {
                         $c_row = [];
@@ -253,7 +269,7 @@ if(isset($_POST['select_columns'])) {
                     }
                     $_SESSION['mapped_columns'] = $mapped_columns;
 
-                    list($valid_rows, $errors_by_row) = processRows($data_rows, $mapped_columns, $conn, $header_row_index);
+                    list($valid_rows, $errors_by_row) = processRows($data_rows, $mapped_columns, $conn, $header_row_index, $current_sy, $current_sem);
 
                     $max_columns = 0;
                     foreach($data_rows as $rowData) {
@@ -353,26 +369,65 @@ unset($_SESSION['upload_error']);
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="upload">Upload Excel File <span class="required">*</span></label>
-                                <input type="file" name="excel_file" accept=".xls, .xlsx" id="upload" required/>
+                                <input type="file" name="excel_file" accept=".xls, .xlsx, .csv" id="upload" required/>
                             </div>
                             <div class="form-group">
                                 <label for="headers">Number of Rows to Skip (Headers) <span class="required">*</span></label>
                                 <input type="number" name="headers" value="<?= $user_skip ?>" id="headers" min="0" required/>
                                 <small>Enter the number of rows to skip (e.g., 3 for a 3‑row header)</small>
                             </div>
+
+                            <!-- School Year Selector -->
+                            <div class="form-group">
+                                <label for="school_year">School Year <span class="required">*</span></label>
+                                <select name="school_year" id="school_year" required onchange="filterProgramsBySYAndSemester()">
+                                    <?php foreach ($available_years as $yr) : ?>
+                                        <option value="<?= htmlspecialchars($yr) ?>" <?= $yr === $selected_sy ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($yr) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <!-- Semester Selector -->
+                            <div class="form-group">
+                                <label for="semester">Semester <span class="required">*</span></label>
+                                <select name="semester" id="semester" required onchange="filterProgramsBySYAndSemester()">
+                                    <?php foreach ($available_semesters as $sem) : ?>
+                                        <option value="<?= htmlspecialchars($sem) ?>" <?= $sem === $selected_sem ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($sem) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <!-- Scholarship Program Selector (Filtered by SY & Semester) -->
                             <div class="form-group">
                                 <label for="scholarship">Scholarship Program <span class="required">*</span></label>
-                                <select name="scholarship_program" required>
+                                <select name="scholarship_program" id="scholarship_program" required>
                                     <option value="" disabled selected>Select Scholarship Program</option>
                                     <?php 
-                                    $sql = "SELECT id, name, school_year FROM scholarship_program";
+                                    $sql = "SELECT sp.id, sp.name, sp.school_year, 
+                                                   GROUP_CONCAT(DISTINCT si.semester SEPARATOR ',') AS semesters 
+                                            FROM scholarship_program sp 
+                                            LEFT JOIN scholar_info si ON si.scholarship_program_id = sp.id AND si.is_archived = 0 
+                                            WHERE sp.is_archived = 0 AND sp.is_active = 1 
+                                            GROUP BY sp.id, sp.name, sp.school_year 
+                                            ORDER BY sp.name ASC";
                                     $stmt = $conn->prepare($sql);
                                     $stmt->execute();
                                     $results = $stmt->get_result();
                                     while($row = $results->fetch_assoc()): ?>
-                                        <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['name']) ?> (<?= $row['school_year'] ?>)</option>
+                                        <option value="<?= $row['id'] ?>" 
+                                                data-sy="<?= htmlspecialchars($row['school_year']) ?>" 
+                                                data-sem="<?= htmlspecialchars($row['semesters'] ?? '') ?>">
+                                            <?= htmlspecialchars($row['name']) ?> (<?= htmlspecialchars($row['school_year']) ?>)
+                                        </option>
                                     <?php endwhile; ?>
                                 </select>
+                                <small id="no_program_msg" style="color: #d9534f; display: none; margin-top: 4px;">
+                                    No active scholarship programs found for the selected School Year and Semester.
+                                </small>
                             </div>
                         </div>
                         <div class="form-actions">
@@ -388,7 +443,7 @@ unset($_SESSION['upload_error']);
                         <li>Use the template provided by the scholarship office.
                             <a href="../assets/TEMPLATE.xlsx" download>Download Template</a>
                         </li>
-                        <li>Make sure the file format is <strong>.xlsx</strong> or <strong>.xls</strong>.</li>
+                        <li>Make sure the file format is <strong>.xlsx</strong>, <strong>.xls</strong>, or <strong>.csv</strong>.</li>
                         <li>After uploading, you will be able to select which columns are present in your file.</li>
                         <li><strong>Skip rows:</strong> Enter the number of top rows that contain headers. Data rows will start after that many rows.</li>
                     </ul>
@@ -399,6 +454,7 @@ unset($_SESSION['upload_error']);
                 <div class="column-selection-section">
                     <h3>Step 2: Select Columns Present in Your File</h3>
                     <p>Check only the columns that exist in your Excel file. They will be mapped in the order they appear (left to right).</p>
+                    <p><strong>Target Term:</strong> SY <?= htmlspecialchars($_SESSION['school_year'] ?? '') ?> (<?= htmlspecialchars($_SESSION['semester'] ?? '') ?>)</p>
                     
                     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" onsubmit="showImportLoading()">
                         <div class="checkbox-grid">
@@ -509,6 +565,8 @@ unset($_SESSION['upload_error']);
                                 <?php endif; ?>
 
                                 <input type="hidden" name="scholarship_program_id" value="<?= $_SESSION['scholarship_program_id'] ?>" />
+                                <input type="hidden" name="school_year" value="<?= htmlspecialchars($_SESSION['school_year'] ?? '') ?>" />
+                                <input type="hidden" name="semester" value="<?= htmlspecialchars($_SESSION['semester'] ?? '') ?>" />
                                 <input type="hidden" name="valid_rows" value="<?= urlencode(json_encode($_SESSION['valid_rows'])) ?>" />
                                 <input type="hidden" name="file_name" value="<?= htmlspecialchars($_SESSION['file_name']) ?>" />
 
@@ -588,6 +646,52 @@ unset($_SESSION['upload_error']);
     function showImportLoading() {
         document.getElementById('importLoadingModal').classList.add('sys-show');
     }
+
+    function filterProgramsBySYAndSemester() {
+        const sySelect = document.getElementById('school_year');
+        const semSelect = document.getElementById('semester');
+        const programSelect = document.getElementById('scholarship_program');
+        const noProgMsg = document.getElementById('no_program_msg');
+        
+        if (!sySelect || !semSelect || !programSelect) return;
+
+        const selectedSY = sySelect.value.replace(/\s+/g, '').toLowerCase();
+        const selectedSem = semSelect.value.replace(/\s+/g, '').toLowerCase();
+
+        let visibleCount = 0;
+
+        Array.from(programSelect.options).forEach(opt => {
+            if (opt.value === "") return;
+
+            const progSY = (opt.getAttribute('data-sy') || '').replace(/\s+/g, '').toLowerCase();
+            const progSem = (opt.getAttribute('data-sem') || '').replace(/\s+/g, '').toLowerCase();
+
+            const syMatch = (progSY === selectedSY);
+            // Allow if program has no scholars yet or if it matches the selected semester
+            const semMatch = (!progSem || progSem.includes(selectedSem));
+
+            if (syMatch && semMatch) {
+                opt.style.display = "";
+                opt.disabled = false;
+                visibleCount++;
+            } else {
+                opt.style.display = "none";
+                opt.disabled = true;
+            }
+        });
+
+        if (visibleCount === 0) {
+            programSelect.value = "";
+            if (noProgMsg) noProgMsg.style.display = "block";
+        } else {
+            if (noProgMsg) noProgMsg.style.display = "none";
+            if (programSelect.selectedOptions.length === 0 || programSelect.selectedOptions[0].disabled) {
+                programSelect.value = "";
+            }
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", filterProgramsBySYAndSemester);
     </script>
 </body>
 </html>
