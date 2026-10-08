@@ -3,6 +3,7 @@
 ob_start();
 
 include __DIR__ . "/../../includes/conn.php";
+include __DIR__ . "/../../includes/check_permission.php";
 require_once "../../vendor/autoload.php";
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -14,11 +15,11 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 session_start();
 
-// ===== Authorization =====
-if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+// ===== Authorization (Allow Admin & Staff with Export Permission) =====
+if(!isset($_SESSION['user_id']) || !hasPermission($conn, $_SESSION['user_id'], 'import_export', 'export')) {
     ob_clean();
     header('Content-Type: application/json');
-    echo json_encode(['error' => 'Unauthorized access.']);
+    echo json_encode(['error' => 'Unauthorized access or insufficient permissions.']);
     exit();
 }
 
@@ -27,10 +28,12 @@ $isPreview = isset($_POST['action']) && $_POST['action'] === 'preview';
 
 // Get filters and columns
 $scholarship_program = $_POST['scholar_program'] ?? 'all';
+$school_year_filter = $_POST['school_year'] ?? 'all';
+$semester_filter = $_POST['semester'] ?? 'all';
 $college = $_POST['college'] ?? 'all';
 $program = $_POST['program'] ?? 'all';
 $academic_status = $_POST['academic_status'] ?? 'all';
-$selected_cols = isset($_POST['columns']) ? $_POST['columns'] : [];
+$selected_cols = isset($_POST['columns']) && is_array($_POST['columns']) ? $_POST['columns'] : [];
 $column_order = isset($_POST['column_order']) ? json_decode($_POST['column_order'], true) : [];
 
 // --- Separate main columns and extra columns ---
@@ -50,6 +53,11 @@ foreach($selected_cols as $col) {
     } else {
         $main_cols[] = $col;
     }
+}
+
+// Fallback: If no main columns selected, default to basic student info to avoid empty SQL query
+if (empty($main_cols)) {
+    $main_cols = ['student_id', 'last_name', 'given_name', 'middle_name', 'program_name', 'scholarship_program', 'academic_status'];
 }
 
 // Automatically enforce LOA details based on academic status filter
@@ -176,6 +184,13 @@ if($scholarship_program !== 'all' && !empty($scholarship_program)) {
         $sql .= " AND scholarship_program.name = '" . $conn->real_escape_string($scholarship_program) . "'";
     }
 }
+if($school_year_filter !== 'all' && !empty($school_year_filter)) {
+    $clean_sy = str_replace(' ', '', $school_year_filter);
+    $sql .= " AND REPLACE(scholar_info.school_year, ' ', '') = '" . $conn->real_escape_string($clean_sy) . "'";
+}
+if($semester_filter !== 'all' && !empty($semester_filter)) {
+    $sql .= " AND scholar_info.semester = '" . $conn->real_escape_string($semester_filter) . "'";
+}
 if($college !== 'all' && !empty($college)) {
     if(is_numeric($college)) {
         $sql .= " AND program.college_id = " . (int)$college;
@@ -183,10 +198,10 @@ if($college !== 'all' && !empty($college)) {
         $sql .= " AND college.college_name = '" . $conn->real_escape_string($college) . "'";
     }
 }
-if($program !== 'all') {
+if($program !== 'all' && !empty($program)) {
     $sql .= " AND program.name = '" . $conn->real_escape_string($program) . "'";
 }
-if($academic_status !== 'all') {
+if($academic_status !== 'all' && !empty($academic_status)) {
     $sql .= " AND scholar_info.academic_status = '" . $conn->real_escape_string($academic_status) . "'";
 }
 $sql .= " ORDER BY scholar_info.last_name ASC";
@@ -296,29 +311,31 @@ if(!empty($column_order)) {
 
 $result = $conn->query($sql);
 if(!$result || $result->num_rows === 0) {
-    $_SESSION['fail'] = "No records found to export.";
+    $_SESSION['fail'] = "No scholar records found for the selected filters.";
     header("Location: ../../admin/export_scholars.php");
     exit();
 }
 
 $sp_title = "ALL SCHOLARSHIP PROGRAMS";
-$sp_school_year = "";
 if ($scholarship_program !== 'all' && !empty($scholarship_program)) {
     if (is_numeric($scholarship_program)) {
-        $sp_info_sql = "SELECT name, school_year FROM scholarship_program WHERE id = " . (int)$scholarship_program;
+        $sp_info_sql = "SELECT name FROM scholarship_program WHERE id = " . (int)$scholarship_program;
     } else {
-        $sp_info_sql = "SELECT name, school_year FROM scholarship_program WHERE name = '" . $conn->real_escape_string($scholarship_program) . "'";
+        $sp_info_sql = "SELECT name FROM scholarship_program WHERE name = '" . $conn->real_escape_string($scholarship_program) . "'";
     }
     $sp_info_res = $conn->query($sp_info_sql);
     if ($sp_info_res && $sp_info_row = $sp_info_res->fetch_assoc()) {
         $sp_title = $sp_info_row['name'];
-        $sp_school_year = $sp_info_row['school_year'];
     }
 }
 
 $banner_text = strtoupper($sp_title);
-if (!empty($sp_school_year)) {
-    $banner_text .= " (" . $sp_school_year . ")";
+if ($school_year_filter !== 'all' && !empty($school_year_filter)) {
+    $term_info = "SY " . $school_year_filter;
+    if ($semester_filter !== 'all' && !empty($semester_filter)) {
+        $term_info .= " (" . $semester_filter . ")";
+    }
+    $banner_text .= " - " . strtoupper($term_info);
 }
 
 $spreadsheet = new Spreadsheet();
@@ -425,7 +442,7 @@ $fullFilename = $filename . '.xlsx';
 
 // ========== AUDIT TRAIL LOGGING ==========
 $user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
-$action = "Exported scholar data to Excel ($fullFilename) [Scholarship Program: $scholarship_program, College: $college, Academic Program: $program, Academic Status: $academic_status]";
+$action = "Exported scholar data to Excel ($fullFilename) [Scholarship Program: $sp_title, School Year: $school_year_filter, Semester: $semester_filter, College: $college, Academic Program: $program, Academic Status: $academic_status]";
 
 $audit_sql = "INSERT INTO audit_trail (user_id, action) VALUES (?, ?)";
 $audit_stmt = $conn->prepare($audit_sql);

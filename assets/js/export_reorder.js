@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewSection = document.getElementById('preview-section');
     const previewHeaders = document.getElementById('preview-headers');
     const previewBody = document.getElementById('preview-body');
+    const previewModal = document.getElementById('exportPreviewModal');
     const proceedBtn = document.getElementById('proceed-btn');
     const exportBtn = document.getElementById('export-btn');
     const refreshBtn = document.getElementById('refresh-preview');
@@ -26,17 +27,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const selected = getSelectedColumns();
         if (selected.length === 0) {
             previewSection.style.display = 'none';
+            if (previewModal) previewModal.classList.remove('sys-show');
             return;
         }
 
-        const scholarProgram = document.getElementById('scholar_program').value;
-        const program = document.getElementById('program').value;
-
-        const data = new FormData();
+        // Use FormData from form to pass ALL filters (school_year, semester, scholar_program, college, program, academic_status)
+        const data = new FormData(form);
         data.append('action', 'preview');
-        data.append('scholar_program', scholarProgram);
-        data.append('program', program);
-        selected.forEach(col => data.append('columns[]', col));
 
         fetch('../functions/admin/export_scholars_process.php', {
             method: 'POST',
@@ -46,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(result => {
             if (result.error) {
                 alert('Preview error: ' + result.error);
+                if (previewModal) previewModal.classList.remove('sys-show');
                 return;
             }
             previewData = result;
@@ -54,6 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(err => {
             alert('Failed to fetch preview data.');
             console.error(err);
+            if (previewModal) previewModal.classList.remove('sys-show');
         });
     }
 
@@ -154,34 +153,38 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ===== Event: "Preview & Rearrange" button =====
-    proceedBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        const selected = getSelectedColumns();
-        if (selected.length === 0) {
-            alert('Please select at least one column to export.');
-            return;
-        }
-        fetchPreview();
-    });
+    if (proceedBtn) {
+        proceedBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const selected = getSelectedColumns();
+            if (selected.length === 0) {
+                alert('Please select at least one column to export.');
+                return;
+            }
+            fetchPreview();
+        });
+    }
 
     // ===== Event: "Refresh Preview" button =====
-    refreshBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        fetchPreview();
-    });
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            fetchPreview();
+        });
+    }
 
     // ===== Event: "Export Now" button =====
-    exportBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        const order = columnOrderInput.value;
-        if (!order || JSON.parse(order).length === 0) {
-            alert('No columns selected. Please rearrange or refresh the preview.');
-            return;
-        }
-        // Debug: log the order being submitted
-        console.log('Submitting column order:', order);
-        // Submit the form directly (the hidden input already contains the order)
-        form.submit();
-    });
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function(e) {
+            const order = columnOrderInput.value;
+            if (!order || JSON.parse(order).length === 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                alert('No columns selected. Please rearrange or refresh the preview.');
+                return false;
+            }
+            // Allow confirmAction(...) to open confirmation modal without calling form.submit() directly here
+        });
+    }
 
 });

@@ -515,3 +515,58 @@ body::before {
     grid-column: 1 / -1;
     margin-top: 10px;
 }
+
+/* ========== EXTRACTED STYLES FROM EXPORT_SCHOLARS.PHP ========== */
+.required-asterisk {
+    color: red;
+}
+
+#no_program_msg {
+    color: #d9534f;
+    display: none;
+    margin-top: 4px;
+}
+
+#extra_fields_header {
+    display: none;
+}
+
+.extra-field-item {
+    display: none;
+}
+
+#proceed-btn-wrapper {
+    margin-top: 20px;
+    margin-bottom: 30px;
+    display: block;
+}
+
+#proceed-btn {
+    width: 100%;
+    padding: 20px 16px;
+}
+
+#preview-section {
+    display: none;
+}
+
+.preview-actions {
+    margin-top: 15px;
+}
+
+.export-modal-content {
+    text-align: center;
+    padding: 35px 20px;
+}
+
+.export-modal-title {
+    margin-top: 18px;
+    color: #1e4628;
+    font-size: 18px;
+}
+
+.export-modal-desc {
+    color: #666;
+    font-size: 13px;
+    margin-top: 6px;
+}

@@ -62,17 +62,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Show Download Loading Modal ONLY when user clicks Proceed in sysConfirmModal
+    // Show Download Loading Modal for 5 seconds and refresh page upon confirmation
+    function triggerDownloadLoading() {
+        if (downloadModal) {
+            document.querySelectorAll('.sys-modal.sys-show').forEach(m => m.classList.remove('sys-show'));
+            downloadModal.classList.add('sys-show');
+        }
+        setTimeout(function() {
+            window.location.reload();
+        }, 5000);
+    }
+
     if (sysConfirmBtn) {
         sysConfirmBtn.addEventListener('click', function() {
             if (typeof pendingFormSubmission !== 'undefined' && pendingFormSubmission === exportForm) {
-                if (downloadModal) {
-                    downloadModal.classList.add('sys-show');
-                    setTimeout(function() {
-                        downloadModal.classList.remove('sys-show');
-                    }, 4000);
-                }
+                setTimeout(triggerDownloadLoading, 100);
             }
+        });
+    }
+
+    if (exportForm) {
+        exportForm.addEventListener('submit', function() {
+            setTimeout(triggerDownloadLoading, 100);
         });
     }
 });
