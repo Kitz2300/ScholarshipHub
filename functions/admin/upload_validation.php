@@ -30,7 +30,7 @@ function normalizeBirthdate($value) {
 
 // ─── Core Validation Functions ───
 
-function validateStudentId($id, $conn) {
+function validateStudentId($id, $conn, $school_year = '', $semester = '') {
     $errors = [];
     if (empty($id)) {
         $errors[] = "Student ID is required.";
@@ -40,13 +40,23 @@ function validateStudentId($id, $conn) {
         $errors[] = "Student ID must be in format: 12-1234-123";
         return $errors;
     }
-    $sql = "SELECT student_id FROM scholar_info WHERE student_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $id);
+
+    if (!empty($school_year) && !empty($semester)) {
+        $clean_sy = str_replace(' ', '', $school_year);
+        $sql = "SELECT student_id FROM scholar_info WHERE student_id = ? AND REPLACE(school_year, ' ', '') = ? AND semester = ? AND is_archived = 0";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sss", $id, $clean_sy, $semester);
+    } else {
+        $sql = "SELECT student_id FROM scholar_info WHERE student_id = ? AND is_archived = 0";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $id);
+    }
+
     $stmt->execute();
     $result = $stmt->get_result();
     if ($result->num_rows > 0) {
-        $errors[] = "Student ID '$id' already exists in the database.";
+        $term_str = (!empty($school_year) && !empty($semester)) ? " for SY $school_year ($semester)" : "";
+        $errors[] = "Student ID '$id' already exists in the database$term_str.";
     }
     $stmt->close();
     return $errors;
@@ -147,7 +157,6 @@ function validateYearLevel(&$value) {
         return $errors;
     }
     
-    // Map numeric integers/strings to standard year level labels
     $map = [
         '1' => '1st Year',
         '2' => '2nd Year',
@@ -283,7 +292,7 @@ function validateFourPsId($value) {
 }
 
 // ─── Main validation using dynamic mapping ───
-function validateFullRow(&$rowData, $conn, $mapped_columns) {
+function validateFullRow(&$rowData, $conn, $mapped_columns, $school_year = '', $semester = '') {
     $allErrors = [];
     
     $data = [];
@@ -292,7 +301,7 @@ function validateFullRow(&$rowData, $conn, $mapped_columns) {
     }
     
     if(isset($data['student_id'])) {
-        $errors = validateStudentId($data['student_id'], $conn);
+        $errors = validateStudentId($data['student_id'], $conn, $school_year, $semester);
         if(!empty($errors)) $allErrors['student_id'] = $errors;
     }
     
@@ -322,7 +331,6 @@ function validateFullRow(&$rowData, $conn, $mapped_columns) {
         if(!empty($errors)) {
             $allErrors['birthdate'] = $errors;
         } else {
-            // Write back normalized YYYY-MM-DD format to rowData
             $rowData[$mapped_columns['birthdate']] = $birth_val;
         }
     }
@@ -338,7 +346,6 @@ function validateFullRow(&$rowData, $conn, $mapped_columns) {
         if(!empty($errors)) {
             $allErrors['year_level'] = $errors;
         } else {
-            // Write back normalized string format ("1st Year", etc.) to rowData
             $rowData[$mapped_columns['year_level']] = $yl_val;
         }
     }

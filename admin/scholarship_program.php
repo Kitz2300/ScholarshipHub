@@ -8,10 +8,13 @@ if ($_SESSION['role'] !== 'admin') {
     checkPageAccess($conn, $_SESSION['user_id'], 'scholarship_programs');
 }
 
-// Handle filter submissions (School Year & Archive Status)
+// Handle filter submissions (School Year, Semester & Archive Status)
 if (isset($_POST['apply_filters'])) {
     if (isset($_POST['school_year'])) {
         setSelectedSchoolYear($_POST['school_year']);
+    }
+    if (isset($_POST['semester'])) {
+        $_SESSION['program_semester_filter'] = $_POST['semester'];
     }
     if (isset($_POST['archive_status'])) {
         $_SESSION['program_archive_filter'] = $_POST['archive_status'];
@@ -31,6 +34,8 @@ if (!empty($available_years) && !in_array($selected_year, $available_years)) {
 }
 
 $archive_filter = $_SESSION['program_archive_filter'] ?? '0';
+$semester_filter = $_SESSION['program_semester_filter'] ?? 'all';
+$available_semesters = ['1st Semester', '2nd Semester', 'Summer'];
 
 // Archive/Unarchive Scholarship Program Process
 if (isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
@@ -58,21 +63,37 @@ if (isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
 // Flexible School Year matching to handle whitespace variations ("2025 - 2026" vs "2025-2026")
 $clean_year = str_replace(' ', '', $selected_year);
 
-$base_sql = "SELECT sp.*, p.name AS provider_name, p.code AS provider_code 
-            FROM scholarship_program sp 
-            LEFT JOIN providers p ON sp.provider_id = p.id 
-            WHERE REPLACE(sp.school_year, ' ', '') = ?";
+$where_clauses = ["REPLACE(sp.school_year, ' ', '') = ?"];
+$params = [$clean_year];
+$types = "s";
 
 if ($archive_filter === '1') {
-    $scholarships_sql = $base_sql . " AND sp.is_archived = 1 ORDER BY sp.name ASC";
-} elseif ($archive_filter === 'all') {
-    $scholarships_sql = $base_sql . " ORDER BY sp.name ASC";
-} else {
-    $scholarships_sql = $base_sql . " AND sp.is_archived = 0 ORDER BY sp.name ASC";
+    $where_clauses[] = "sp.is_archived = 1";
+} elseif ($archive_filter === '0') {
+    $where_clauses[] = "sp.is_archived = 0";
 }
 
+// Filter scholarship programs based on scholars' semester in scholar_info
+if (!empty($semester_filter) && $semester_filter !== 'all') {
+    $where_clauses[] = "EXISTS (
+        SELECT 1 FROM scholar_info si 
+        WHERE si.scholarship_program_id = sp.id 
+          AND si.semester = ?
+    )";
+    $params[] = $semester_filter;
+    $types .= "s";
+}
+
+$where_sql = implode(" AND ", $where_clauses);
+
+$scholarships_sql = "SELECT sp.*, p.name AS provider_name, p.code AS provider_code 
+                     FROM scholarship_program sp 
+                     LEFT JOIN providers p ON sp.provider_id = p.id 
+                     WHERE $where_sql 
+                     ORDER BY sp.name ASC";
+
 $scholarships_stmt = $conn->prepare($scholarships_sql);
-$scholarships_stmt->bind_param('s', $clean_year);
+$scholarships_stmt->bind_param($types, ...$params);
 $scholarships_stmt->execute();
 $scholarships_result = $scholarships_stmt->get_result();
 ?>
@@ -113,6 +134,15 @@ $scholarships_result = $scholarships_stmt->get_result();
                             <?php else : ?>
                                 <option value="">No School Year</option>
                             <?php endif; ?>
+                        </select>
+
+                        <label for="semester" style="margin-left: 10px;"><strong>Semester:</strong></label>
+                        <select name="semester" id="semester">
+                            <?php foreach ($available_semesters as $sem) : ?>
+                                <option value="<?= htmlspecialchars($sem) ?>" <?= $semester_filter === $sem ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($sem) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
 
                         <label for="archive_status" style="margin-left: 10px;"><strong>Status:</strong></label>

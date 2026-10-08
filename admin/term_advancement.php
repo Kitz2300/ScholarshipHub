@@ -16,10 +16,34 @@ if ($_SESSION['role'] !== 'admin') {
     checkPageAccess($conn, $_SESSION['user_id'], 'promote_scholars');
 }
 
-// Fetch filter selections
+// Fetch filter selections and target semester logic
 $program_filter = (int) ($_GET['program_id'] ?? 0);
 $school_year_filter = $_GET['school_year'] ?? getSelectedSchoolYear();
-$semester_filter = $_GET['semester'] ?? getSelectedSemester();
+
+$target_semester_get = $_GET['target_semester'] ?? '';
+$semester_get = $_GET['semester'] ?? '';
+
+if (!empty($target_semester_get)) {
+    $target_semester = $target_semester_get;
+    if ($target_semester === 'Summer') {
+        $semester_filter = '2nd Semester';
+    } elseif ($target_semester === '2nd Semester') {
+        $semester_filter = '1st Semester';
+    } elseif ($target_semester === '1st Semester') {
+        $semester_filter = 'Summer';
+    } else {
+        $semester_filter = $semester_get ?: getSelectedSemester();
+    }
+} else {
+    $semester_filter = $semester_get ?: getSelectedSemester();
+    if ($semester_filter === '1st Semester') {
+        $target_semester = '2nd Semester';
+    } elseif ($semester_filter === '2nd Semester') {
+        $target_semester = 'Summer';
+    } else {
+        $target_semester = '1st Semester';
+    }
+}
 
 // Fetch active scholarship programs for dropdown
 $sp_sql = "SELECT id, name FROM scholarship_program WHERE is_archived = 0 ORDER BY name ASC";
@@ -57,7 +81,7 @@ if (!empty($semester_filter)) {
 
 $where_sql = implode(" AND ", $where_clauses);
 
-// Joined academic_performance to verify current term GWA presence
+// Joined academic_performance & check if scholar already has a 2nd semester/later term snapshot
 $scholars_sql = "SELECT 
                     si.id AS scholar_id,
                     si.student_id,
@@ -71,13 +95,23 @@ $scholars_sql = "SELECT
                     sp.name AS scholarship_program_name,
                     sp.min_gwa_req,
                     p.name AS program_name,
-                    ap.gwa AS current_gwa
+                    ap.gwa AS current_gwa,
+                    later_si.id AS already_advanced_id
                  FROM scholar_info si
                  INNER JOIN scholarship_program sp ON si.scholarship_program_id = sp.id
                  LEFT JOIN program p ON si.program_id = p.id
                  LEFT JOIN academic_performance ap ON ap.scholar_id = si.id 
                      AND ap.school_year = si.school_year 
                      AND ap.semester = si.semester
+                 LEFT JOIN scholar_info later_si ON later_si.student_id = si.student_id 
+                     AND later_si.is_archived = 0
+                     AND (
+                         (later_si.school_year = si.school_year AND (
+                             (si.semester = '1st Semester' AND later_si.semester IN ('2nd Semester', 'Summer')) OR
+                             (si.semester = '2nd Semester' AND later_si.semester = 'Summer')
+                         ))
+                         OR (REPLACE(later_si.school_year, ' ', '') > REPLACE(si.school_year, ' ', ''))
+                     )
                  WHERE $where_sql
                  ORDER BY sp.name ASC, si.last_name ASC";
 
@@ -91,12 +125,19 @@ $scholars_result = $stmt->get_result();
 $scholars_list = [];
 $eligible_count = 0;
 $ineligible_count = 0;
+$already_advanced_count = 0;
 
 while ($row = $scholars_result->fetch_assoc()) {
     $requires_gwa = (!empty($row['min_gwa_req']) && floatval($row['min_gwa_req']) > 0);
     $has_gwa = ($row['current_gwa'] !== null && $row['current_gwa'] !== '');
+    $already_advanced = !empty($row['already_advanced_id']);
 
-    if ($requires_gwa && !$has_gwa) {
+    if ($already_advanced) {
+        $row['is_eligible'] = false;
+        $row['eligibility_reason'] = 'Already Advanced to Next Semester / Term';
+        $already_advanced_count++;
+        $ineligible_count++;
+    } elseif ($requires_gwa && !$has_gwa) {
         $row['is_eligible'] = false;
         $row['eligibility_reason'] = 'Missing GWA for current semester';
         $ineligible_count++;
@@ -147,6 +188,8 @@ $stmt->close();
             <!-- Filter & Search Card -->
             <div class="filter-card">
                 <form method="GET" action="<?= $_SERVER['PHP_SELF'] ?>" class="filter-form">
+                    <input type="hidden" name="target_semester" id="hidden_target_semester" value="<?= htmlspecialchars($target_semester) ?>">
+
                     <div class="form-group search-group">
                         <label for="searchQuery">Search Scholar</label>
                         <input type="text" 
@@ -183,7 +226,7 @@ $stmt->close();
 
                     <div class="form-group">
                         <label for="semester">Current Semester</label>
-                        <select name="semester" id="semester" onchange="this.form.submit()">
+                        <select name="semester" id="semester" onchange="handleCurrentSemesterChange(this)">
                             <?php foreach ($available_semesters as $sem) : ?>
                                 <option value="<?= $sem ?>" <?= $semester_filter == $sem ? 'selected' : '' ?>>
                                     <?= $sem ?>
@@ -216,10 +259,10 @@ $stmt->close();
 
                         <div class="target-group">
                             <label for="target_semester">Target Semester:</label>
-                            <select name="target_semester" id="target_semester" required onchange="updateTargetPreview()">
-                                <option value="1st Semester" <?= $semester_filter == 'Summer' ? 'selected' : '' ?>>1st Semester</option>
-                                <option value="2nd Semester" <?= $semester_filter == '1st Semester' ? 'selected' : '' ?>>2nd Semester</option>
-                                <option value="Summer" <?= $semester_filter == '2nd Semester' ? 'selected' : '' ?>>Summer</option>
+                            <select name="target_semester" id="target_semester" required onchange="handleTargetSemesterChange(this)">
+                                <option value="1st Semester" <?= $target_semester == '1st Semester' ? 'selected' : '' ?>>1st Semester</option>
+                                <option value="2nd Semester" <?= $target_semester == '2nd Semester' ? 'selected' : '' ?>>2nd Semester</option>
+                                <option value="Summer" <?= $target_semester == 'Summer' ? 'selected' : '' ?>>Summer</option>
                             </select>
                         </div>
                     </div>
@@ -227,15 +270,19 @@ $stmt->close();
 
                 <div class="table-toolbar">
                     <div class="toolbar-left">
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="selectAll()">Select All Eligible</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="selectAll()">Select All</button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="selectEligibleOnly()">Select All Eligible</button>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="deselectAll()">Deselect All</button>
                     </div>
                     <div class="toolbar-right">
                         <span class="stat-badge stat-eligible">Eligible: <?= $eligible_count ?></span>
-                        <?php if ($ineligible_count > 0) : ?>
-                            <span class="stat-badge stat-ineligible">Missing GWA: <?= $ineligible_count ?></span>
+                        <?php if ($already_advanced_count > 0) : ?>
+                            <span class="stat-badge stat-ineligible">Already Advanced: <?= $already_advanced_count ?></span>
                         <?php endif; ?>
-                        <button type="submit" name="advance_term" class="btn btn-success" <?= $eligible_count === 0 ? 'disabled' : '' ?>>Advance Term</button>
+                        <?php if (($ineligible_count - $already_advanced_count) > 0) : ?>
+                            <span class="stat-badge stat-ineligible">Missing GWA: <?= ($ineligible_count - $already_advanced_count) ?></span>
+                        <?php endif; ?>
+                        <button type="submit" name="advance_term" class="btn btn-success" disabled>Advance Term</button>
                     </div>
                 </div>
 
@@ -245,7 +292,7 @@ $stmt->close();
                         <thead>
                             <tr>
                                 <th style="width: 40px; text-align: center;">
-                                    <input type="checkbox" id="masterCheckbox" onclick="toggleMasterCheckbox(this)" checked>
+                                    <input type="checkbox" id="masterCheckbox" onclick="toggleMasterCheckbox(this)">
                                 </th>
                                 <th>Student ID & Name</th>
                                 <th>Program / Course</th>
@@ -264,6 +311,7 @@ $stmt->close();
                                     $student_id = htmlspecialchars($scholar['student_id']);
                                     $search_text = strtolower($full_name . " " . $student_id);
                                     $is_eligible = $scholar['is_eligible'];
+                                    $already_advanced = !empty($scholar['already_advanced_id']);
                                     $curr_gwa = ($scholar['current_gwa'] !== null && $scholar['current_gwa'] !== '') 
                                                 ? number_format((float)$scholar['current_gwa'], 2) 
                                                 : 'None';
@@ -280,7 +328,8 @@ $stmt->close();
                                                    name="advance_scholars[]" 
                                                    value="<?= $scholar_id ?>" 
                                                    class="scholar-checkbox"
-                                                   <?= $is_eligible ? 'checked' : 'disabled' ?>
+                                                   data-eligible="<?= $is_eligible ? '1' : '0' ?>"
+                                                   <?= !$is_eligible ? 'disabled' : '' ?>
                                                    onchange="updateMasterCheckboxState()">
                                         </td>
                                         <td>
@@ -304,6 +353,8 @@ $stmt->close();
                                         <td>
                                             <?php if ($is_eligible) : ?>
                                                 <span class="status-badge badge-success">Eligible</span>
+                                            <?php elseif ($already_advanced) : ?>
+                                                <span class="status-badge badge-secondary" title="Scholar has already advanced to a later semester or term">Already Advanced</span>
                                             <?php else : ?>
                                                 <span class="status-badge badge-danger" title="<?= htmlspecialchars($scholar['eligibility_reason']) ?>">Missing GWA</span>
                                             <?php endif; ?>
@@ -332,6 +383,37 @@ $stmt->close();
     </div>
 
     <script>
+    function handleTargetSemesterChange(selectElem) {
+        const targetVal = selectElem.value;
+        document.getElementById('hidden_target_semester').value = targetVal;
+
+        const semSelect = document.getElementById('semester');
+        if (targetVal === 'Summer') {
+            semSelect.value = '2nd Semester';
+        } else if (targetVal === '2nd Semester') {
+            semSelect.value = '1st Semester';
+        } else if (targetVal === '1st Semester') {
+            semSelect.value = 'Summer';
+        }
+
+        document.querySelector('.filter-form').submit();
+    }
+
+    function handleCurrentSemesterChange(selectElem) {
+        const currVal = selectElem.value;
+        const hiddenTarget = document.getElementById('hidden_target_semester');
+
+        if (currVal === '2nd Semester') {
+            hiddenTarget.value = 'Summer';
+        } else if (currVal === '1st Semester') {
+            hiddenTarget.value = '2nd Semester';
+        } else if (currVal === 'Summer') {
+            hiddenTarget.value = '1st Semester';
+        }
+
+        selectElem.form.submit();
+    }
+
     function updateTargetPreview() {
         const targetSY = document.getElementById('target_school_year').value;
         const targetSem = document.getElementById('target_semester').value;
@@ -360,6 +442,7 @@ $stmt->close();
     function toggleMasterCheckbox(master) {
         const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)');
         visibleCheckboxes.forEach(cb => cb.checked = master.checked);
+        updateMasterCheckboxState();
     }
 
     function selectAll() {
@@ -368,20 +451,37 @@ $stmt->close();
         updateMasterCheckboxState();
     }
 
+    function selectEligibleOnly() {
+        const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)');
+        visibleCheckboxes.forEach(cb => {
+            cb.checked = (cb.getAttribute('data-eligible') === '1');
+        });
+        updateMasterCheckboxState();
+    }
+
     function deselectAll() {
         const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox');
         visibleCheckboxes.forEach(cb => cb.checked = false);
         document.getElementById('masterCheckbox').checked = false;
+        updateMasterCheckboxState();
     }
 
     function updateMasterCheckboxState() {
         const visibleCheckboxes = Array.from(document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)'));
+        const checkedCheckboxes = visibleCheckboxes.filter(cb => cb.checked);
+
+        const masterCb = document.getElementById('masterCheckbox');
         if (visibleCheckboxes.length === 0) {
-            document.getElementById('masterCheckbox').checked = false;
-            return;
+            masterCb.checked = false;
+        } else {
+            masterCb.checked = (checkedCheckboxes.length === visibleCheckboxes.length);
         }
-        const allChecked = visibleCheckboxes.every(cb => cb.checked);
-        document.getElementById('masterCheckbox').checked = allChecked;
+
+        const advanceBtn = document.querySelector('button[name="advance_term"]');
+        if (advanceBtn) {
+            const totalChecked = document.querySelectorAll('.scholar-checkbox:checked:not(:disabled)').length;
+            advanceBtn.disabled = (totalChecked === 0);
+        }
     }
 
     function confirmTermAdvancement(event) {

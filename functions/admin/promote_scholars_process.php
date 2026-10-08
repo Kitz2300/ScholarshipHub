@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
         $audit_sql = "INSERT INTO audit_trail (user_id, action) VALUES (?, ?)";
         $audit_stmt = $conn->prepare($audit_sql);
 
-        // SQL to insert new term snapshot row for promoted scholars
+        // Inserts new year-level snapshot row resetting semester to '1st Semester'
         $duplicate_sql = "INSERT INTO scholar_info (
                             student_id, username, philsys_id, lrn, four_ps_id, last_name, given_name, middle_name, ext_name,
                             sex, birthdate, disability, ip_group, is_solo_parent, is_raised_by_solo_parent, is_gida, gida_details,
@@ -125,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
         foreach ($selected_ids as $scholar_id) {
             $eval_sql = "SELECT 
                             si.id, 
+                            si.student_id,
                             si.given_name, 
                             si.last_name, 
                             si.year_level, 
@@ -133,18 +134,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
                             sp.name AS scholarship_program_name,
                             sp.min_gwa_req,
                             COUNT(DISTINCT CASE WHEN ap.semester IN ('1st Semester', '2nd Semester', '1st', '2nd') THEN ap.semester END) AS required_sems_count,
-                            MAX(ap.gwa) AS worst_gwa
+                            MAX(ap.gwa) AS worst_gwa,
+                            next_si.id AS already_promoted_id
                          FROM scholar_info si
                          INNER JOIN scholarship_program sp ON si.scholarship_program_id = sp.id
-                         LEFT JOIN academic_performance ap ON si.id = ap.scholar_id AND ap.school_year = si.school_year
+                         INNER JOIN scholar_info all_si ON all_si.student_id = si.student_id AND all_si.school_year = si.school_year
+                         LEFT JOIN academic_performance ap ON all_si.id = ap.scholar_id AND ap.school_year = si.school_year
+                         LEFT JOIN scholar_info next_si ON next_si.student_id = si.student_id AND next_si.school_year = ?
                          WHERE si.id = ?
                          GROUP BY si.id";
+
             $eval_stmt = $conn->prepare($eval_sql);
-            $eval_stmt->bind_param("i", $scholar_id);
+            
+            // Fetch current SY first to calculate and bind target SY
+            $sy_lookup = $conn->query("SELECT school_year FROM scholar_info WHERE id = $scholar_id LIMIT 1");
+            if ($sy_row = $sy_lookup->fetch_assoc()) {
+                $calc_next_sy = getNextSchoolYear($sy_row['school_year']);
+                $eval_stmt->bind_param("si", $calc_next_sy, $scholar_id);
+            }
+
             $eval_stmt->execute();
             $eval_res = $eval_stmt->get_result();
 
             if ($s_row = $eval_res->fetch_assoc()) {
+                if (!empty($s_row['already_promoted_id'])) {
+                    continue; // Skip if already promoted to target SY
+                }
+
                 $curr_year = (int) $s_row['year_level'];
                 $curr_sy = $s_row['school_year'];
                 $next_sy = getNextSchoolYear($curr_sy);
@@ -152,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
                 $source_sp_id = (int)$s_row['scholarship_program_id'];
                 $sp_name = $s_row['scholarship_program_name'] ?? 'Scholarship Program';
 
-                // Ensure scholarship program snapshot exists for target school year
+                // Ensure scholarship program entry exists for target school year
                 $was_duplicated = false;
                 $target_sp_id = getOrCreateProgramForSY($conn, $source_sp_id, $next_sy, $was_duplicated);
                 if ($was_duplicated) {
@@ -228,9 +244,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
             $dup_names = array_keys($duplicated_programs);
             $dup_sy = reset($duplicated_programs);
             if (count($dup_names) === 1) {
-                $dup_toast_msg = "A duplicate of scholarship program '{$dup_names[0]}' has been made for the new school year ($dup_sy).";
+                $dup_toast_msg = "A duplicate of scholarship program '{$dup_names[0]}' has been created for the new school year ($dup_sy).";
             } else {
-                $dup_toast_msg = "Duplicates of " . count($dup_names) . " scholarship programs (" . implode(', ', $dup_names) . ") have been made for the new school year ($dup_sy).";
+                $dup_toast_msg = "Duplicates of " . count($dup_names) . " scholarship programs (" . implode(', ', $dup_names) . ") have been created for the new school year ($dup_sy).";
             }
 
             $_SESSION['toasts'][] = [

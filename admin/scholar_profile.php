@@ -46,10 +46,14 @@ if(isset($_POST['remove_academic']) && isset($_POST['record_id'])) {
     exit();
 }
 
-// Handle proper return URL
+// Handle proper return URL (exclude self-referrals and edit forms)
 $current_referrer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
 
-if (!empty($current_referrer) && strpos($current_referrer, 'edit_scholar.php') === false && strpos($current_referrer, 'academic_performance.php') === false && strpos($current_referrer, 'edit_academic_performance.php') === false) {
+if (!empty($current_referrer) 
+    && strpos($current_referrer, 'edit_scholar.php') === false 
+    && strpos($current_referrer, 'academic_performance.php') === false 
+    && strpos($current_referrer, 'edit_academic_performance.php') === false
+    && strpos($current_referrer, 'scholar_profile.php') === false) {
     $_SESSION['redirect_back_url'] = $current_referrer;
 }
 
@@ -411,6 +415,10 @@ while($c_row = $chart_res->fetch_assoc()) {
                             <span class="info-value"><?= htmlspecialchars($school_year) ?></span>
                         </div>
                         <div class="info-row">
+                            <span class="info-label">Semester</span>
+                            <span class="info-value"><?= htmlspecialchars($current_semester) ?></span>
+                        </div>
+                        <div class="info-row">
                             <span class="info-label">Academic Status</span>
                             <span class="info-value"><?= htmlspecialchars($academic_status) ?></span>
                         </div>
@@ -657,9 +665,9 @@ while($c_row = $chart_res->fetch_assoc()) {
                 <!-- Scholar Notes Section -->
                 <div class="profile-card notes-card">
                     <div class="card-header">
-                        <h3>Notes</h3>
+                        <h3>Other Information:</h3>
                         <?php if(hasPermission($conn, $_SESSION['user_id'], 'scholars', 'notes')) : ?>
-                            <button class="btn btn-sm btn-primary open-modal-btn">+ Add Notes</button>
+                            <button class="btn btn-sm btn-primary open-modal-btn" style="padding: 8px 30px;">+ Add</button>
                         <?php endif; ?>
                     </div>
                     <div class="card-body">

@@ -12,6 +12,9 @@ $error_count = 0;
 if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
     $file_name = $_POST['file_name'];
     $scholarship_program_id = (int)$_POST['scholarship_program_id'];
+    $school_year = trim($_POST['school_year'] ?? $_SESSION['school_year'] ?? '');
+    $semester = trim($_POST['semester'] ?? $_SESSION['semester'] ?? '');
+
     $valid_rows_json = urldecode($_POST['valid_rows']);
     $valid_rows = json_decode($valid_rows_json, true);
     $column_names = isset($_POST['column_names']) ? $_POST['column_names'] : [];
@@ -23,28 +26,30 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
         exit();
     }
 
-    $school_year_sql = "SELECT school_year FROM scholarship_program WHERE id = ?";
-    $school_year_stmt = $conn->prepare($school_year_sql);
-    $school_year_stmt->bind_param('i', $scholarship_program_id);
-    $school_year_stmt->execute();
-    $school_year_result = $school_year_stmt->get_result();
-    if ($row = $school_year_result->fetch_assoc()) {
-        $school_year = $row['school_year'];
-    } else {
-        $_SESSION['fail'] = "Invalid scholarship program ID.";
-        header("Location: ../../admin/upload_excel.php");
-        exit();
+    if (empty($school_year) || empty($semester)) {
+        $school_year_sql = "SELECT school_year FROM scholarship_program WHERE id = ?";
+        $school_year_stmt = $conn->prepare($school_year_sql);
+        $school_year_stmt->bind_param('i', $scholarship_program_id);
+        $school_year_stmt->execute();
+        $school_year_result = $school_year_stmt->get_result();
+        if ($row = $school_year_result->fetch_assoc()) {
+            if (empty($school_year)) $school_year = $row['school_year'];
+        } else {
+            $_SESSION['fail'] = "Invalid scholarship program ID.";
+            header("Location: ../../admin/upload_excel.php");
+            exit();
+        }
+        $school_year_stmt->close();
+        if (empty($semester)) $semester = "1st Semester";
     }
-    $school_year_stmt->close();
 
     $emails_to_send = [];
 
-    // ─── START TRANSACTION (Massive speed gain for bulk inserts) ───
+    // ─── START TRANSACTION ───
     $conn->begin_transaction();
 
     try {
-        // Types string: year_level is string 's' ('iis' instead of 'iii')
-        $types = 'ssssssss' . 'i' . 's' . 'iis' . 'sssssss' . 'iiii' . 'sssssssssss'; 
+        $types = 'ssssssss' . 'i' . 's' . 'iis' . 'sssssss' . 'iiii' . 'ssssssssssss'; 
         $insert_sql = "INSERT INTO scholar_info(
             student_id, philsys_id, lrn, four_ps_id,
             last_name, given_name, ext_name, middle_name,
@@ -55,7 +60,7 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
             street, barangay_id, city_id, province_id, region_id, zipcode, permanent_address, country,
             town_city, province,
             disability, contact_num, email, ip_group,
-            username, password, school_year
+            username, password, school_year, semester
         ) VALUES(
             ?, ?, ?, ?,
             ?, ?, ?, ?,
@@ -66,7 +71,7 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
             ?, ?, ?, ?, ?, ?, ?, 'Philippines',
             ?, ?,
             ?, ?, ?, ?,
-            ?, ?, ?
+            ?, ?, ?, ?
         )";
         $insert_stmt = $conn->prepare($insert_sql);
 
@@ -107,7 +112,8 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
             $four_ps_id    = $data['four_ps_id'] ?? '';
             $last_name     = $data['last_name'] ?? '';
             $given_name    = $data['given_name'] ?? '';
-            $ext_name      = empty($data['ext_name']) ? "N/A" : $data['ext_name'];
+            $raw_ext       = trim($data['ext_name'] ?? '');
+            $ext_name      = (empty($raw_ext) || in_array(strtoupper($raw_ext), ['N/A', 'NONE', '0', 'NULL'])) ? "" : $raw_ext;
             $middle_name   = $data['middle_name'] ?? '';
             $sex           = $data['sex'] ?? '';
             $birthdate     = $data['birthdate'] ?? '';
@@ -171,7 +177,7 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
                 $street, $barangay_id, $city_id, $province_id, $region_id, $zipcode, $permanent_address,
                 $town_city, $province,
                 $disability, $contact_num, $email, $ip_group,
-                $student_id, $hashed_pass, $school_year
+                $student_id, $hashed_pass, $school_year, $semester
             );
 
             if($insert_stmt->execute()) {
@@ -232,7 +238,7 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
         $history_stmt->execute();
 
         $user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
-        $action = "Imported $success_count scholar record(s) from Excel file '$file_name' (Failed: $error_count)";
+        $action = "Imported $success_count scholar record(s) for SY $school_year ($semester) from Excel file '$file_name' (Failed: $error_count)";
         $audit_sql = "INSERT INTO audit_trail (user_id, action) VALUES (?, ?)";
         $audit_stmt = $conn->prepare($audit_sql);
         $audit_stmt->bind_param("is", $user_id, $action);
@@ -253,9 +259,9 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
     }
 
     if($success_count > 0 && $error_count == 0) {
-        $_SESSION['success'] = "Scholar record successfully imported and email notifications sent.";
-        unset($_SESSION['mapped_columns'], $_SESSION['valid_rows'], $_SESSION['errors_by_row'], $_SESSION['import_processed']);
-        header("Location: ../../admin/scholar_list.php");
+        $_SESSION['success'] = "Scholar records successfully imported for SY $school_year ($semester) and email notifications sent.";
+        unset($_SESSION['mapped_columns'], $_SESSION['valid_rows'], $_SESSION['errors_by_row'], $_SESSION['import_processed'], $_SESSION['school_year'], $_SESSION['semester']);
+        header("Location: ../../admin/scholar_list.php?school_year_filter=" . urlencode($school_year) . "&semester_filter=" . urlencode($semester));
         exit();
     } else {
         $_SESSION['fail'] = "Scholar record import completed with $error_count error(s).";

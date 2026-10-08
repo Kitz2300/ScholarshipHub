@@ -61,7 +61,7 @@ if ($year_filter > 0) {
 
 $where_sql = implode(" AND ", $where_clauses);
 
-// Joined query checking current term evaluation & whether scholar was already promoted to target year
+// Joined query ensuring ONLY the LATEST active snapshot per scholar in that SY is evaluated
 $scholars_sql = "SELECT 
                     si.id AS scholar_id,
                     si.student_id,
@@ -71,6 +71,7 @@ $scholars_sql = "SELECT
                     si.year_level,
                     si.academic_status,
                     si.school_year,
+                    si.semester,
                     sp.id AS scholarship_program_id,
                     sp.name AS scholarship_program_name,
                     sp.min_gwa_req,
@@ -81,9 +82,19 @@ $scholars_sql = "SELECT
                  FROM scholar_info si
                  INNER JOIN scholarship_program sp ON si.scholarship_program_id = sp.id
                  LEFT JOIN program p ON si.program_id = p.id
-                 LEFT JOIN academic_performance ap ON si.id = ap.scholar_id AND ap.school_year = si.school_year
-                 LEFT JOIN scholar_info next_si ON next_si.student_id = si.student_id AND next_si.school_year = ?
-                 WHERE $where_sql
+                 LEFT JOIN scholar_info latest_si ON latest_si.student_id = si.student_id 
+                     AND latest_si.school_year = si.school_year 
+                     AND latest_si.is_archived = 0 
+                     AND latest_si.id > si.id
+                 INNER JOIN scholar_info all_si ON all_si.student_id = si.student_id 
+                     AND all_si.school_year = si.school_year 
+                     AND all_si.is_archived = 0
+                 LEFT JOIN academic_performance ap ON ap.scholar_id = all_si.id 
+                     AND ap.school_year = si.school_year
+                 LEFT JOIN scholar_info next_si ON next_si.student_id = si.student_id 
+                     AND next_si.school_year = ? 
+                     AND next_si.is_archived = 0
+                 WHERE $where_sql AND latest_si.id IS NULL
                  GROUP BY si.id
                  ORDER BY sp.name ASC, si.year_level ASC, si.last_name ASC";
 

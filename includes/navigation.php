@@ -89,7 +89,8 @@ $promotion_pages = [
 $management_pages = array_merge(
     $announcement_pages, 
     $promotion_pages,
-    ['program_management.php', 'account_management.php', 'staff_account.php', 'archive.php', 'audit_trail.php']
+    // ['program_management.php', 'account_management.php', 'staff_account.php', 'archive.php', 'audit_trail.php']
+    ['program_management.php', 'account_management.php', 'staff_account.php', 'audit_trail.php']
 );
 ?>
 
@@ -208,12 +209,12 @@ $management_pages = array_merge(
                         </li>
                     <?php endif; ?>
 
-                    <!-- Archives -->
+                    <!-- Archives
                     <?php if(($_SESSION['role'] ?? '') === 'admin') : ?>
                         <li>
                             <a href="<?= $admin_path ?>archive.php" class="<?= isActive('archive.php', $current_page) ?>">Archives</a>
                         </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
 
                     <!-- Audit Trail -->
                     <?php if(($_SESSION['role'] ?? '') === 'admin') : ?>

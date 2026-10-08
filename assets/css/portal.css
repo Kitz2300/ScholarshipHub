@@ -475,6 +475,34 @@ body::before {
     color: #0d47a1;
 }
 
+/* Attachment Link Styling */
+.announcement-attachment {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(0, 0, 0, 0.15);
+}
+
+.attachment-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    background: rgba(30, 70, 40, 0.08);
+    color: var(--brand-primary);
+    border: 1px solid rgba(30, 70, 40, 0.2);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.attachment-link:hover {
+    background: var(--brand-primary);
+    color: #ffffff;
+    border-color: var(--brand-primary);
+}
+
 .no-data {
     color: var(--text-muted);
     font-size: 14px;
