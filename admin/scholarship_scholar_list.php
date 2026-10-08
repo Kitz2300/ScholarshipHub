@@ -40,24 +40,6 @@ if ($scholarship_name_stmt->execute()) {
 }
 $scholarship_name_stmt->close();
 
-// Archive scholar process
-if (isset($_POST['archive']) && isset($_POST['scholar_id'])) {
-    $scholar_id = (int) ($_POST['scholar_id'] ?? 0);
-
-    $archive_sql = "UPDATE scholar_info SET is_archived = 1 WHERE id = ?";
-    $archive_stmt = $conn->prepare($archive_sql);
-    $archive_stmt->bind_param('i', $scholar_id);
-    
-    if ($archive_stmt->execute()) {
-        $_SESSION['success'] = "Scholar Archived";
-    } else {
-        $_SESSION['fail'] = "Failed to archive scholar";
-    }
-    
-    header("Location: scholarship_scholar_list.php?id=$scholarship_id");
-    exit();
-}
-
 // 2. Query scholar list matching the scholarship program and school year
 $clean_sy = str_replace(' ', '', $school_year);
 
@@ -156,13 +138,6 @@ $result = $stmt->get_result();
                                         <div class="action-buttons">
                                             <!-- View scholar info button -->
                                             <a href="scholar_profile.php?scholar_id=<?= $row['scholar_id'] ?>" class="btn-sm btn-view">View Profile</a>
-                                            
-                                            <?php if (hasPermission($conn, $_SESSION['user_id'], 'scholars', 'archive')) : ?>
-                                                <form action="<?= $_SERVER['PHP_SELF'] ?>?id=<?= $scholarship_id ?>" method="POST" style="display: inline;">
-                                                    <input type="hidden" name="scholar_id" value="<?= $row['scholar_id'] ?>"/>
-                                                    <button type="submit" name="archive" class="btn-sm btn-archive" onclick="return confirmAction(event, 'Are you sure you want to archive this scholar snapshot?', 'Archive Scholar', 'archive')">Archive</button>
-                                                </form>
-                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
