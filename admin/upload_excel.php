@@ -33,7 +33,12 @@ if(isset($_GET['clear'])) {
     exit();
 }
 
-require '../vendor/autoload.php';
+// Autoload composer vendor (supports both root vendor and lib/vendor paths)
+if (file_exists(__DIR__ . "/../../lib/vendor/autoload.php")) {
+    require_once __DIR__ . "/../../lib/vendor/autoload.php";
+} elseif (file_exists(__DIR__ . "/../../vendor/autoload.php")) {
+    require_once __DIR__ . "/../../vendor/autoload.php";
+}
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Exception as ReaderException;
