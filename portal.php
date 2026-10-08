@@ -15,6 +15,29 @@ function makeLinksClickable($text) {
 
     return preg_replace($pattern, $replacement, $safe_text);
 }
+
+// Helper function to format attachment URLs (handles single string and multiple JSON paths)
+function getAttachmentList($raw_path) {
+    if (empty($raw_path)) return [];
+
+    $decoded = json_decode($raw_path, true);
+    $items = is_array($decoded) ? $decoded : [$raw_path];
+
+    $attachments = [];
+    foreach ($items as $path) {
+        if (empty($path)) continue;
+
+        $url = preg_match('~^https?://~i', $path) ? $path : ltrim(str_replace('../', '', $path), '/');
+        $filename = basename($path);
+
+        $attachments[] = [
+            'url' => $url,
+            'filename' => $filename
+        ];
+    }
+
+    return $attachments;
+}
 ?>
 
 <!DOCTYPE html>
@@ -30,7 +53,7 @@ function makeLinksClickable($text) {
     <?php include __DIR__ . "/includes/modal_alerts.php"; ?>
     <body>
         <div class="container">
-            <!-- hero & header section -->
+            <!-- Hero & Header Section -->
             <div class="portal-hero">
                 <div class="header">
                     <div class="header-logo-wrapper">
@@ -46,7 +69,7 @@ function makeLinksClickable($text) {
                 </div>
             </div>
 
-            <!-- role cards -->
+            <!-- Role Cards -->
             <div class="role-cards">
                 <a href="admin/login.php" class="role-card admin">
                     <div class="icon-badge">
@@ -76,7 +99,7 @@ function makeLinksClickable($text) {
                 </a>
             </div>
 
-            <!-- announcements section -->
+            <!-- Announcements Section -->
             <div class="announcements">
                 <div class="announcements-header">
                     <h2>Announcements</h2>
@@ -86,6 +109,7 @@ function makeLinksClickable($text) {
                 $announcement_sql = "SELECT 
                                         announcements.title, 
                                         announcements.content, 
+                                        announcements.attachment,
                                         CAST(announcements.created_at AS DATE) AS created_at_date,
                                         sp.name AS scholarship_program_name
                                      FROM announcements 
@@ -123,6 +147,7 @@ function makeLinksClickable($text) {
                         <div class="announcement-content-viewer">
                             <?php foreach ($announcements as $index => $item) : 
                                 $addressed_to = !empty($item['scholarship_program_name']) ? $item['scholarship_program_name'] : "All Scholarship Programs";
+                                $attachments = getAttachmentList($item['attachment']);
                             ?>
                                 <div class="announcement-detail <?= $index === 0 ? 'active' : '' ?>" 
                                      id="content-item-<?= $index ?>">
@@ -130,6 +155,22 @@ function makeLinksClickable($text) {
                                     <span class="detail-date-badge">Date Posted: <?= date('F d, Y', strtotime($item['created_at_date'])) ?> | Addressed To: <?= htmlspecialchars($addressed_to) ?></span>
                                     <hr class="detail-divider">
                                     <div class="detail-content"><?= makeLinksClickable($item['content']) ?></div>
+
+                                    <?php if (!empty($attachments)) : ?>
+                                        <div class="announcement-attachment" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                            <?php foreach ($attachments as $att) : ?>
+                                                <a href="<?= htmlspecialchars($att['url']) ?>" 
+                                                   target="_blank" 
+                                                   rel="noopener noreferrer" 
+                                                   class="attachment-link">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                                    </svg>
+                                                    <span><?= htmlspecialchars($att['filename']) ?></span>
+                                                </a>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
                         </div>

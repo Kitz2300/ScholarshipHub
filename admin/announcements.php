@@ -24,11 +24,12 @@ if (!function_exists('makeLinksClickable')) {
     }
 }
 
-// Query all announcements with addressed scholarship program
+// Query all announcements with addressed scholarship program and attachment
 $announcement_sql = "SELECT
                         announcements.id AS announcement_id,
                         title, 
                         content, 
+                        announcements.attachment,
                         announcements.is_active,
                         created_at,
                         scholarship_users.given_name, 
@@ -121,6 +122,7 @@ if (isset($_POST['delete']) && isset($_POST['announcement_id'])) {
                     <?php while ($row = $announcement_result->fetch_assoc()) : 
                         $title = $row['title'];
                         $content = $row['content'];
+                        $attachment = $row['attachment'] ?? '';
                         $is_active = $row['is_active'] == 1 ? "Active" : "Not Active";
                         $is_active_title = $row['is_active'] == 0 ? "Active" : "Not Active";
                         $is_active_class = $row['is_active'] == 1 ? "status-active" : "status-inactive";
@@ -141,6 +143,25 @@ if (isset($_POST['delete']) && isset($_POST['announcement_id'])) {
                             </div>
                             <div class="announcement-content">
                                 <p><?= makeLinksClickable($content) ?></p>
+                                
+                                <?php if (!empty($attachment)) : 
+                                    $decoded_attachments = json_decode($attachment, true);
+                                    $attachments_list = is_array($decoded_attachments) ? $decoded_attachments : [$attachment];
+                                ?>
+                                    <div class="announcement-attachment-box" style="margin-top: 12px; padding: 10px; background: rgba(0,0,0,0.03); border: 1px dashed #2a6b37; border-radius: 6px;">
+                                        <strong>📎 Attachments (<?= count($attachments_list) ?>):</strong> 
+                                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
+                                            <?php foreach ($attachments_list as $idx => $att_file) : 
+                                                $file_url = preg_match('~^https?://~i', $att_file) ? $att_file : $att_file;
+                                                $filename = basename($att_file);
+                                            ?>
+                                                <a href="<?= htmlspecialchars($file_url) ?>" target="_blank" rel="noopener noreferrer" style="color: #1a73e8; font-weight: bold; text-decoration: underline; background: #ffffff; padding: 4px 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                                                    📎 <?= htmlspecialchars($filename) ?>
+                                                </a>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                             <div class="announcement-actions">
                                 <?php if (hasPermission($conn, $_SESSION['user_id'], "announcements", "edit")) : ?>

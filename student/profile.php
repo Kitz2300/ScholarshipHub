@@ -12,8 +12,38 @@ if (!function_exists('makeLinksClickable')) {
     }
 }
 
+// Helper function to format attachment list (handles single string and JSON array paths)
+if (!function_exists('getAttachmentList')) {
+    function getAttachmentList($raw_path) {
+        if (empty($raw_path)) return [];
+
+        $decoded = json_decode($raw_path, true);
+        $items = is_array($decoded) ? $decoded : [$raw_path];
+
+        $attachments = [];
+        foreach ($items as $path) {
+            if (empty($path)) continue;
+
+            $clean_path = ltrim(str_replace('../', '', $path), '/');
+            $url = preg_match('~^https?://~i', $path) ? $path : '../' . $clean_path;
+            $filename = basename($path);
+
+            $attachments[] = [
+                'url' => $url,
+                'filename' => $filename
+            ];
+        }
+
+        return $attachments;
+    }
+}
+
 // ─── CHECK STUDENT AUTHORIZATION ───
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student') {
+if (!isset($_SESSION['role'])) {
+    header("Location: login.php");
+    exit();
+}
+if ($_SESSION['role'] !== 'student') {
     header("Location: login.php");
     exit();
 }
@@ -227,10 +257,11 @@ if ($p_row = $pass_check_res->fetch_assoc()) {
 }
 $pass_check_stmt->close();
 
-// ─── 7. FETCH ANNOUNCEMENTS & LATEST GWA ───
+// ─── 7. FETCH ANNOUNCEMENTS WITH ATTACHMENT & LATEST GWA ───
 $announcements_sql = "SELECT 
                         announcements.title, 
                         announcements.content, 
+                        announcements.attachment,
                         announcements.created_at, 
                         sp.name AS scholarship_program_name 
                       FROM announcements 
@@ -479,6 +510,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                             <div class="announcements-list-compact">
                                 <?php foreach ($scholar_announcements as $index => $item) : 
                                     $addressed_to = !empty($item['scholarship_program_name']) ? $item['scholarship_program_name'] : "All Scholarship Programs";
+                                    $attachments = getAttachmentList($item['attachment']);
                                 ?>
                                     <div class="announcement-title-item" onclick="showAnnouncementModal(<?= $index ?>)" title="Click to view full announcement content">
                                         <div class="title-header-row">
@@ -492,6 +524,18 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                                         <div class="ann-data-title"><?= htmlspecialchars($item['title']) ?></div>
                                         <div class="ann-data-meta">Date Posted: <?= date('F d, Y', strtotime($item['created_at'])) ?> | Addressed To: <?= htmlspecialchars($addressed_to) ?></div>
                                         <div class="ann-data-body"><?= makeLinksClickable($item['content']) ?></div>
+                                        <?php if (!empty($attachments)): ?>
+                                            <div class="ann-data-attachment" style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.03); border: 1px dashed #2a6b37; border-radius: 6px;">
+                                                <strong>📎 File Attachments (<?= count($attachments) ?>):</strong> 
+                                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
+                                                    <?php foreach ($attachments as $att) : ?>
+                                                        <a href="<?= htmlspecialchars($att['url']) ?>" target="_blank" rel="noopener noreferrer" style="color: #1a73e8; font-weight: bold; text-decoration: underline; background: #ffffff; padding: 4px 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                                                            📎 <?= htmlspecialchars($att['filename']) ?>
+                                                        </a>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
                                     </template>
                                 <?php endforeach; ?>
                             </div>
@@ -681,6 +725,7 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 <span id="annModalMeta" class="detail-date-badge"></span>
                 <hr class="detail-divider">
                 <div id="annModalContent" class="detail-content"></div>
+                <div id="annModalAttachment"></div>
             </div>
         </div>
     </div>
@@ -777,10 +822,12 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
         const title = tmpl.content.querySelector('.ann-data-title').innerHTML;
         const meta = tmpl.content.querySelector('.ann-data-meta').innerHTML;
         const body = tmpl.content.querySelector('.ann-data-body').innerHTML;
+        const attachmentElem = tmpl.content.querySelector('.ann-data-attachment');
 
         document.getElementById('annModalTitle').innerHTML = title;
         document.getElementById('annModalMeta').innerHTML = meta;
         document.getElementById('annModalContent').innerHTML = body;
+        document.getElementById('annModalAttachment').innerHTML = attachmentElem ? attachmentElem.outerHTML : '';
         document.getElementById('announcementModal').classList.add('show');
     }
 
