@@ -11,11 +11,11 @@ include __DIR__ . "/../../includes/conn.php";
 include __DIR__ . "/../../includes/check_permission.php";
 
 // Autoload composer vendor (supports both root vendor and lib/vendor paths)
-if (file_exists(__DIR__ . "/../../lib/vendor/autoload.php")) {
-    require_once __DIR__ . "/../../lib/vendor/autoload.php";
-} elseif (file_exists(__DIR__ . "/../../vendor/autoload.php")) {
+if (file_exists(__DIR__ . "/../../vendor/autoload.php")) {
     require_once __DIR__ . "/../../vendor/autoload.php";
-}
+} elseif (file_exists(__DIR__ . "/../../lib/vendor/autoload.php")) {
+    require_once __DIR__ . "/../../lib/vendor/autoload.php";
+} 
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
