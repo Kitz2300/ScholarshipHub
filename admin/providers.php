@@ -76,20 +76,9 @@ $providers_result = $providers_stmt->get_result();
 
         <!-- Page Content -->
         <div class="page-content">
-            <!-- Page Header & Mini Navigation -->
+            <!-- Page Header -->
             <div class="page-header">
                 <h2>Scholarship Management</h2>
-                
-                <!-- Filters Form -->
-                <form action="providers.php" method="POST" class="school-year-selector">
-                    <label for="archive_status"><strong>Status:</strong></label>
-                    <select name="archive_status" id="archive_status">
-                        <option value="0" <?= $archive_filter === '0' ? 'selected' : '' ?>>Active Providers</option>
-                        <option value="1" <?= $archive_filter === '1' ? 'selected' : '' ?>>Archived Providers</option>
-                        <option value="all" <?= $archive_filter === 'all' ? 'selected' : '' ?>>All Providers</option>
-                    </select>
-                    <button type="submit" name="apply_filters" class="btn btn-sm btn-primary">Apply</button>
-                </form>
             </div>
 
             <!-- Mini Tab Navigation between Programs and Providers -->
@@ -98,6 +87,28 @@ $providers_result = $providers_stmt->get_result();
                 <a href="providers.php" class="sub-nav-item active">Funding Providers</a>
             </div>
 
+            <!-- 1. Auto-submitting Filter Bar -->
+            <form action="providers.php" method="POST" class="program-filter-bar">
+                <input type="hidden" name="apply_filters" value="1" />
+                
+                <div class="filter-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    <span>Filters</span>
+                </div>
+
+                <div class="filter-group">
+                    <label for="archive_status">Status:</label>
+                    <select name="archive_status" id="archive_status" onchange="this.form.submit()">
+                        <option value="0" <?= $archive_filter === '0' ? 'selected' : '' ?>>Active Providers</option>
+                        <option value="1" <?= $archive_filter === '1' ? 'selected' : '' ?>>Archived Providers</option>
+                        <option value="all" <?= $archive_filter === 'all' ? 'selected' : '' ?>>All Providers</option>
+                    </select>
+                </div>
+            </form>
+
+            <!-- 2. Action Row -->
             <div class="action-row">
                 <div class="action-row-right">
                     <?php if (hasPermission($conn, $_SESSION['user_id'], 'scholarship_programs', 'add')) : ?>
@@ -146,7 +157,6 @@ $providers_result = $providers_stmt->get_result();
                                 
                                 <?php if (hasPermission($conn, $_SESSION['user_id'], 'scholarship_programs', 'archive')) : ?>
                                     <form action="providers.php" method="POST" style="display: inline;">
-                                        <!-- Added hidden input so JS form.submit() includes $_POST['toggle_archive'] -->
                                         <input type="hidden" name="toggle_archive" value="1"/>
                                         <input type="hidden" name="provider_id" value="<?= $row['id'] ?>"/>
                                         

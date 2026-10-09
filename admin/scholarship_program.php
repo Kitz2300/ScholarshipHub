@@ -8,13 +8,16 @@ if ($_SESSION['role'] !== 'admin') {
     checkPageAccess($conn, $_SESSION['user_id'], 'scholarship_programs');
 }
 
-// Handle filter submissions (School Year, Semester & Archive Status)
+// Handle filter submissions (School Year, Semester, Provider & Archive Status)
 if (isset($_POST['apply_filters'])) {
     if (isset($_POST['school_year'])) {
         setSelectedSchoolYear($_POST['school_year']);
     }
     if (isset($_POST['semester'])) {
         $_SESSION['program_semester_filter'] = $_POST['semester'];
+    }
+    if (isset($_POST['provider_id'])) {
+        $_SESSION['program_provider_filter'] = $_POST['provider_id'];
     }
     if (isset($_POST['archive_status'])) {
         $_SESSION['program_archive_filter'] = $_POST['archive_status'];
@@ -34,8 +37,13 @@ if (!empty($available_years) && !in_array($selected_year, $available_years)) {
 }
 
 $archive_filter = $_SESSION['program_archive_filter'] ?? '0';
-$semester_filter = $_SESSION['program_semester_filter'] ?? 'all';
+$semester_filter = $_SESSION['program_semester_filter'] ?? '1st Semester';
+$provider_filter = $_SESSION['program_provider_filter'] ?? 'all';
 $available_semesters = ['1st Semester', '2nd Semester', 'Summer'];
+
+// Fetch funding providers list for the filter dropdown
+$providers_sql = "SELECT id, name, code FROM providers ORDER BY name ASC";
+$providers_result = $conn->query($providers_sql);
 
 // Archive/Unarchive Scholarship Program Process
 if (isset($_POST['archive']) && isset($_POST['scholarship_program_id'])) {
@@ -84,6 +92,13 @@ if (!empty($semester_filter) && $semester_filter !== 'all') {
     $types .= "s";
 }
 
+// Filter by funding provider
+if (!empty($provider_filter) && $provider_filter !== 'all') {
+    $where_clauses[] = "sp.provider_id = ?";
+    $params[] = (int)$provider_filter;
+    $types .= "i";
+}
+
 $where_sql = implode(" AND ", $where_clauses);
 
 $scholarships_sql = "SELECT sp.*, p.name AS provider_name, p.code AS provider_code 
@@ -121,10 +136,27 @@ $scholarships_result = $scholarships_stmt->get_result();
             <div class="page-content">
                 <div class="page-header">
                     <h2>Scholarship Management</h2>
+                </div>
+
+                <div class="sub-nav">
+                    <a href="scholarship_program.php" class="sub-nav-item active">Scholarship Programs</a>
+                    <a href="providers.php" class="sub-nav-item">Funding Providers</a>
+                </div>
+
+                <!-- 1. Auto-submitting Filter Bar -->
+                <form action="scholarship_program.php" method="POST" class="program-filter-bar">
+                    <input type="hidden" name="apply_filters" value="1" />
                     
-                    <form action="scholarship_program.php" method="POST" class="school-year-selector">
-                        <label for="school_year"><strong>School Year:</strong></label>
-                        <select name="school_year" id="school_year">
+                    <div class="filter-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                        <span>Filters</span>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="school_year">School Year:</label>
+                        <select name="school_year" id="school_year" onchange="this.form.submit()">
                             <?php if (!empty($available_years)) : ?>
                                 <?php foreach ($available_years as $year) : ?>
                                     <option value="<?= htmlspecialchars($year) ?>" <?= $year == $selected_year ? 'selected' : '' ?>>
@@ -135,32 +167,44 @@ $scholarships_result = $scholarships_stmt->get_result();
                                 <option value="">No School Year</option>
                             <?php endif; ?>
                         </select>
+                    </div>
 
-                        <label for="semester" style="margin-left: 10px;"><strong>Semester:</strong></label>
-                        <select name="semester" id="semester">
+                    <div class="filter-group">
+                        <label for="semester">Semester:</label>
+                        <select name="semester" id="semester" onchange="this.form.submit()">
                             <?php foreach ($available_semesters as $sem) : ?>
                                 <option value="<?= htmlspecialchars($sem) ?>" <?= $semester_filter === $sem ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($sem) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
+                    </div>
 
-                        <label for="archive_status" style="margin-left: 10px;"><strong>Status:</strong></label>
-                        <select name="archive_status" id="archive_status">
+                    <div class="filter-group">
+                        <label for="provider_id">Funding Provider:</label>
+                        <select name="provider_id" id="provider_id" onchange="this.form.submit()">
+                            <option value="all" <?= $provider_filter === 'all' ? 'selected' : '' ?>>All Providers</option>
+                            <?php if ($providers_result && $providers_result->num_rows > 0) : ?>
+                                <?php while ($p = $providers_result->fetch_assoc()) : ?>
+                                    <option value="<?= $p['id'] ?>" <?= (string)$provider_filter === (string)$p['id'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($p['name']) ?><?= !empty($p['code']) ? ' (' . htmlspecialchars($p['code']) . ')' : '' ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="archive_status">Status:</label>
+                        <select name="archive_status" id="archive_status" onchange="this.form.submit()">
                             <option value="0" <?= $archive_filter === '0' ? 'selected' : '' ?>>Active</option>
                             <option value="1" <?= $archive_filter === '1' ? 'selected' : '' ?>>Archived</option>
                             <option value="all" <?= $archive_filter === 'all' ? 'selected' : '' ?>>All Programs</option>
                         </select>
+                    </div>
+                </form>
 
-                        <button type="submit" name="apply_filters" class="btn btn-sm btn-primary">Apply</button>
-                    </form>
-                </div>
-
-                <div class="sub-nav">
-                    <a href="scholarship_program.php" class="sub-nav-item active">Scholarship Programs</a>
-                    <a href="providers.php" class="sub-nav-item">Funding Providers</a>
-                </div>
-
+                <!-- 2. Action Row -->
                 <div class="action-row">
                     <div class="action-row-right">
                         <?php if (hasPermission($conn, $_SESSION['user_id'], 'scholarship_programs', 'add')) : ?>
