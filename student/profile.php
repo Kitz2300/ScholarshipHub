@@ -870,6 +870,14 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
         gradient.addColorStop(0, 'rgba(42, 107, 55, 0.35)');
         gradient.addColorStop(1, 'rgba(42, 107, 55, 0.0)');
 
+        // Dynamically calculate y-axis range based on scholar's GWA and required GWA threshold
+        const allGwa = [...gwaValues, gwaReqValue];
+        const lowestGwa = Math.min(...allGwa);
+        const highestGwa = Math.max(...allGwa);
+
+        let chartMin = Math.min(1.0, Math.floor(lowestGwa));
+        let chartMax = Math.max(3.5, Math.ceil(highestGwa + 0.5));
+
         const datasets = [
             {
                 label: 'Scholar GWA',
@@ -891,7 +899,11 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 borderColor: '#e74c3c',
                 borderWidth: 2,
                 borderDash: [6, 6],
-                pointRadius: 0,
+                pointBackgroundColor: '#e74c3c',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 1,
+                pointRadius: gwaLabels.length === 1 ? 5 : 3,
+                pointHoverRadius: 6,
                 fill: false,
                 tension: 0
             }
@@ -925,8 +937,8 @@ $status_slug = strtolower(str_replace(' ', '-', trim($academic_status)));
                 scales: {
                     y: {
                         reverse: true,
-                        min: 1.0,
-                        max: 3.5,
+                        min: chartMin,
+                        max: chartMax,
                         title: {
                             display: true,
                             text: 'GWA (1.00 Highest - 3.00 Passing)',
