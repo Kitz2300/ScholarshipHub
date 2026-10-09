@@ -101,14 +101,34 @@ if (!empty($provider_filter) && $provider_filter !== 'all') {
 
 $where_sql = implode(" AND ", $where_clauses);
 
-$scholarships_sql = "SELECT sp.*, p.name AS provider_name, p.code AS provider_code 
+// Prepare parameters for the scholar count subquery
+$select_params = [$clean_year];
+$select_types = "s";
+$sem_sub_sql = "";
+
+if (!empty($semester_filter) && $semester_filter !== 'all') {
+    $sem_sub_sql = " AND si.semester = ?";
+    $select_params[] = $semester_filter;
+    $select_types .= "s";
+}
+
+$scholarships_sql = "SELECT sp.*, p.name AS provider_name, p.code AS provider_code,
+                            (SELECT COUNT(*) 
+                             FROM scholar_info si 
+                             WHERE si.scholarship_program_id = sp.id 
+                               AND si.is_archived = 0 
+                               AND REPLACE(si.school_year, ' ', '') = ?$sem_sub_sql
+                            ) AS total_scholars
                      FROM scholarship_program sp 
                      LEFT JOIN providers p ON sp.provider_id = p.id 
                      WHERE $where_sql 
                      ORDER BY sp.name ASC";
 
+$final_params = array_merge($select_params, $params);
+$final_types = $select_types . $types;
+
 $scholarships_stmt = $conn->prepare($scholarships_sql);
-$scholarships_stmt->bind_param($types, ...$params);
+$scholarships_stmt->bind_param($final_types, ...$final_params);
 $scholarships_stmt->execute();
 $scholarships_result = $scholarships_stmt->get_result();
 ?>
@@ -237,6 +257,9 @@ $scholarships_result = $scholarships_stmt->get_result();
                                 <div class="program-code">
                                     <strong>Funding Provider:</strong> 
                                     <?= !empty($row['provider_name']) ? htmlspecialchars($row['provider_name']) . ' (' . htmlspecialchars($row['provider_code']) . ')' : 'Not Specified' ?>
+                                </div>
+                                <div class="program-code">
+                                    <strong>Total Scholars:</strong> <?= (int)$row['total_scholars'] ?>
                                 </div>
                                 <?php if ($row['min_gwa_req'] > 0) : ?>
                                     <div class="program-code">
