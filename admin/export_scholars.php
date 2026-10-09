@@ -327,7 +327,7 @@ $selected_sem = getSelectedSemester();
         <div id="exportDownloadModal" class="sys-modal">
             <div class="sys-modal-content export-modal-content">
                 <h3 class="export-modal-title">File is Downloading</h3>
-                <p class="export-modal-desc">Your scholar records export has started. Once your file download is complete, click the button below to reset the page.</p>
+                <p class="export-modal-desc">Your scholar records export has started. Once your file download is complete, click the button below to refresh the page.</p>
                 <div class="export-modal-actions">
                     <button type="button" id="refreshPageBtn" class="btn btn-success">Refresh Page</button>
                 </div>

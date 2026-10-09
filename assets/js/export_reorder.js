@@ -14,6 +14,15 @@ document.addEventListener('DOMContentLoaded', function() {
     let sortableInstance = null;
     let previewData = null; // store the latest preview data
 
+    // Helper: Display Toast Notification with fallback
+    function triggerToast(message, type = 'warning') {
+        if (typeof showToast === 'function') {
+            showToast(message, type);
+        } else {
+            alert(message);
+        }
+    }
+
     // Helper: Toggle Steps 1 - 3 visibility
     function toggleInitialSteps(show) {
         const stepSections = document.querySelectorAll('#exportForm > .form-section:not(#preview-section)');
@@ -69,9 +78,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const semSelect = document.getElementById('semester');
         const spSelect = document.getElementById('scholar_program');
 
-        // Validation: Block proceeding if required filters are unselected
+        // Validation: Toast notification if required filters are unselected
         if (!sySelect?.value || !semSelect?.value || !spSelect?.value) {
-            alert('Please select a School Year, Semester, and Scholarship Program before generating a preview.');
+            triggerToast('Please select a School Year, Semester, and Scholarship Program before generating a preview.', 'warning');
             if (previewModal) previewModal.classList.remove('sys-show');
             if (!spSelect?.value) spSelect?.focus();
             else if (!sySelect?.value) sySelect?.focus();
@@ -81,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const selected = getSelectedColumns();
         if (selected.length === 0) {
-            alert('Please select at least one column to export.');
+            triggerToast('Please select at least one column to export.', 'warning');
             previewSection.style.display = 'none';
             if (previewModal) previewModal.classList.remove('sys-show');
             return;
@@ -98,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(result => {
             if (result.error) {
-                alert('Preview error: ' + result.error);
+                triggerToast('Preview error: ' + result.error, 'error');
                 if (previewModal) previewModal.classList.remove('sys-show');
                 return;
             }
@@ -106,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderPreview(result);
         })
         .catch(err => {
-            alert('Failed to fetch preview data.');
+            triggerToast('Failed to fetch preview data.', 'error');
             console.error(err);
             if (previewModal) previewModal.classList.remove('sys-show');
         });
@@ -230,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!order || JSON.parse(order).length === 0) {
                 e.preventDefault();
                 e.stopPropagation();
-                alert('No columns selected. Please rearrange or refresh the preview.');
+                triggerToast('No columns selected. Please rearrange or refresh the preview.', 'warning');
                 return false;
             }
         });
