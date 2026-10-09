@@ -7,11 +7,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewBody = document.getElementById('preview-body');
     const previewModal = document.getElementById('exportPreviewModal');
     const proceedBtn = document.getElementById('proceed-btn');
+    const proceedWrapper = document.getElementById('proceed-btn-wrapper');
     const exportBtn = document.getElementById('export-btn');
     const refreshBtn = document.getElementById('refresh-preview');
     const columnOrderInput = document.getElementById('column_order');
     let sortableInstance = null;
     let previewData = null; // store the latest preview data
+
+    // Helper: Toggle Steps 1 - 3 visibility
+    function toggleInitialSteps(show) {
+        const stepSections = document.querySelectorAll('#exportForm > .form-section:not(#preview-section)');
+        stepSections.forEach(sec => {
+            sec.style.display = show ? 'block' : 'none';
+        });
+        if (proceedWrapper) {
+            proceedWrapper.style.display = show ? 'block' : 'none';
+        }
+    }
 
     // ===== Helper: Get selected column names =====
     function getSelectedColumns() {
@@ -24,14 +36,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== Fetch preview from server =====
     function fetchPreview() {
+        const sySelect = document.getElementById('school_year');
+        const semSelect = document.getElementById('semester');
+        const spSelect = document.getElementById('scholar_program');
+
+        // Validation: Block proceeding if required filters are unselected
+        if (!sySelect?.value || !semSelect?.value || !spSelect?.value) {
+            alert('Please select a School Year, Semester, and Scholarship Program before generating a preview.');
+            if (previewModal) previewModal.classList.remove('sys-show');
+            if (!spSelect?.value) spSelect?.focus();
+            else if (!sySelect?.value) sySelect?.focus();
+            else if (!semSelect?.value) semSelect?.focus();
+            return;
+        }
+
         const selected = getSelectedColumns();
         if (selected.length === 0) {
+            alert('Please select at least one column to export.');
             previewSection.style.display = 'none';
             if (previewModal) previewModal.classList.remove('sys-show');
             return;
         }
 
-        // Use FormData from form to pass ALL filters (school_year, semester, scholar_program, college, program, academic_status)
+        // Use FormData from form to pass ALL filters
         const data = new FormData(form);
         data.append('action', 'preview');
 
@@ -99,19 +126,16 @@ document.addEventListener('DOMContentLoaded', function() {
             sortableInstance = new Sortable(headerRow, {
                 animation: 150,
                 onEnd: function() {
-                    // After drag, update the column order and re‑render
                     const newOrder = getCurrentHeaderOrder();
                     reorderColumns(newOrder);
                 }
             });
         }
 
-        // Show preview section and update hidden input with initial order
+        // Hide Steps 1–3 and show Step 4 (Preview Section)
+        toggleInitialSteps(false);
         previewSection.style.display = 'block';
         updateHiddenInput();
-
-        // Debug: log the order to console
-        console.log('Column order set to:', columnOrderInput.value);
     }
 
     // ===== Get current header order from DOM =====
@@ -135,10 +159,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function reorderColumns(newOrder) {
         if (!previewData) return;
 
-        // Update columns array
         previewData.columns = newOrder;
 
-        // Reorder each row to match new column order
         const reorderedRows = previewData.rows.map(row => {
             const newRow = {};
             newOrder.forEach(col => {
@@ -148,39 +170,38 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         previewData.rows = reorderedRows;
 
-        // Re‑render the table with the new order
         renderPreview(previewData);
     }
 
     // ===== Event: "Preview & Rearrange" button =====
-    proceedBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        const selected = getSelectedColumns();
-        if (selected.length === 0) {
-            alert('Please select at least one column to export.');
-            return;
-        }
-        fetchPreview();
-    });
+    if (proceedBtn) {
+        proceedBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            fetchPreview();
+        });
+    }
 
-    // ===== Event: "Refresh Preview" button =====
-    refreshBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        fetchPreview();
-    });
+    // ===== Event: "Reset" button =====
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Hide preview section and restore Steps 1–3
+            previewSection.style.display = 'none';
+            toggleInitialSteps(true);
+        });
+    }
 
     // ===== Event: "Export Now" button =====
-    exportBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        const order = columnOrderInput.value;
-        if (!order || JSON.parse(order).length === 0) {
-            alert('No columns selected. Please rearrange or refresh the preview.');
-            return;
-        }
-        // Debug: log the order being submitted
-        console.log('Submitting column order:', order);
-        // Submit the form directly (the hidden input already contains the order)
-        form.submit();
-    });
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function(e) {
+            const order = columnOrderInput.value;
+            if (!order || JSON.parse(order).length === 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                alert('No columns selected. Please rearrange or refresh the preview.');
+                return false;
+            }
+        });
+    }
 
 });
