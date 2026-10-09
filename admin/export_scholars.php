@@ -282,6 +282,13 @@ $selected_sem = getSelectedSemester();
                     <!-- Preview & Export Area -->
                     <div class="form-section" id="preview-section">
                         <h3>Step 4: Preview & Rearrange Columns</h3>
+                        
+                        <!-- Selected Filters Summary Card -->
+                        <div class="filter-summary-box">
+                            <h4>Selected Filters:</h4>
+                            <div id="filter-summary-content" class="filter-summary-grid"></div>
+                        </div>
+
                         <p><strong>Drag column headers to reorder. The order in the preview will be used in the exported file.</strong></p>
                         <div class="table-wrapper">
                             <table id="preview-table">
@@ -310,7 +317,6 @@ $selected_sem = getSelectedSemester();
                 </div>
             </div>
 
-
             <!-- Footer -->
             <div class="footer">
                 © 2026 PIT ScholarshipHub. All rights reserved.
@@ -318,15 +324,15 @@ $selected_sem = getSelectedSemester();
         </div>
 
         <!-- Download Success / Refresh Modal -->
-            <div id="exportDownloadModal" class="sys-modal">
-                <div class="sys-modal-content export-modal-content">
-                    <h3 class="export-modal-title">File is Downloading</h3>
-                    <p class="export-modal-desc">Your scholar records export has started. Once your file download is complete, click the button below to reset the page.</p>
-                    <div class="export-modal-actions">
-                        <button type="button" id="refreshPageBtn" class="btn btn-success">Refresh Page</button>
-                    </div>
+        <div id="exportDownloadModal" class="sys-modal">
+            <div class="sys-modal-content export-modal-content">
+                <h3 class="export-modal-title">File is Downloading</h3>
+                <p class="export-modal-desc">Your scholar records export has started. Once your file download is complete, click the button below to reset the page.</p>
+                <div class="export-modal-actions">
+                    <button type="button" id="refreshPageBtn" class="btn btn-success">Refresh Page</button>
                 </div>
             </div>
+        </div>
 
         <script>
         function filterProgramsBySYAndSemester() {

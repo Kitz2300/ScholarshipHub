@@ -25,6 +25,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Helper: Render selected filter summary badges inside Step 4
+    function renderFilterSummary() {
+        const sy = document.getElementById('school_year');
+        const sem = document.getElementById('semester');
+        const sp = document.getElementById('scholar_program');
+        const college = document.getElementById('college');
+        const program = document.getElementById('program');
+        const status = document.getElementById('academic_status');
+        const summaryGrid = document.getElementById('filter-summary-content');
+
+        if (!summaryGrid) return;
+
+        const syText = sy && sy.options[sy.selectedIndex] ? sy.options[sy.selectedIndex].text : 'N/A';
+        const semText = sem && sem.options[sem.selectedIndex] ? sem.options[sem.selectedIndex].text : 'N/A';
+        const spText = sp && sp.options[sp.selectedIndex] ? sp.options[sp.selectedIndex].text : 'N/A';
+        const collegeText = college && college.options[college.selectedIndex] ? college.options[college.selectedIndex].text : 'All Colleges';
+        const programText = program && program.options[program.selectedIndex] ? program.options[program.selectedIndex].text : 'All Programs';
+        const statusText = status && status.options[status.selectedIndex] ? status.options[status.selectedIndex].text : 'All Statuses';
+
+        summaryGrid.innerHTML = `
+            <div class="filter-chip"><strong>School Year:</strong> ${syText}</div>
+            <div class="filter-chip"><strong>Semester:</strong> ${semText}</div>
+            <div class="filter-chip"><strong>Scholarship Program:</strong> ${spText}</div>
+            <div class="filter-chip"><strong>College:</strong> ${collegeText}</div>
+            <div class="filter-chip"><strong>Program:</strong> ${programText}</div>
+            <div class="filter-chip"><strong>Academic Status:</strong> ${statusText}</div>
+        `;
+    }
+
     // ===== Helper: Get selected column names =====
     function getSelectedColumns() {
         const selected = [];
@@ -87,6 +116,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderPreview(data) {
         const columns = data.columns || [];
         const rows = data.rows || [];
+
+        // Populate active filters summary
+        renderFilterSummary();
 
         // Build headers
         let headerHtml = '<tr>';
