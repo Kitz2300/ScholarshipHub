@@ -220,6 +220,95 @@ body::before {
     flex-wrap: wrap;
 }
 
+/* ============================================================
+   PROMINENT ACTION BANNER & ADD ACCOUNT BUTTON
+   ============================================================ */
+.account-action-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: linear-gradient(135deg, rgba(63, 181, 36, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%);
+    border: 1px solid rgba(63, 181, 36, 0.25);
+    border-left: 5px solid #2a6b37;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.action-banner-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.action-banner-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: #2a6b37;
+    color: #ffffff;
+    border-radius: 8px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(42, 107, 55, 0.25);
+}
+
+.action-banner-text h4 {
+    margin: 0 0 2px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e4628;
+}
+
+.action-banner-text p {
+    margin: 0;
+    font-size: 13px;
+    color: #555555;
+}
+
+.btn-add-account {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    background-color: #2a6b37;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 3px 8px rgba(42, 107, 55, 0.3);
+}
+
+.btn-add-account:hover {
+    background-color: #1e4628;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 12px rgba(42, 107, 55, 0.4);
+}
+
+.btn-add-account:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    .account-action-banner {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: left;
+    }
+
+    .btn-add-account {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
 /* Section Card */
 .section-card { background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
 .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #2a6b37; padding-bottom: 10px; }

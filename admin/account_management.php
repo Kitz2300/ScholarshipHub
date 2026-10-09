@@ -310,10 +310,9 @@ $staff_result = $conn->query($staff_sql);
 
         <!-- Page Content -->
         <div class="page-content">
-            <!-- Page Header with inline Add button -->
+            <!-- Page Header -->
             <div class="page-header">
                 <h2>Account Management</h2>
-                <button type="button" class="btn btn-success" onclick="openAddModal()">Add Account</button>
             </div>
 
             <!-- ========== CURRENT ADMIN PROFILE CARD ========== -->
@@ -349,6 +348,31 @@ $staff_result = $conn->query($staff_sql);
                     </div>
                 </div>
             <?php endif; ?>
+
+            <!-- ========== PROMINENT ACTION BANNER ========== -->
+            <div class="account-action-banner">
+                <div class="action-banner-info">
+                    <div class="action-banner-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="8.5" cy="7" r="4"></circle>
+                            <line x1="20" y1="8" x2="20" y2="14"></line>
+                            <line x1="17" y1="11" x2="23" y2="11"></line>
+                        </svg>
+                    </div>
+                    <div class="action-banner-text">
+                        <h4>Account Operations</h4>
+                        <p>Create new admin or staff accounts and configure page access permissions.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-success btn-add-account" onclick="openAddModal()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Add New Account</span>
+                </button>
+            </div>
 
             <!-- ========== OTHER ADMIN ACCOUNTS ========== -->
             <div class="section-card">
