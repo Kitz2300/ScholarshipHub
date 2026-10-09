@@ -34,10 +34,10 @@ if(isset($_GET['clear'])) {
 }
 
 // Autoload composer vendor (supports both root vendor and lib/vendor paths)
-if (file_exists(__DIR__ . "/../../vendor/autoload.php")) {
-    require_once __DIR__ . "/../../vendor/autoload.php";
-} elseif (file_exists(__DIR__ . "/../../lib/vendor/autoload.php")) {
-    require_once __DIR__ . "/../../lib/vendor/autoload.php";
+if (file_exists(__DIR__ . "/../vendor/autoload.php")) {
+    require_once __DIR__ . "/../vendor/autoload.php";
+} elseif (file_exists(__DIR__ . "/../lib/vendor/autoload.php")) {
+    require_once __DIR__ . "/../lib/vendor/autoload.php";
 } 
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -332,6 +332,39 @@ unset($_SESSION['upload_error']);
     <link rel="stylesheet" href="../assets/css/upload_excel.css?v=<?= filemtime('../assets/css/upload_excel.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
     <link rel="stylesheet" href="../assets/css/modals.css">
+    <style>
+        .filter-summary-box {
+            background: rgba(30, 70, 40, 0.05);
+            border: 1px solid rgba(30, 70, 40, 0.2);
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+        }
+        .filter-summary-box h4 {
+            color: #1e4628;
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .filter-summary-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+        }
+        .filter-chip {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #c2d6c6;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 13px;
+            color: #2c3e50;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        .filter-chip strong {
+            color: #1e4628;
+        }
+    </style>
 </head>
 <body>
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
@@ -346,7 +379,7 @@ unset($_SESSION['upload_error']);
     </div>
 
     <?php if(!isset($_SESSION['user_id']) && $_SESSION['role'] !== 'admin') :
-        $_SESSION['fail'] = "You are no logged in!";
+        $_SESSION['fail'] = "You are not logged in!";
         header("Location: ../portal.php");
         exit();  
     else : ?>
@@ -412,12 +445,12 @@ unset($_SESSION['upload_error']);
                                 <select name="scholarship_program" id="scholarship_program" required>
                                     <option value="" disabled selected>Select Scholarship Program</option>
                                     <?php 
-                                    $sql = "SELECT sp.id, sp.name, sp.school_year, 
+                                    $sql = "SELECT sp.id, sp.name, sp.code, sp.school_year, 
                                                    GROUP_CONCAT(DISTINCT si.semester SEPARATOR ',') AS semesters 
                                             FROM scholarship_program sp 
                                             LEFT JOIN scholar_info si ON si.scholarship_program_id = sp.id AND si.is_archived = 0 
                                             WHERE sp.is_archived = 0 AND sp.is_active = 1 
-                                            GROUP BY sp.id, sp.name, sp.school_year 
+                                            GROUP BY sp.id, sp.name, sp.code, sp.school_year 
                                             ORDER BY sp.name ASC";
                                     $stmt = $conn->prepare($sql);
                                     $stmt->execute();
@@ -445,9 +478,9 @@ unset($_SESSION['upload_error']);
                 <div class="instructions-section">
                     <h4>Instructions</h4>
                     <ul>
-                        <li>Use the template provided by the scholarship office.
+                        <!-- <li>Use the template provided by the scholarship office.
                             <a href="../assets/TEMPLATE.xlsx" download>Download Template</a>
-                        </li>
+                        </li> -->
                         <li>Make sure the file format is <strong>.xlsx</strong>, <strong>.xls</strong>, or <strong>.csv</strong>.</li>
                         <li>After uploading, you will be able to select which columns are present in your file.</li>
                         <li><strong>Skip rows:</strong> Enter the number of top rows that contain headers. Data rows will start after that many rows.</li>
@@ -458,9 +491,35 @@ unset($_SESSION['upload_error']);
                 <!-- Step 2: Column Selection & Preview -->
                 <div class="column-selection-section">
                     <h3>Step 2: Select Columns Present in Your File</h3>
-                    <p>Check only the columns that exist in your Excel file. They will be mapped in the order they appear (left to right).</p>
-                    <p><strong>Target Term:</strong> SY <?= htmlspecialchars($_SESSION['school_year'] ?? '') ?> (<?= htmlspecialchars($_SESSION['semester'] ?? '') ?>)</p>
+                    <p style="margin-bottom: 15px;">Check only the columns that exist in your Excel file. They will be mapped in the order they appear (left to right).</p>
                     
+                    <?php
+                    // Retrieve selected scholarship program details
+                    $sp_display_name = 'N/A';
+                    if (!empty($_SESSION['scholarship_program_id'])) {
+                        $sp_stmt = $conn->prepare("SELECT name, code FROM scholarship_program WHERE id = ?");
+                        $sp_stmt->bind_param("i", $_SESSION['scholarship_program_id']);
+                        $sp_stmt->execute();
+                        $sp_res = $sp_stmt->get_result();
+                        if ($sp_row = $sp_res->fetch_assoc()) {
+                            $sp_display_name = $sp_row['name'] . (!empty($sp_row['code']) ? ' (' . $sp_row['code'] . ')' : '');
+                        }
+                        $sp_stmt->close();
+                    }
+                    ?>
+
+                    <!-- Selected Targets & Filters Summary Box -->
+                    <div class="filter-summary-box">
+                        <h4>Selected Import Targets:</h4>
+                        <div class="filter-summary-grid">
+                            <div class="filter-chip"><strong>Scholarship Program:</strong> <?= htmlspecialchars($sp_display_name) ?></div>
+                            <div class="filter-chip"><strong>School Year:</strong> <?= htmlspecialchars($_SESSION['school_year'] ?? 'N/A') ?></div>
+                            <div class="filter-chip"><strong>Semester:</strong> <?= htmlspecialchars($_SESSION['semester'] ?? 'N/A') ?></div>
+                            <div class="filter-chip"><strong>Uploaded File:</strong> <?= htmlspecialchars($_SESSION['file_name'] ?? 'N/A') ?></div>
+                            <div class="filter-chip"><strong>Rows Skipped:</strong> <?= isset($_SESSION['header_row_index']) ? ((int)$_SESSION['header_row_index'] + 1) : 'N/A' ?></div>
+                        </div>
+                    </div>
+
                     <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" onsubmit="showImportLoading()">
                         <div class="checkbox-grid">
                             <?php 
@@ -476,8 +535,9 @@ unset($_SESSION['upload_error']);
                                 </div>
                             <?php endforeach; ?>
                         </div>
-                        <div class="form-actions">
+                        <div class="form-actions" style="margin-top: 20px;">
                             <button type="submit" name="select_columns" class="btn btn-success">Update Mapping & Validate</button>
+                            <a href="?clear=1" class="btn btn-secondary">Change File / Reset</a>
                         </div>
                     </form>
                 </div>
@@ -539,7 +599,7 @@ unset($_SESSION['upload_error']);
                                 <?php if($extra_cols) : ?>
                                     <div class="extra-columns-section">
                                         <h4>Extra Columns Detected!</h4>
-                                        <p class="help-text">These columns are beyond the mapped columns. Please provide a name for each, or they will be stored as notes.</p>
+                                        <p class="help-text">These columns are beyond the mapped columns. Please provide a name for each, or they will be stored as Others.</p>
                                         <table>
                                             <thead>
                                                 <tr>
@@ -672,7 +732,6 @@ unset($_SESSION['upload_error']);
             const progSem = (opt.getAttribute('data-sem') || '').replace(/\s+/g, '').toLowerCase();
 
             const syMatch = (progSY === selectedSY);
-            // Allow if program has no scholars yet or if it matches the selected semester
             const semMatch = (!progSem || progSem.includes(selectedSem));
 
             if (syMatch && semMatch) {
