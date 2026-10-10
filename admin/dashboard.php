@@ -259,9 +259,9 @@ while ($row = $status_result->fetch_assoc()) {
             <div class="section-card">
                 <div class="section-card-header">
                     <h3>Scholars per Scholarship Program</h3>
-                    <a href="generate_summary_pdf.php?school_year=<?= urlencode($selected_year) ?>&semester=<?= urlencode($selected_sem) ?>" target="_blank" class="btn btn-sm btn-success">
+                    <!-- <a href="generate_summary_pdf.php?school_year=<?= urlencode($selected_year) ?>&semester=<?= urlencode($selected_sem) ?>" target="_blank" class="btn btn-sm btn-success">
                         Generate Printable Report
-                    </a>
+                    </a> -->
                 </div>
                 <div class="program-list">
                     <?php if(!empty($scholarship_data)) : ?>
