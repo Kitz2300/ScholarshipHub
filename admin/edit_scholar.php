@@ -27,6 +27,8 @@ $id_num = "";
 $sex = 0;
 $birthdate = "";
 $scholarship_program = 0;
+$scholar_sy = "";
+$scholar_sem = "";
 $program = 0;
 $year_lvl = "";
 $academic_status = "";
@@ -77,6 +79,8 @@ if($row = $scholar_result->fetch_assoc()) {
     $birthdate = (!empty($row['birthdate']) && $row['birthdate'] !== '0000-00-00') ? date('Y-m-d', strtotime($row['birthdate'])) : '';
     
     $scholarship_program = $row['scholarship_program_id'];
+    $scholar_sy = $row['school_year'] ?? '';
+    $scholar_sem = $row['semester'] ?? '';
     $program = $row['program_id'];
     $year_lvl = $row['year_level'];
     $academic_status = $row['academic_status'];
@@ -116,11 +120,47 @@ if($row = $scholar_result->fetch_assoc()) {
     $philsys_id = $row['philsys_id'] ?? '';
     $lrn = $row['lrn'] ?? '';
     $four_ps_id = $row['four_ps_id'] ?? '';
+
+    // If scholar's scholarship program details match existing program, fill missing term info
+    if ($scholarship_program > 0 && (empty($scholar_sy) || empty($scholar_sem))) {
+        $sp_info_stmt = $conn->prepare("SELECT school_year, semester FROM scholarship_program WHERE id = ?");
+        $sp_info_stmt->bind_param('i', $scholarship_program);
+        $sp_info_stmt->execute();
+        $sp_info_res = $sp_info_stmt->get_result();
+        if ($sp_info_row = $sp_info_res->fetch_assoc()) {
+            if (empty($scholar_sy)) $scholar_sy = $sp_info_row['school_year'];
+            if (empty($scholar_sem)) $scholar_sem = $sp_info_row['semester'];
+        }
+    }
     
 } else {
     $_SESSION['fail'] = "Scholar not available";
     header("Location: scholar_list.php");
     exit();
+}
+
+// Fetch active scholarship programs with School Year & Semester info
+$all_sp_sql = "SELECT id, name, code, school_year, REPLACE(school_year, ' ', '') AS clean_sy, semester 
+               FROM scholarship_program 
+               WHERE is_archived = 0 OR id = ? 
+               ORDER BY name ASC";
+$all_sp_stmt = $conn->prepare($all_sp_sql);
+$all_sp_stmt->bind_param('i', $scholarship_program);
+$all_sp_stmt->execute();
+$all_sp_res = $all_sp_stmt->get_result();
+
+$sp_list = [];
+$available_sy_list = [];
+
+while ($sp_row = $all_sp_res->fetch_assoc()) {
+    $sp_list[] = $sp_row;
+    if (!in_array($sp_row['school_year'], $available_sy_list)) {
+        $available_sy_list[] = $sp_row['school_year'];
+    }
+}
+
+if (!empty($scholar_sy) && !in_array($scholar_sy, $available_sy_list)) {
+    $available_sy_list[] = $scholar_sy;
 }
 ?>
 
@@ -139,7 +179,7 @@ if($row = $scholar_result->fetch_assoc()) {
 <body>
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <?php if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') : 
-        $_SESSION['fail'] = "You are no logged in!";
+        $_SESSION['fail'] = "You are not logged in!";
         header("Location: ../portal.php");
         exit();    
     else : ?>
@@ -402,22 +442,35 @@ if($row = $scholar_result->fetch_assoc()) {
                     <div class="form-section">
                         <h3>Scholarship & Academic Information</h3>
 
+                        <!-- School Year & Semester Selection -->
+                        <div class="form-row">
+                            <div class="form-group half-width">
+                                <label for="school_year_select">School Year <span class="required">*</span></label>
+                                <select id="school_year_select" required>
+                                    <?php foreach ($available_sy_list as $sy) : ?>
+                                        <option value="<?= htmlspecialchars($sy) ?>" <?= (str_replace(' ', '', $scholar_sy) === str_replace(' ', '', $sy)) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($sy) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group half-width">
+                                <label for="semester_select">Semester <span class="required">*</span></label>
+                                <select id="semester_select" required>
+                                    <option value="1st Semester" <?= ($scholar_sem === '1st Semester') ? 'selected' : '' ?>>1st Semester</option>
+                                    <option value="2nd Semester" <?= ($scholar_sem === '2nd Semester') ? 'selected' : '' ?>>2nd Semester</option>
+                                    <option value="Summer" <?= ($scholar_sem === 'Summer') ? 'selected' : '' ?>>Summer</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="scholarship_program">Scholarship Program <span class="required">*</span></label>
                                 <select name="scholarship_program" id="scholarship_program" required>
                                     <option value="" disabled>Select Scholarship Program</option>
-                                    <?php 
-                                    $scholarship_program_sql = "SELECT id, name, code FROM scholarship_program WHERE is_archived = 0";
-                                    $stmt = $conn->prepare($scholarship_program_sql);
-                                    $stmt->execute();
-                                    $result = $stmt->get_result();
-                                    while($row = $result->fetch_assoc()) {
-                                        $selected = ($scholarship_program == $row['id']) ? 'selected' : '';
-                                        echo "<option value='" . $row['id'] . "' $selected> " . htmlspecialchars($row['name']) . " (" . htmlspecialchars($row['code']) . ")</option>";
-                                    }
-                                    ?>
                                 </select>
+                                <small id="sp_error_msg" style="color: #dc3545; font-size: 12px; margin-top: 5px; display: none; font-weight: 500;">⚠️ No active scholarship program available for this term.</small>
                             </div>
                             <div class="form-group">
                                 <label for="program">Program / Course <span class="required">*</span></label>
@@ -477,8 +530,7 @@ if($row = $scholar_result->fetch_assoc()) {
                                     <?php 
                                     $current_y = (int)date('Y');
                                     for ($y = $current_y - 5; $y <= $current_y + 5; $y++) : 
-                                        $sy_option = $y . '-' . ($y + 1);
-                                        $selected_sy = ($loa_school_year == $sy_option) ? 'selected' : '';
+                                        $sy_option =$y . '-' . ($y + 1);$selected_sy = ($loa_school_year ==$sy_option) ? 'selected' : '';
                                     ?>
                                         <option value="<?= $sy_option ?>" <?= $selected_sy ?>><?= $sy_option ?></option>
                                     <?php endfor; ?>
@@ -545,6 +597,49 @@ if($row = $scholar_result->fetch_assoc()) {
         </div>
 
         <script>
+        const allScholarshipPrograms = <?= json_encode($sp_list) ?>;
+        const currentScholarProgramId = <?= (int)$scholarship_program ?>;
+
+        function updateScholarshipDropdown() {
+            const sySelect = document.getElementById('school_year_select');
+            const semSelect = document.getElementById('semester_select');
+            const spSelect = document.getElementById('scholarship_program');
+            const spErrorMsg = document.getElementById('sp_error_msg');
+
+            if (!sySelect || !semSelect || !spSelect) return;
+
+            const selectedSY = sySelect.value.replace(/\s+/g, '');
+            const selectedSem = semSelect.value;
+
+            spSelect.innerHTML = '<option value="" disabled>Select Scholarship Program</option>';
+
+            const filtered = allScholarshipPrograms.filter(p => p.clean_sy === selectedSY && p.semester === selectedSem);
+
+            if (filtered.length > 0) {
+                if (spErrorMsg) spErrorMsg.style.display = 'none';
+                spSelect.disabled = false;
+                let hasMatch = false;
+
+                filtered.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = `${p.name} (${p.code})`;
+                    if (parseInt(p.id) === currentScholarProgramId) {
+                        opt.selected = true;
+                        hasMatch = true;
+                    }
+                    spSelect.appendChild(opt);
+                });
+
+                if (!hasMatch && spSelect.options.length > 1) {
+                    spSelect.options[0].selected = true;
+                }
+            } else {
+                if (spErrorMsg) spErrorMsg.style.display = 'block';
+                spSelect.disabled = true;
+            }
+        }
+
         function toggleGidaDetails(checkbox) {
             const container = document.getElementById('gida_details_container');
             if (container) {
@@ -556,6 +651,15 @@ if($row = $scholar_result->fetch_assoc()) {
         }
 
         document.addEventListener("DOMContentLoaded", function() {
+            const sySelect = document.getElementById('school_year_select');
+            const semSelect = document.getElementById('semester_select');
+
+            if (sySelect) sySelect.addEventListener('change', updateScholarshipDropdown);
+            if (semSelect) semSelect.addEventListener('change', updateScholarshipDropdown);
+
+            // Initial population
+            updateScholarshipDropdown();
+
             const studentIdInput = document.getElementById("student_id");
             if (studentIdInput) {
                 studentIdInput.addEventListener("input", function(e) {

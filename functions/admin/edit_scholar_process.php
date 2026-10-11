@@ -104,14 +104,17 @@ if(isset($_POST['update'])) {
     $loa_semester = ($academic_status === 'Leave of Absence' && !empty($_POST['loa_semester'])) ? trim($_POST['loa_semester']) : NULL;
     $loa_school_year = ($academic_status === 'Leave of Absence' && !empty($_POST['loa_school_year'])) ? trim($_POST['loa_school_year']) : NULL;
 
-    $school_year_sql = "SELECT school_year FROM scholarship_program WHERE id = ?";
-    $school_year_stmt = $conn->prepare($school_year_sql);
-    $school_year_stmt->bind_param('i', $scholarship_program_id);
-    $school_year_stmt->execute();
-    $school_year_result = $school_year_stmt->get_result();
+    // Fetch school year & semester from selected scholarship program
+    $sp_sql = "SELECT school_year, semester FROM scholarship_program WHERE id = ?";
+    $sp_stmt = $conn->prepare($sp_sql);
+    $sp_stmt->bind_param('i', $scholarship_program_id);
+    $sp_stmt->execute();
+    $sp_result = $sp_stmt->get_result();
     $school_year = "";
-    if ($row = $school_year_result->fetch_assoc()) {
+    $semester = "1st Semester";
+    if ($row = $sp_result->fetch_assoc()) {
         $school_year = $row['school_year'];
+        $semester = $row['semester'];
     }
     
     // Optional fields
@@ -181,7 +184,7 @@ if(isset($_POST['update'])) {
 
     $permanent_address = implode(', ', $address_parts);
 
-    // ─── UPDATE QUERY (45 updated columns + 1 WHERE parameter) ───
+    // ─── UPDATE QUERY (46 updated columns + 1 WHERE parameter) ───
     $scholar_sql = "UPDATE scholar_info SET 
                     student_id = ?, 
                     last_name = ?, 
@@ -225,6 +228,7 @@ if(isset($_POST['update'])) {
                     username = ?,
                     password = ?,
                     school_year = ?,
+                    semester = ?,
                     philsys_id = ?,
                     lrn = ?,
                     four_ps_id = ?
@@ -232,8 +236,8 @@ if(isset($_POST['update'])) {
     
     $scholar_stmt = $conn->prepare($scholar_sql);
     
-    // Exactly 46 type specifiers matching 46 bound variables
-    $types = "sssssisiissssssssssssssiiiissssssiiisiissssssi";
+    // Exactly 47 type specifiers matching 47 bound variables
+    $types = "sssssisiissssssssssssssiiiissssssiiisiisssssssi";
     
     $scholar_stmt->bind_param(
         $types, 
@@ -279,6 +283,7 @@ if(isset($_POST['update'])) {
         $student_id,
         $hashed_pass,
         $school_year,
+        $semester,
         $philsys_id,
         $lrn,
         $four_ps_id,

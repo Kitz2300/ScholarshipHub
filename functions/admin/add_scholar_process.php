@@ -116,15 +116,17 @@ if (isset($_POST['add'])) {
     $loa_semester = ($academic_status === 'Leave of Absence' && !empty($_POST['loa_semester'])) ? trim($_POST['loa_semester']) : NULL;
     $loa_school_year = ($academic_status === 'Leave of Absence' && !empty($_POST['loa_school_year'])) ? trim($_POST['loa_school_year']) : NULL;
 
-    // Get school year from selected scholarship program
-    $school_year_sql = "SELECT school_year FROM scholarship_program WHERE id = ?";
-    $school_year_stmt = $conn->prepare($school_year_sql);
-    $school_year_stmt->bind_param('i', $scholarship_program_id);
-    $school_year_stmt->execute();
-    $school_year_result = $school_year_stmt->get_result();
+    // Fetch school year & semester from selected scholarship program
+    $sp_sql = "SELECT school_year, semester FROM scholarship_program WHERE id = ?";
+    $sp_stmt = $conn->prepare($sp_sql);
+    $sp_stmt->bind_param('i', $scholarship_program_id);
+    $sp_stmt->execute();
+    $sp_result = $sp_stmt->get_result();
     $school_year = "";
-    if ($row = $school_year_result->fetch_assoc()) {
+    $semester = "1st Semester";
+    if ($row = $sp_result->fetch_assoc()) {
         $school_year = $row['school_year'];
+        $semester = $row['semester'];
     }
     
     // Optional fields
@@ -193,7 +195,7 @@ if (isset($_POST['add'])) {
 
     $permanent_address = implode(', ', $address_parts);
 
-    // ─── INSERT QUERY (44 columns) ───
+    // ─── INSERT QUERY (45 columns) ───
     $scholar_sql = "INSERT INTO scholar_info (
                     student_id, 
                     last_name, 
@@ -236,15 +238,16 @@ if (isset($_POST['add'])) {
                     username,
                     password,
                     school_year,
+                    semester,
                     philsys_id,
                     lrn,
                     four_ps_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $scholar_stmt = $conn->prepare($scholar_sql);
     
-    // Exactly 44 type specifiers matching 44 bound variables
-    $types = "sssssisiisssssssssssssiiiissssssiiisiissssss";
+    // Exactly 45 type specifiers matching 45 bound variables
+    $types = "sssssisiisssssssssssssiiiissssssiiisiisssssss";
     
     $scholar_stmt->bind_param(
         $types, 
@@ -289,6 +292,7 @@ if (isset($_POST['add'])) {
         $student_id,
         $hashed_pass,
         $school_year,
+        $semester,
         $philsys_id,
         $lrn,
         $four_ps_id

@@ -35,6 +35,28 @@ $stmt = $conn->prepare($barangays_sql);
 $stmt->bind_param("i", $city_id);
 $stmt->execute();
 $barangays_result = $stmt->get_result();
+
+// Fetch active scholarship programs with School Year & Semester info
+$all_sp_sql = "SELECT id, name, code, school_year, REPLACE(school_year, ' ', '') AS clean_sy, semester 
+               FROM scholarship_program 
+               WHERE is_archived = 0 AND is_active = 1 
+               ORDER BY name ASC";
+$all_sp_res = $conn->query($all_sp_sql);
+$sp_list = [];
+$available_sy_list = [];
+
+while ($sp_row = $all_sp_res->fetch_assoc()) {
+    $sp_list[] = $sp_row;
+    if (!in_array($sp_row['school_year'], $available_sy_list)) {
+        $available_sy_list[] = $sp_row['school_year'];
+    }
+}
+
+// Fallback current school year if no programs exist
+if (empty($available_sy_list)) {
+    $current_y = (int)date('Y');
+    $available_sy_list[] = $current_y . ' - ' . ($current_y + 1);
+}
 ?>
 
 <!DOCTYPE html>
@@ -52,7 +74,7 @@ $barangays_result = $stmt->get_result();
 <body>
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
     <?php if(!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) :
-        $_SESSION['fail'] = "You are no logged in!";
+        $_SESSION['fail'] = "You are not logged in!";
         header("Location: ../portal.php");
         exit();
     else : ?>
@@ -219,7 +241,7 @@ $barangays_result = $stmt->get_result();
                             </div>
                         </div>
 
-                        <!-- GIDA Details Field (Hidden by default) -->
+                        <!-- GIDA Details Field -->
                         <div class="form-row" id="gida_details_container" style="display: none;">
                             <div class="form-group full-width">
                                 <label for="gida_details">Please specify GIDA Area / Details</label>
@@ -232,7 +254,6 @@ $barangays_result = $stmt->get_result();
                     <div class="form-section">
                         <h3>Address</h3>
                         
-                        <!-- Country -->
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="country">Country <span class="required">*</span></label>
@@ -243,7 +264,6 @@ $barangays_result = $stmt->get_result();
                             </div>
                         </div>
 
-                        <!-- Other Country Name -->
                         <div id="other-country-row" style="display: none;">
                             <div class="form-group">
                                 <label for="other_country">Country Name <span class="required">*</span></label>
@@ -251,7 +271,6 @@ $barangays_result = $stmt->get_result();
                             </div>
                         </div>
 
-                        <!-- Philippine Address -->
                         <div id="philippines-address">
                             <div class="form-row">
                                 <div class="form-group full-width">
@@ -293,7 +312,6 @@ $barangays_result = $stmt->get_result();
                             </div>
                         </div>
 
-                        <!-- Other Address -->
                         <div id="other-address" style="display: none;">
                             <div class="form-row">
                                 <div class="form-group full-width">
@@ -322,20 +340,33 @@ $barangays_result = $stmt->get_result();
                     <div class="form-section">
                         <h3>Scholarship & Academic Information</h3>
                         
+                        <!-- School Year & Semester Selection -->
+                        <div class="form-row">
+                            <div class="form-group half-width">
+                                <label for="school_year_select">School Year <span class="required">*</span></label>
+                                <select id="school_year_select" required>
+                                    <?php foreach ($available_sy_list as $sy) : ?>
+                                        <option value="<?= htmlspecialchars($sy) ?>"><?= htmlspecialchars($sy) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group half-width">
+                                <label for="semester_select">Semester <span class="required">*</span></label>
+                                <select id="semester_select" required>
+                                    <option value="1st Semester">1st Semester</option>
+                                    <option value="2nd Semester">2nd Semester</option>
+                                    <option value="Summer">Summer</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="scholarship_program">Scholarship Program <span class="required">*</span></label>
                                 <select name="scholarship_program" id="scholarship_program" required>
                                     <option value="" selected disabled>Select Scholarship Program</option>
-                                    <?php 
-                                    $scholarship_program_sql = "SELECT id, name, code FROM scholarship_program WHERE is_archived = 0 ORDER BY name ASC";
-                                    $stmt = $conn->prepare($scholarship_program_sql);
-                                    $stmt->execute();
-                                    $result = $stmt->get_result();
-                                    while($row = $result->fetch_assoc()) : ?>
-                                        <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['name']) ?> (<?= htmlspecialchars($row['code']) ?>)</option>
-                                    <?php endwhile; ?>
                                 </select>
+                                <small id="sp_error_msg" style="color: #dc3545; font-size: 12px; margin-top: 5px; display: none; font-weight: 500;">⚠️ No active scholarship program available for this term.</small>
                             </div>
                             <div class="form-group">
                                 <label for="program">Program / Course <span class="required">*</span></label>
@@ -460,6 +491,38 @@ $barangays_result = $stmt->get_result();
         </div>
 
         <script>
+        const allScholarshipPrograms = <?= json_encode($sp_list) ?>;
+
+        function updateScholarshipDropdown() {
+            const sySelect = document.getElementById('school_year_select');
+            const semSelect = document.getElementById('semester_select');
+            const spSelect = document.getElementById('scholarship_program');
+            const spErrorMsg = document.getElementById('sp_error_msg');
+
+            if (!sySelect || !semSelect || !spSelect) return;
+
+            const selectedSY = sySelect.value.replace(/\s+/g, '');
+            const selectedSem = semSelect.value;
+
+            spSelect.innerHTML = '<option value="" selected disabled>Select Scholarship Program</option>';
+
+            const filtered = allScholarshipPrograms.filter(p => p.clean_sy === selectedSY && p.semester === selectedSem);
+
+            if (filtered.length > 0) {
+                if (spErrorMsg) spErrorMsg.style.display = 'none';
+                spSelect.disabled = false;
+                filtered.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = `${p.name} (${p.code})`;
+                    spSelect.appendChild(opt);
+                });
+            } else {
+                if (spErrorMsg) spErrorMsg.style.display = 'block';
+                spSelect.disabled = true;
+            }
+        }
+
         function toggleGidaDetails(checkbox) {
             const container = document.getElementById('gida_details_container');
             if (container) {
@@ -471,6 +534,15 @@ $barangays_result = $stmt->get_result();
         }
 
         document.addEventListener("DOMContentLoaded", function() {
+            const sySelect = document.getElementById('school_year_select');
+            const semSelect = document.getElementById('semester_select');
+
+            if (sySelect) sySelect.addEventListener('change', updateScholarshipDropdown);
+            if (semSelect) semSelect.addEventListener('change', updateScholarshipDropdown);
+
+            // Initial population
+            updateScholarshipDropdown();
+
             const studentIdInput = document.getElementById("student_id");
             if (studentIdInput) {
                 studentIdInput.addEventListener("input", function(e) {
