@@ -11,7 +11,7 @@ function getNextSchoolYear($sy) {
     return $sy;
 }
 
-// Helper function to get or duplicate scholarship program for target school year
+// Helper function to get or duplicate scholarship program for target school year & 1st semester
 function getOrCreateProgramForSY($conn, $source_program_id, $target_sy, &$was_duplicated = false) {
     $was_duplicated = false;
     $sy_parts = explode('-', str_replace(' ', '', $target_sy));
@@ -29,9 +29,12 @@ function getOrCreateProgramForSY($conn, $source_program_id, $target_sy, &$was_du
         $code = $src_row['code'];
         $src_stmt->close();
 
-        // 2. Check if program entry already exists for this code in target school year
+        // 2. Check if program entry already exists for this code in target school year (1st Semester)
         $check_sql = "SELECT id FROM scholarship_program 
-                      WHERE code = ? AND (REPLACE(school_year, ' ', '') = ? OR REPLACE(school_year, ' ', '') = ?) AND is_archived = 0 
+                      WHERE code = ? 
+                        AND (REPLACE(school_year, ' ', '') = ? OR REPLACE(school_year, ' ', '') = ?)
+                        AND (semester = '1st Semester' OR semester IS NULL OR semester = '')
+                        AND is_archived = 0 
                       LIMIT 1";
         $check_stmt = $conn->prepare($check_sql);
         $check_stmt->bind_param("sss", $code, $raw_sp_sy, $raw_sp_sy);
@@ -44,11 +47,11 @@ function getOrCreateProgramForSY($conn, $source_program_id, $target_sy, &$was_du
         }
         $check_stmt->close();
 
-        // 3. Duplicate program for target school year if missing
+        // 3. Duplicate program for target school year & 1st Semester if missing
         $dup_sp_sql = "INSERT INTO scholarship_program (
-                          name, code, school_year, provider_id, scholarship_type, 
+                          name, code, school_year, semester, provider_id, scholarship_type, 
                           description, pay_amount, min_gwa_req, is_archived, is_active
-                       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 1)";
+                       ) VALUES (?, ?, ?, '1st Semester', ?, ?, ?, ?, ?, 0, 1)";
         $dup_sp_stmt = $conn->prepare($dup_sp_sql);
         $dup_sp_stmt->bind_param(
             "sssissdd", 
@@ -74,6 +77,9 @@ function getOrCreateProgramForSY($conn, $source_program_id, $target_sy, &$was_du
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) {
     $user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
     $selected_ids = array_map('intval', $_POST['promote_scholars']);
+    $target_choices = isset($_POST['target_standing_choice']) && is_array($_POST['target_standing_choice']) 
+                      ? $_POST['target_standing_choice'] 
+                      : [];
 
     if ($user_id <= 0 || empty($selected_ids)) {
         $_SESSION['fail'] = "No scholars selected for promotion.";
@@ -117,7 +123,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
         $dup_stmt = $conn->prepare($duplicate_sql);
 
         $promoted_count = 0;
-        $pending_grad_count = 0;
+        $graduated_count = 0;
+        $irregular_count = 0;
         $overrides_count = 0;
         $duplicated_programs = [];
         $target_sy_recorded = '';
@@ -161,14 +168,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
                     continue; // Skip if already promoted to target SY
                 }
 
-                $curr_year = (int) $s_row['year_level'];
+                $curr_yl_str = trim((string)$s_row['year_level']);
                 $curr_sy = $s_row['school_year'];
                 $next_sy = getNextSchoolYear($curr_sy);
                 $target_sy_recorded = $next_sy;
                 $source_sp_id = (int)$s_row['scholarship_program_id'];
                 $sp_name = $s_row['scholarship_program_name'] ?? 'Scholarship Program';
 
-                // Ensure scholarship program entry exists for target school year
+                // Ensure scholarship program entry exists for target school year (1st Semester)
                 $was_duplicated = false;
                 $target_sp_id = getOrCreateProgramForSY($conn, $source_sp_id, $next_sy, $was_duplicated);
                 if ($was_duplicated) {
@@ -180,7 +187,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
                 $worst_gwa = (float) $s_row['worst_gwa'];
                 $full_name = $s_row['last_name'] . ", " . $s_row['given_name'];
 
-                $next_standing = ($curr_year >= 4) ? "4th Year (Pending Graduation)" : ($curr_year + 1) . "th Year";
+                // Calculate target year_level and target status ('Graduated' or 'Irregular' for 4th year)
+                if ($curr_yl_str === '4th Year' || $curr_yl_str === '4' || (is_numeric($curr_yl_str) && (int)$curr_yl_str >= 4)) {
+                    $choice = $target_choices[$scholar_id] ?? 'Graduated';
+                    if ($choice === 'Irregular') {
+                        $target_yl = 'Irregular';
+                        $target_status = 'Enrolled';
+                        $irregular_count++;
+                        $next_standing = "Irregular";
+                    } else {
+                        $target_yl = '4th Year';
+                        $target_status = 'Graduated';
+                        $graduated_count++;
+                        $next_standing = "Graduated";
+                    }
+                } elseif ($curr_yl_str === '1st Year' || $curr_yl_str === '1') {
+                    $target_yl = '2nd Year';
+                    $target_status = 'Enrolled';
+                    $promoted_count++;
+                    $next_standing = "2nd Year";
+                } elseif ($curr_yl_str === '2nd Year' || $curr_yl_str === '2') {
+                    $target_yl = '3rd Year';
+                    $target_status = 'Enrolled';
+                    $promoted_count++;
+                    $next_standing = "3rd Year";
+                } elseif ($curr_yl_str === '3rd Year' || $curr_yl_str === '3') {
+                    $target_yl = '4th Year';
+                    $target_status = 'Enrolled';
+                    $promoted_count++;
+                    $next_standing = "4th Year";
+                } elseif ($curr_yl_str === 'Irregular') {
+                    $target_yl = 'Irregular';
+                    $target_status = 'Enrolled';
+                    $irregular_count++;
+                    $next_standing = "Irregular";
+                } else {
+                    $target_yl = $curr_yl_str;
+                    $target_status = 'Enrolled';
+                    $promoted_count++;
+                    $next_standing = $curr_yl_str;
+                }
 
                 if ($min_gwa > 0) {
                     if ($sems_count < 2) {
@@ -196,17 +242,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
                     }
                 }
 
-                if ($curr_year >= 4) {
-                    $target_yl = 4;
-                    $target_status = 'Pending Graduation';
-                    $pending_grad_count++;
-                } else {
-                    $target_yl = $curr_year + 1;
-                    $target_status = 'Enrolled';
-                    $promoted_count++;
-                }
-
-                $dup_stmt->bind_param("iissi", $target_sp_id, $target_yl, $next_sy, $target_status, $scholar_id);
+                // Bind parameters for insertion
+                $dup_stmt->bind_param("isssi", $target_sp_id, $target_yl, $next_sy, $target_status, $scholar_id);
                 $dup_stmt->execute();
             }
             $eval_stmt->close();
@@ -214,7 +251,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
 
         $dup_stmt->close();
 
-        $summary_log = "Executed bulk year-level promotion for " . count($selected_ids) . " scholar(s) ($promoted_count Standard Advancement, $pending_grad_count Moved to Pending Graduation, $overrides_count Manual Overrides).";
+        $summary_log = "Executed bulk year-level promotion for " . count($selected_ids) . " scholar(s) ($promoted_count Standard Advancement, $graduated_count Graduated, $irregular_count Irregular, $overrides_count Manual Overrides).";
         $audit_stmt->bind_param("is", $user_id, $summary_log);
         $audit_stmt->execute();
         $audit_stmt->close();
@@ -223,15 +260,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_scholars'])) 
 
         $_SESSION['toasts'] = [];
 
-        if ($promoted_count > 0 && $pending_grad_count > 0) {
-            $scholar_toast_msg = "Successfully moved $promoted_count scholar(s) to the next year level and $pending_grad_count to Pending Graduation for SY $target_sy_recorded.";
-        } elseif ($pending_grad_count > 0) {
-            $scholar_toast_msg = "Successfully moved $pending_grad_count scholar(s) to Pending Graduation for SY $target_sy_recorded.";
-        } elseif ($promoted_count === 1) {
-            $scholar_toast_msg = "Scholar has been successfully moved to the next year level for SY $target_sy_recorded.";
-        } else {
-            $scholar_toast_msg = "Successfully moved $promoted_count scholars to the next year level for SY $target_sy_recorded.";
-        }
+        $msg_parts = [];
+        if ($promoted_count > 0) $msg_parts[] = "$promoted_count promoted to next year level";
+        if ($graduated_count > 0) $msg_parts[] = "$graduated_count set to Graduated";
+        if ($irregular_count > 0) $msg_parts[] = "$irregular_count set to Irregular";
+
+        $scholar_toast_msg = "Successfully processed " . count($selected_ids) . " scholar(s) for SY $target_sy_recorded (" . implode(", ", $msg_parts) . ").";
 
         $_SESSION['toasts'][] = [
             'title' => 'Year Level Promoted',

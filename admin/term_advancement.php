@@ -45,8 +45,12 @@ if (!empty($target_semester_get)) {
     }
 }
 
-// Fetch active scholarship programs for dropdown
-$sp_sql = "SELECT id, name FROM scholarship_program WHERE is_archived = 0 ORDER BY name ASC";
+// Fetch active scholarship programs for dropdown (Deduplicated by name & code)
+$sp_sql = "SELECT MIN(id) AS id, name, code 
+           FROM scholarship_program 
+           WHERE is_archived = 0 
+           GROUP BY name, code 
+           ORDER BY name ASC";
 $sp_result = $conn->query($sp_sql);
 
 // Fetch available school years
@@ -62,7 +66,7 @@ $params = [];
 $types = "";
 
 if ($program_filter > 0) {
-    $where_clauses[] = "si.scholarship_program_id = ?";
+    $where_clauses[] = "sp.name = (SELECT name FROM scholarship_program WHERE id = ?)";
     $params[] = $program_filter;
     $types .= "i";
 }
@@ -81,7 +85,7 @@ if (!empty($semester_filter)) {
 
 $where_sql = implode(" AND ", $where_clauses);
 
-// Joined academic_performance & check if scholar already has a 2nd semester/later term snapshot
+// Joined academic_performance & check that ONLY the scholar's LATEST OVERALL active record is selected
 $scholars_sql = "SELECT 
                     si.id AS scholar_id,
                     si.student_id,
@@ -100,6 +104,19 @@ $scholars_sql = "SELECT
                  FROM scholar_info si
                  INNER JOIN scholarship_program sp ON si.scholarship_program_id = sp.id
                  LEFT JOIN program p ON si.program_id = p.id
+                 LEFT JOIN scholar_info overall_newer ON overall_newer.student_id = si.student_id 
+                     AND overall_newer.is_archived = 0 
+                     AND (
+                         REPLACE(overall_newer.school_year, ' ', '') > REPLACE(si.school_year, ' ', '')
+                         OR (
+                             REPLACE(overall_newer.school_year, ' ', '') = REPLACE(si.school_year, ' ', '') 
+                             AND (
+                                 (si.semester = '1st Semester' AND overall_newer.semester IN ('2nd Semester', 'Summer'))
+                                 OR (si.semester = '2nd Semester' AND overall_newer.semester = 'Summer')
+                                 OR (overall_newer.id > si.id)
+                             )
+                         )
+                     )
                  LEFT JOIN academic_performance ap ON ap.scholar_id = si.id 
                      AND ap.school_year = si.school_year 
                      AND ap.semester = si.semester
@@ -112,7 +129,7 @@ $scholars_sql = "SELECT
                          ))
                          OR (REPLACE(later_si.school_year, ' ', '') > REPLACE(si.school_year, ' ', ''))
                      )
-                 WHERE $where_sql
+                 WHERE $where_sql AND overall_newer.id IS NULL
                  ORDER BY sp.name ASC, si.last_name ASC";
 
 $stmt = $conn->prepare($scholars_sql);
@@ -150,6 +167,16 @@ while ($row = $scholars_result->fetch_assoc()) {
     $scholars_list[] = $row;
 }
 $stmt->close();
+
+// Sort scholars: Eligible at top first, then secondary sort by Scholarship Program and Last Name
+usort($scholars_list, function($a, $b) {
+    if ($a['is_eligible'] !== $b['is_eligible']) {
+        return $b['is_eligible'] <=> $a['is_eligible'];
+    }
+    $sp_cmp = strcmp($a['scholarship_program_name'], $b['scholarship_program_name']);
+    if ($sp_cmp !== 0) return $sp_cmp;
+    return strcmp($a['last_name'], $b['last_name']);
+});
 ?>
 
 <!DOCTYPE html>
@@ -206,7 +233,7 @@ $stmt->close();
                             <?php if ($sp_result && $sp_result->num_rows > 0) : ?>
                                 <?php while ($sp = $sp_result->fetch_assoc()) : ?>
                                     <option value="<?= $sp['id'] ?>" <?= $program_filter == $sp['id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($sp['name']) ?>
+                                        <?= htmlspecialchars($sp['name']) ?><?= !empty($sp['code']) ? ' (' . htmlspecialchars($sp['code']) . ')' : '' ?>
                                     </option>
                                 <?php endwhile; ?>
                             <?php endif; ?>
@@ -315,12 +342,18 @@ $stmt->close();
                                     $curr_gwa = ($scholar['current_gwa'] !== null && $scholar['current_gwa'] !== '') 
                                                 ? number_format((float)$scholar['current_gwa'], 2) 
                                                 : 'None';
-                                    $curr_year_str = $scholar['year_level'] . match ((int)$scholar['year_level']) {
-                                        1 => "st Year",
-                                        2 => "nd Year",
-                                        3 => "rd Year",
-                                        default => "th Year"
-                                    };
+                                    
+                                    $curr_yl_raw = trim((string)$scholar['year_level']);
+                                    if (in_array($curr_yl_raw, ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Irregular'])) {
+                                        $curr_year_str = htmlspecialchars($curr_yl_raw);
+                                    } else {
+                                        $curr_year_str = htmlspecialchars($curr_yl_raw . match ((int)$curr_yl_raw) {
+                                            1 => "st Year",
+                                            2 => "nd Year",
+                                            3 => "rd Year",
+                                            default => "th Year"
+                                        });
+                                    }
                                 ?>
                                     <tr class="scholar-row <?= !$is_eligible ? 'row-ineligible' : '' ?>" data-search="<?= $search_text ?>">
                                         <td style="text-align: center;">
@@ -474,7 +507,7 @@ $stmt->close();
         if (visibleCheckboxes.length === 0) {
             masterCb.checked = false;
         } else {
-            masterCb.checked = (checkedCheckboxes.length === visibleCheckboxes.length);
+            masterCb.checked = (checkedCheckboxes.length === visibleCheckboxes.length && visibleCheckboxes.length > 0);
         }
 
         const advanceBtn = document.querySelector('button[name="advance_term"]');

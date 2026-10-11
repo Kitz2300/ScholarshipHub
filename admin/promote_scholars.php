@@ -27,14 +27,18 @@ if ($_SESSION['role'] !== 'admin') {
 
 // Fetch filter selections
 $program_filter = (int) ($_GET['program_id'] ?? 0);
-$year_filter = (int) ($_GET['year_level'] ?? 0);
+$year_filter = $_GET['year_level'] ?? '0';
 $school_year_filter = $_GET['school_year'] ?? getSelectedSchoolYear();
 
 $next_school_year = getNextSchoolYear($school_year_filter);
 $available_years = getAvailableSchoolYears($conn);
 
-// Fetch active scholarship programs for dropdown
-$sp_sql = "SELECT id, name FROM scholarship_program WHERE is_archived = 0 ORDER BY name ASC";
+// Fetch active scholarship programs for dropdown (Deduplicated by name & code)
+$sp_sql = "SELECT MIN(id) AS id, name, code 
+           FROM scholarship_program 
+           WHERE is_archived = 0 
+           GROUP BY name, code 
+           ORDER BY name ASC";
 $sp_result = $conn->query($sp_sql);
 
 // Build query for scholars evaluation in selected school year
@@ -48,20 +52,20 @@ $params = [$school_year_filter];
 $types = "s";
 
 if ($program_filter > 0) {
-    $where_clauses[] = "si.scholarship_program_id = ?";
+    $where_clauses[] = "sp.name = (SELECT name FROM scholarship_program WHERE id = ?)";
     $params[] = $program_filter;
     $types .= "i";
 }
 
-if ($year_filter > 0) {
+if ($year_filter !== '0' && !empty($year_filter)) {
     $where_clauses[] = "si.year_level = ?";
     $params[] = $year_filter;
-    $types .= "i";
+    $types .= "s";
 }
 
 $where_sql = implode(" AND ", $where_clauses);
 
-// Joined query ensuring ONLY the LATEST active snapshot per scholar in that SY is evaluated
+// Query ensuring ONLY the scholar's LATEST OVERALL active snapshot is evaluated
 $scholars_sql = "SELECT 
                     si.id AS scholar_id,
                     si.student_id,
@@ -82,10 +86,15 @@ $scholars_sql = "SELECT
                  FROM scholar_info si
                  INNER JOIN scholarship_program sp ON si.scholarship_program_id = sp.id
                  LEFT JOIN program p ON si.program_id = p.id
-                 LEFT JOIN scholar_info latest_si ON latest_si.student_id = si.student_id 
-                     AND latest_si.school_year = si.school_year 
-                     AND latest_si.is_archived = 0 
-                     AND latest_si.id > si.id
+                 LEFT JOIN scholar_info overall_newer ON overall_newer.student_id = si.student_id 
+                     AND overall_newer.is_archived = 0 
+                     AND (
+                         REPLACE(overall_newer.school_year, ' ', '') > REPLACE(si.school_year, ' ', '')
+                         OR (
+                             REPLACE(overall_newer.school_year, ' ', '') = REPLACE(si.school_year, ' ', '') 
+                             AND overall_newer.id > si.id
+                         )
+                     )
                  INNER JOIN scholar_info all_si ON all_si.student_id = si.student_id 
                      AND all_si.school_year = si.school_year 
                      AND all_si.is_archived = 0
@@ -94,9 +103,9 @@ $scholars_sql = "SELECT
                  LEFT JOIN scholar_info next_si ON next_si.student_id = si.student_id 
                      AND next_si.school_year = ? 
                      AND next_si.is_archived = 0
-                 WHERE $where_sql AND latest_si.id IS NULL
+                 WHERE $where_sql AND overall_newer.id IS NULL
                  GROUP BY si.id
-                 ORDER BY sp.name ASC, si.year_level ASC, si.last_name ASC";
+                 ORDER BY sp.name ASC, si.last_name ASC";
 
 array_unshift($params, $next_school_year);
 $types = "s" . $types;
@@ -116,7 +125,7 @@ while ($row = $scholars_result->fetch_assoc()) {
     $min_gwa = (float) $row['min_gwa_req'];
     $sems_count = (int) $row['required_sems_count'];
     $worst_gwa = (float) $row['worst_gwa'];
-    $curr_year = (int) $row['year_level'];
+    $curr_yl_raw = trim((string)$row['year_level']);
     $is_already_promoted = !empty($row['already_promoted_id']);
     
     $is_eligible = false;
@@ -158,18 +167,47 @@ while ($row = $scholars_result->fetch_assoc()) {
     $row['status_reason'] = $status_reason;
     $row['badge_class'] = $badge_class;
     
-    if ($curr_year >= 4) {
-        $row['target_standing'] = "4th Year → Pending Graduation ($next_school_year)";
+    // Format display for current year level
+    if (in_array($curr_yl_raw, ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Irregular'])) {
+        $row['display_year_level'] = $curr_yl_raw;
     } else {
-        $row['target_standing'] = ($curr_year + 1) . match ($curr_year + 1) {
+        $row['display_year_level'] = $curr_yl_raw . match ((int)$curr_yl_raw) {
+            1 => "st Year",
             2 => "nd Year",
             3 => "rd Year",
             default => "th Year"
-        } . " ($next_school_year)";
+        };
+    }
+
+    // Flag if scholar is in 4th year to render dropdown selector
+    $is_4th_year = ($curr_yl_raw === '4th Year' || $curr_yl_raw === '4' || (is_numeric($curr_yl_raw) && (int)$curr_yl_raw >= 4));
+    $row['is_4th_year'] = $is_4th_year;
+
+    // Determine target standing description for standard years
+    if ($curr_yl_raw === '1st Year' || $curr_yl_raw === '1') {
+        $row['target_standing'] = "2nd Year ($next_school_year)";
+    } elseif ($curr_yl_raw === '2nd Year' || $curr_yl_raw === '2') {
+        $row['target_standing'] = "3rd Year ($next_school_year)";
+    } elseif ($curr_yl_raw === '3rd Year' || $curr_yl_raw === '3') {
+        $row['target_standing'] = "4th Year ($next_school_year)";
+    } elseif ($curr_yl_raw === 'Irregular') {
+        $row['target_standing'] = "Irregular ($next_school_year)";
+    } else {
+        $row['target_standing'] = "$curr_yl_raw ($next_school_year)";
     }
 
     $scholars_list[] = $row;
 }
+
+// Sort scholars: Eligible at top first, then secondary sort by Scholarship Program and Last Name
+usort($scholars_list, function($a, $b) {
+    if ($a['is_eligible'] !== $b['is_eligible']) {
+        return $b['is_eligible'] <=> $a['is_eligible'];
+    }
+    $sp_cmp = strcmp($a['scholarship_program_name'], $b['scholarship_program_name']);
+    if ($sp_cmp !== 0) return $sp_cmp;
+    return strcmp($a['last_name'], $b['last_name']);
+});
 ?>
 
 <!DOCTYPE html>
@@ -231,7 +269,7 @@ while ($row = $scholars_result->fetch_assoc()) {
                             <?php if ($sp_result && $sp_result->num_rows > 0) : ?>
                                 <?php while ($sp = $sp_result->fetch_assoc()) : ?>
                                     <option value="<?= $sp['id'] ?>" <?= $program_filter == $sp['id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($sp['name']) ?>
+                                        <?= htmlspecialchars($sp['name']) ?><?= !empty($sp['code']) ? ' (' . htmlspecialchars($sp['code']) . ')' : '' ?>
                                     </option>
                                 <?php endwhile; ?>
                             <?php endif; ?>
@@ -242,10 +280,11 @@ while ($row = $scholars_result->fetch_assoc()) {
                         <label for="year_level">Current Year Level</label>
                         <select name="year_level" id="year_level" onchange="this.form.submit()">
                             <option value="0">All Year Levels</option>
-                            <option value="1" <?= $year_filter == 1 ? 'selected' : '' ?>>1st Year</option>
-                            <option value="2" <?= $year_filter == 2 ? 'selected' : '' ?>>2nd Year</option>
-                            <option value="3" <?= $year_filter == 3 ? 'selected' : '' ?>>3rd Year</option>
-                            <option value="4" <?= $year_filter == 4 ? 'selected' : '' ?>>4th Year</option>
+                            <option value="1st Year" <?= $year_filter === '1st Year' ? 'selected' : '' ?>>1st Year</option>
+                            <option value="2nd Year" <?= $year_filter === '2nd Year' ? 'selected' : '' ?>>2nd Year</option>
+                            <option value="3rd Year" <?= $year_filter === '3rd Year' ? 'selected' : '' ?>>3rd Year</option>
+                            <option value="4th Year" <?= $year_filter === '4th Year' ? 'selected' : '' ?>>4th Year</option>
+                            <option value="Irregular" <?= $year_filter === 'Irregular' ? 'selected' : '' ?>>Irregular</option>
                         </select>
                     </div>
                 </form>
@@ -261,7 +300,7 @@ while ($row = $scholars_result->fetch_assoc()) {
                     <div class="toolbar-right">
                         <span class="stat-badge stat-eligible">Eligible: <?= $total_eligible ?></span>
                         <span class="stat-badge stat-ineligible">Ineligible: <?= $total_ineligible ?></span>
-                        <button type="submit" name="promote" class="btn btn-success" <?= $total_eligible === 0 ? 'disabled' : '' ?>>Execute Promotion</button>
+                        <button type="submit" name="promote" class="btn btn-success" disabled>Promote Scholar/s</button>
                     </div>
                 </div>
 
@@ -288,12 +327,7 @@ while ($row = $scholars_result->fetch_assoc()) {
                                     $student_id = htmlspecialchars($scholar['student_id']);
                                     $search_text = strtolower($full_name . " " . $student_id);
                                     $is_eligible = $scholar['is_eligible'];
-                                    $curr_year_str = $scholar['year_level'] . match ((int)$scholar['year_level']) {
-                                        1 => "st Year",
-                                        2 => "nd Year",
-                                        3 => "rd Year",
-                                        default => "th Year"
-                                    };
+                                    $curr_year_str = htmlspecialchars($scholar['display_year_level']);
                                 ?>
                                     <tr class="scholar-row <?= !$is_eligible ? 'row-ineligible' : '' ?>" data-search="<?= $search_text ?>">
                                         <td style="text-align: center;">
@@ -304,7 +338,6 @@ while ($row = $scholars_result->fetch_assoc()) {
                                                    data-eligible="<?= $is_eligible ? '1' : '0' ?>"
                                                    data-name="<?= $full_name ?>"
                                                    data-reason="<?= htmlspecialchars($scholar['status_reason']) ?>"
-                                                   <?= $is_eligible ? 'checked' : '' ?>
                                                    <?= !$is_eligible ? 'disabled' : '' ?>
                                                    onchange="updateMasterCheckboxState()">
                                         </td>
@@ -315,7 +348,17 @@ while ($row = $scholars_result->fetch_assoc()) {
                                         <td><?= htmlspecialchars($scholar['program_name'] ?? 'N/A') ?></td>
                                         <td><?= htmlspecialchars($scholar['scholarship_program_name']) ?></td>
                                         <td><span class="year-badge"><?= $curr_year_str ?></span></td>
-                                        <td><strong><?= $scholar['target_standing'] ?></strong></td>
+                                        <td>
+                                            <?php if ($scholar['is_4th_year']) : ?>
+                                                <select name="target_standing_choice[<?= $scholar_id ?>]" 
+                                                        style="padding: 5px 8px; border-radius: 6px; border: 1px solid #2a6b37; font-weight: 600; color: #1e4628; background-color: #f4fbf5; cursor: pointer;">
+                                                    <option value="Graduated">Graduated (SY <?= $next_school_year ?>)</option>
+                                                    <option value="Irregular">Irregular (SY <?= $next_school_year ?>)</option>
+                                                </select>
+                                            <?php else : ?>
+                                                <strong><?= $scholar['target_standing'] ?></strong>
+                                            <?php endif; ?>
+                                        </td>
                                         <td>
                                             <span class="status-badge <?= $scholar['badge_class'] ?>">
                                                 <?= $scholar['status_reason'] ?>
@@ -359,6 +402,7 @@ while ($row = $scholars_result->fetch_assoc()) {
     function toggleMasterCheckbox(master) {
         const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)');
         visibleCheckboxes.forEach(cb => cb.checked = master.checked);
+        updateMasterCheckboxState();
     }
 
     function selectAll() {
@@ -379,16 +423,25 @@ while ($row = $scholars_result->fetch_assoc()) {
         const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox');
         visibleCheckboxes.forEach(cb => cb.checked = false);
         document.getElementById('masterCheckbox').checked = false;
+        updateMasterCheckboxState();
     }
 
     function updateMasterCheckboxState() {
         const visibleCheckboxes = Array.from(document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)'));
+        const checkedCheckboxes = visibleCheckboxes.filter(cb => cb.checked);
+
+        const masterCb = document.getElementById('masterCheckbox');
         if (visibleCheckboxes.length === 0) {
-            document.getElementById('masterCheckbox').checked = false;
-            return;
+            masterCb.checked = false;
+        } else {
+            masterCb.checked = (checkedCheckboxes.length === visibleCheckboxes.length && visibleCheckboxes.length > 0);
         }
-        const allChecked = visibleCheckboxes.every(cb => cb.checked);
-        document.getElementById('masterCheckbox').checked = allChecked;
+
+        const promoteBtn = document.querySelector('button[name="promote"]');
+        if (promoteBtn) {
+            const totalChecked = document.querySelectorAll('.scholar-checkbox:checked:not(:disabled)').length;
+            promoteBtn.disabled = (totalChecked === 0);
+        }
     }
 
     function confirmPromotion(event) {
