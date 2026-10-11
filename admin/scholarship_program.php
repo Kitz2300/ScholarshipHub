@@ -81,13 +81,9 @@ if ($archive_filter === '1') {
     $where_clauses[] = "sp.is_archived = 0";
 }
 
-// Filter scholarship programs based on scholars' semester in scholar_info
+// Filter scholarship programs based on the scholarship program's semester
 if (!empty($semester_filter) && $semester_filter !== 'all') {
-    $where_clauses[] = "EXISTS (
-        SELECT 1 FROM scholar_info si 
-        WHERE si.scholarship_program_id = sp.id 
-          AND si.semester = ?
-    )";
+    $where_clauses[] = "sp.semester = ?";
     $params[] = $semester_filter;
     $types .= "s";
 }
@@ -104,20 +100,13 @@ $where_sql = implode(" AND ", $where_clauses);
 // Prepare parameters for the scholar count subquery
 $select_params = [$clean_year];
 $select_types = "s";
-$sem_sub_sql = "";
-
-if (!empty($semester_filter) && $semester_filter !== 'all') {
-    $sem_sub_sql = " AND si.semester = ?";
-    $select_params[] = $semester_filter;
-    $select_types .= "s";
-}
 
 $scholarships_sql = "SELECT sp.*, p.name AS provider_name, p.code AS provider_code,
                             (SELECT COUNT(*) 
                              FROM scholar_info si 
                              WHERE si.scholarship_program_id = sp.id 
                                AND si.is_archived = 0 
-                               AND REPLACE(si.school_year, ' ', '') = ?$sem_sub_sql
+                               AND REPLACE(si.school_year, ' ', '') = ?
                             ) AS total_scholars
                      FROM scholarship_program sp 
                      LEFT JOIN providers p ON sp.provider_id = p.id 
