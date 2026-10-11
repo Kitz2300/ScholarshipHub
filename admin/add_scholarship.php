@@ -27,7 +27,7 @@ $providers_result = $conn->query($providers_sql);
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
 
     <?php if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : 
-        $_SESSION['fail'] = "You are no logged in!";
+        $_SESSION['fail'] = "You are not logged in!";
         header("Location: ../portal.php");
         exit();
     else : ?>
@@ -63,14 +63,25 @@ $providers_result = $conn->query($providers_sql);
                                 <label for="start_year">School Year <span class="required">*</span></label>
                                 <div class="school-year-group">
                                     <select name="start_year" id="start_year" required>
-                                        <?php for ($y = date('Y') - 5; $y <= date('Y'); $y++) : ?>
-                                            <option value="<?= $y ?>"><?= $y ?></option>
+                                        <?php 
+                                        $current_y = (int) date('Y');
+                                        for ($y = $current_y - 5; $y <= $current_y; $y++) : 
+                                        ?>
+                                            <option value="<?= $y ?>" <?= $y === $current_y ? 'selected' : '' ?>><?= $y ?></option>
                                         <?php endfor; ?>
                                     </select>
                                     <span class="dash">–</span>
                                     <input type="text" id="end_year_display" value="" readonly class="end-year-display">
                                     <input type="hidden" name="end_year" id="end_year_hidden" value="">
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="semester">Semester <span class="required">*</span></label>
+                                <select name="semester" id="semester" required>
+                                    <option value="1st Semester" selected>1st Semester</option>
+                                    <option value="2nd Semester">2nd Semester</option>
+                                    <option value="Summer">Summer</option>
+                                </select>
                             </div>
                         </div>
 
@@ -91,7 +102,7 @@ $providers_result = $conn->query($providers_sql);
                                     <?php endif; ?>
                                 </select>
                                 <?php if (!$providers_result || $providers_result->num_rows === 0) : ?>
-                                    <small class="help-text" style="color: #e74c3c;">No active provider available. Please <a href="add_provider.php" style="color: #1e4628; text-decoration: underline;">add a provider</a> first.</small>
+                                    <small class="help-text help-text-danger">No active provider available. Please <a href="add_provider.php" class="link-primary-underlined">add a provider</a> first.</small>
                                 <?php endif; ?>
                             </div>
 
@@ -119,8 +130,8 @@ $providers_result = $conn->query($providers_sql);
 
                         <div class="form-row">
                             <div class="form-group full-width">
-                                <label for="desc">Description <span class="required">*</span></label>
-                                <textarea name="desc" id="desc" rows="4" placeholder="Enter scholarship description" required></textarea>
+                                <label for="desc">Description</label>
+                                <textarea name="desc" id="desc" rows="4" placeholder="Enter scholarship description (optional)"></textarea>
                             </div>
                         </div>
 
@@ -129,10 +140,18 @@ $providers_result = $conn->query($providers_sql);
                                 <label for="pay_amount">Allowance <span class="required">*</span></label>
                                 <input type="number" name="pay_amount" id="pay_amount" step="0.01" min="0" placeholder="e.g., 5000.00" required/>
                             </div>
-                            <div class="form-group half-width">
-                                <label for="gwa_req">Minimum GWA Requirement</label>
-                                <input type="number" name="gwa_req" id="gwa_req" step="0.01" min="1.0" max="4.0" placeholder="e.g., 2.50"/>
-                                <small class="help-text">Leave blank if no GWA requirement.</small>
+
+                            <div class="form-group half-width gwa-row-wrapper">
+                                <div class="checkbox-align-bottom">
+                                    <label class="checkbox-inline">
+                                        <input type="checkbox" id="has_gwa_req" onchange="toggleGwaInput(this)">
+                                        <span>Require GWA</span>
+                                    </label>
+                                </div>
+                                <div id="gwa_input_container" class="form-group gwa-input-group" style="display: none;">
+                                    <label for="gwa_req">Minimum GWA Requirement</label>
+                                    <input type="number" name="gwa_req" id="gwa_req" step="0.01" min="1.0" max="4.0" placeholder="e.g., 2.50"/>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -151,6 +170,17 @@ $providers_result = $conn->query($providers_sql);
         </div>
 
         <script>
+            function toggleGwaInput(checkbox) {
+                const container = document.getElementById('gwa_input_container');
+                const input = document.getElementById('gwa_req');
+                if (container) {
+                    container.style.display = checkbox.checked ? 'flex' : 'none';
+                    if (!checkbox.checked && input) {
+                        input.value = '';
+                    }
+                }
+            }
+
             document.addEventListener('DOMContentLoaded', function () {
                 const scTypeSelect = document.getElementById('sc_type');
                 const otherTypeContainer = document.getElementById('other_type_container');

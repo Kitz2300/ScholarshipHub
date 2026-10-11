@@ -11,11 +11,13 @@ if (!hasPermission($conn, $_SESSION['user_id'], 'scholarship_programs', 'edit'))
 // Get ID from URL
 $scholarship_id = (int) ($_GET['id'] ?? 0);
 
-// Initialize variables
+// Initialize variables with current year defaults
+$current_year_default = (int) date('Y');
 $name = "";
 $code = "";
-$start_year = "";
-$end_year = "";
+$start_year = $current_year_default;
+$end_year = $current_year_default + 1;
+$semester = "1st Semester";
 $description = "";
 $gwa_req = 0.00;
 $pay = 0.00;
@@ -32,11 +34,15 @@ if ($scholarship_result->num_rows > 0) {
     if ($row = $scholarship_result->fetch_assoc()) {
         $name = $row['name'];
         $code = $row['code'];
-        $school_year = explode(" - ", $row['school_year']);
-        $start_year = $school_year[0] ?? date('Y');
-        $end_year = $school_year[1] ?? (date('Y') + 1);
+        $school_year = explode(" - ", str_replace(" ", "", $row['school_year']));
+        if (count($school_year) < 2) {
+            $school_year = explode("-", $row['school_year']);
+        }
+        $start_year = !empty($school_year[0]) ? (int)$school_year[0] : $current_year_default;
+        $end_year = !empty($school_year[1]) ? (int)$school_year[1] : ($start_year + 1);
+        $semester = $row['semester'] ?? '1st Semester';
         $description = $row['description'];
-        $gwa_req = $row['min_gwa_req'];
+        $gwa_req = (float) $row['min_gwa_req'];
         $pay = $row['pay_amount'];
         $sc_type = $row['scholarship_type'];
         $provider_id = (int) ($row['provider_id'] ?? 0);
@@ -68,6 +74,7 @@ $standard_types = [
 $is_other_type = (!empty($sc_type) && !in_array($sc_type, $standard_types));
 $sc_type_select_val = $is_other_type ? 'Other' : $sc_type;
 $sc_type_other_val = $is_other_type ? $sc_type : '';
+$has_gwa = ($gwa_req > 0);
 ?>
 
 <!DOCTYPE html>
@@ -85,7 +92,7 @@ $sc_type_other_val = $is_other_type ? $sc_type : '';
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
 
     <?php if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : 
-        $_SESSION['fail'] = "You are no logged in!";
+        $_SESSION['fail'] = "You are not logged in!";
         header("Location: ../portal.php");
         exit();    
     else : ?>
@@ -123,14 +130,27 @@ $sc_type_other_val = $is_other_type ? $sc_type : '';
                                 <label for="start_year">School Year <span class="required">*</span></label>
                                 <div class="school-year-group">
                                     <select name="start_year" id="start_year" required>
-                                        <?php for ($y = date('Y') - 5; $y <= date('Y'); $y++) : ?>
-                                            <option value="<?= $y ?>" <?= $start_year == $y ? "selected" : "" ?>><?= $y ?></option>
+                                        <?php 
+                                        $current_y = (int) date('Y');
+                                        $min_y = min($current_y - 5, (int)$start_year);
+                                        $max_y = $current_y;
+                                        for ($y = $min_y; $y <= $max_y; $y++) : 
+                                        ?>
+                                            <option value="<?= $y ?>" <?= (int)$start_year === $y ? "selected" : "" ?>><?= $y ?></option>
                                         <?php endfor; ?>
                                     </select>
                                     <span class="dash">–</span>
                                     <input type="text" id="end_year_display" value="" readonly class="end-year-display">
                                     <input type="hidden" name="end_year" id="end_year_hidden" value="">
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="semester">Semester <span class="required">*</span></label>
+                                <select name="semester" id="semester" required>
+                                    <option value="1st Semester" <?= $semester === "1st Semester" ? "selected" : "" ?>>1st Semester</option>
+                                    <option value="2nd Semester" <?= $semester === "2nd Semester" ? "selected" : "" ?>>2nd Semester</option>
+                                    <option value="Summer" <?= $semester === "Summer" ? "selected" : "" ?>>Summer</option>
+                                </select>
                             </div>
                         </div>
 
@@ -177,8 +197,8 @@ $sc_type_other_val = $is_other_type ? $sc_type : '';
 
                         <div class="form-row">
                             <div class="form-group full-width">
-                                <label for="desc">Description <span class="required">*</span></label>
-                                <textarea name="desc" id="desc" rows="4" required><?= htmlspecialchars($description) ?></textarea>
+                                <label for="desc">Description</label>
+                                <textarea name="desc" id="desc" rows="4" placeholder="Enter scholarship description (optional)"><?= htmlspecialchars($description) ?></textarea>
                             </div>
                         </div>
 
@@ -187,10 +207,18 @@ $sc_type_other_val = $is_other_type ? $sc_type : '';
                                 <label for="pay_amount">Allowance <span class="required">*</span></label>
                                 <input type="number" name="pay_amount" id="pay_amount" step="0.01" min="0" placeholder="e.g., 5000.00" value="<?= htmlspecialchars($pay) ?>" required/>
                             </div>
-                            <div class="form-group half-width">
-                                <label for="gwa_req">Minimum GWA Requirement</label>
-                                <input type="number" name="gwa_req" id="gwa_req" step="0.01" min="0.0" max="4.0" placeholder="e.g., 2.50" value="<?= htmlspecialchars($gwa_req) ?>"/>
-                                <small class="help-text">Leave blank if no GWA requirement.</small>
+
+                            <div class="form-group half-width gwa-row-wrapper">
+                                <div class="checkbox-align-bottom">
+                                    <label class="checkbox-inline">
+                                        <input type="checkbox" id="has_gwa_req" <?= $has_gwa ? 'checked' : '' ?> onchange="toggleGwaInput(this)">
+                                        <span>Require GWA</span>
+                                    </label>
+                                </div>
+                                <div id="gwa_input_container" class="form-group gwa-input-group" style="display: <?= $has_gwa ? 'flex' : 'none' ?>;">
+                                    <label for="gwa_req">Minimum GWA Requirement</label>
+                                    <input type="number" name="gwa_req" id="gwa_req" step="0.01" min="1.0" max="4.0" placeholder="e.g., 2.50" value="<?= $has_gwa ? htmlspecialchars($gwa_req) : '' ?>"/>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -209,6 +237,17 @@ $sc_type_other_val = $is_other_type ? $sc_type : '';
         </div>
 
         <script>
+            function toggleGwaInput(checkbox) {
+                const container = document.getElementById('gwa_input_container');
+                const input = document.getElementById('gwa_req');
+                if (container) {
+                    container.style.display = checkbox.checked ? 'flex' : 'none';
+                    if (!checkbox.checked && input) {
+                        input.value = '';
+                    }
+                }
+            }
+
             document.addEventListener('DOMContentLoaded', function () {
                 const scTypeSelect = document.getElementById('sc_type');
                 const otherTypeContainer = document.getElementById('other_type_container');
