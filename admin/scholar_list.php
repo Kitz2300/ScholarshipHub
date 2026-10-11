@@ -23,7 +23,6 @@ $offset = ($page - 1) * $records_per_page;
 $searched = isset($_GET['search']) ? trim($_GET['search']) : "";
 $course_filter = isset($_GET['course_filter']) ? (int)$_GET['course_filter'] : 0;
 $college_filter = isset($_GET['college_filter']) ? (int)$_GET['college_filter'] : 0;
-$scholarship_filter = isset($_GET['scholarship_filter']) ? (int)$_GET['scholarship_filter'] : 0;
 $year_level_filter = isset($_GET['year_level_filter']) ? trim($_GET['year_level_filter']) : '0';
 
 // Default academic status to "Enrolled" if not provided
@@ -38,6 +37,27 @@ $school_year_filter = isset($_GET['school_year_filter']) ? $_GET['school_year_fi
 // Default school year to latest available
 if($school_year_filter === null && !empty($available_years)) {
     $school_year_filter = $available_years[0];
+}
+
+$clean_school_year_filter = !empty($school_year_filter) ? str_replace(' ', '', $school_year_filter) : '';
+
+// ─── Handle Scholarship Filter (Merge by Name across Semesters) ───
+$scholarship_filter_raw = isset($_GET['scholarship_filter']) ? trim($_GET['scholarship_filter']) : '0';
+$selected_scholarship_name = '0';
+
+if (!empty($scholarship_filter_raw) && $scholarship_filter_raw !== '0') {
+    if (is_numeric($scholarship_filter_raw) && (int)$scholarship_filter_raw > 0) {
+        // Resolve legacy/dashboard numeric ID to program name
+        $get_name_stmt = $conn->prepare("SELECT name FROM scholarship_program WHERE id = ?");
+        $get_name_stmt->bind_param('i', $scholarship_filter_raw);
+        $get_name_stmt->execute();
+        $get_name_res = $get_name_stmt->get_result();
+        if ($name_row = $get_name_res->fetch_assoc()) {
+            $selected_scholarship_name = $name_row['name'];
+        }
+    } else {
+        $selected_scholarship_name = $scholarship_filter_raw;
+    }
 }
 
 // ─── Build WHERE conditions ───
@@ -80,11 +100,11 @@ if($college_filter > 0) {
     $types .= "i";
 }
 
-// Scholarship Program Filter
-if($scholarship_filter > 0) {
-    $where_condition[] = "scholar_info.scholarship_program_id = ?";
-    $params[] = $scholarship_filter;
-    $types .= "i";
+// Scholarship Program Filter (Matches by Program Name to cover all semesters)
+if($selected_scholarship_name !== '0' && !empty($selected_scholarship_name)) {
+    $where_condition[] = "sp.name = ?";
+    $params[] = $selected_scholarship_name;
+    $types .= "s";
 }
 
 // Year Level Filter (Handles 1-4 as well as 'Irregular' or 5+ year levels)
@@ -121,8 +141,8 @@ if ($flagged_filter == 1) {
 
 // School Year Filter (Enforces 1 snapshot row per student per term)
 if(!empty($school_year_filter)) {
-    $where_condition[] = "scholar_info.school_year = ?";
-    $params[] = $school_year_filter;
+    $where_condition[] = "REPLACE(scholar_info.school_year, ' ', '') = ?";
+    $params[] = $clean_school_year_filter;
     $types .= "s";
 }
 
@@ -162,6 +182,7 @@ $scholar_sql = "SELECT
                 scholar_info.year_level,
                 scholar_info.academic_status,
                 sp.name AS scholarship_name, 
+                sp.semester AS scholarship_semester,
                 p.name AS program_name,
                 c.college_code AS college_name,
                 sp.min_gwa_req,
@@ -188,20 +209,36 @@ $scholar_stmt->execute();
 $result = $scholar_stmt->get_result();
 
 // Dropdown data
-$course_sql = "SELECT id, name FROM program";
+$course_sql = "SELECT id, name FROM program ORDER BY name ASC";
 $course_stmt = $conn->prepare($course_sql);
 $course_stmt->execute();
 $course_result = $course_stmt->get_result();
 
-$college_sql = "SELECT id, college_name FROM college";
+$college_sql = "SELECT id, college_name FROM college ORDER BY college_name ASC";
 $college_stmt = $conn->prepare($college_sql);
 $college_stmt->execute();
 $college_result = $college_stmt->get_result();
 
-$scholarship_sql = "SELECT id, name FROM scholarship_program WHERE is_archived = 0";
+// Fetch UNIQUE scholarship program names available for the selected School Year
+$scholarship_sql = "SELECT MIN(id) AS id, name 
+                    FROM scholarship_program 
+                    WHERE is_archived = 0 
+                      AND is_active = 1 
+                      AND REPLACE(school_year, ' ', '') = ? 
+                    GROUP BY name 
+                    ORDER BY name ASC";
 $scholarship_stmt = $conn->prepare($scholarship_sql);
+$scholarship_stmt->bind_param('s', $clean_school_year_filter);
 $scholarship_stmt->execute();
 $scholarship_result = $scholarship_stmt->get_result();
+
+// Fallback to all unique active scholarship names if none exist for exact SY
+if ($scholarship_result->num_rows === 0) {
+    $scholarship_sql = "SELECT MIN(id) AS id, name FROM scholarship_program WHERE is_archived = 0 AND is_active = 1 GROUP BY name ORDER BY name ASC";
+    $scholarship_stmt = $conn->prepare($scholarship_sql);
+    $scholarship_stmt->execute();
+    $scholarship_result = $scholarship_stmt->get_result();
+}
 
 if($page > $total_pages && $total_pages > 0) {
     header("Location: ?page=" . $total_pages);
@@ -228,7 +265,7 @@ $clear_filters_url = !empty($clear_filters_params)
     ? $_SERVER['PHP_SELF'] . '?' . http_build_query($clear_filters_params) 
     : $_SERVER['PHP_SELF'];
 
-$has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filter != 0 || 
+$has_filters = ($course_filter != 0 || $college_filter != 0 || ($selected_scholarship_name !== '0' && !empty($selected_scholarship_name)) || 
                 ($year_level_filter !== '0' && $year_level_filter !== '') ||
                 ($academic_status != "" && $academic_status != 'Enrolled') || 
                 ($semester_filter != "" && $semester_filter != '1st Semester') ||
@@ -274,6 +311,15 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                             <button type="button" class="btn btn-sm btn-info toggle-filters">Filters ▼</button>
                         </div>
                         <div class="filter-row<?= $has_filters ? ' open' : '' ?>" id="filter-row">
+                            
+                            <!-- Inline Filter Title Label -->
+                            <div class="filter-title-label" style="display: flex; align-items: center; gap: 6px; font-weight: bold; color: #1e4628; white-space: nowrap;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                </svg>
+                                <span>Filters:</span>
+                            </div>
+
                             <select name="course_filter" style="max-width: 240px;">
                                 <option value="0" <?= $course_filter == 0 ? 'selected' : '' ?>>All Programs</option>
                                 <?php 
@@ -283,6 +329,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                     <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= htmlspecialchars($row['name']) ?> </option>
                                 <?php } ?>
                             </select>
+
                             <select name="college_filter" style="max-width: 240px;">
                                 <option value="0" <?= $college_filter == 0 ? 'selected' : '' ?>>All Colleges</option>
                                 <?php 
@@ -292,15 +339,20 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                     <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= htmlspecialchars($row['college_name']) ?> </option>
                                 <?php } ?>
                             </select>
+
+                            <!-- Unique Scholarship Filter Dropdown -->
                             <select name="scholarship_filter" style="max-width: 240px;">
-                                <option value="0" <?= $scholarship_filter == 0 ? 'selected' : '' ?>>All Scholarships</option>
+                                <option value="0" <?= ($selected_scholarship_name === '0' || empty($selected_scholarship_name)) ? 'selected' : '' ?>>All Scholarships</option>
                                 <?php 
-                                $scholarship_result->data_seek(0);
-                                while($row = $scholarship_result->fetch_assoc()) {
-                                    $selected = ($scholarship_filter == $row['id']) ? 'selected' : ''; ?>
-                                    <option value="<?= $row['id'] ?>" <?= $selected ?>> <?= htmlspecialchars($row['name']) ?> </option>
-                                <?php } ?>
+                                if ($scholarship_result && $scholarship_result->num_rows > 0) {
+                                    $scholarship_result->data_seek(0);
+                                    while($row = $scholarship_result->fetch_assoc()) {
+                                        $selected = ($selected_scholarship_name === $row['name']) ? 'selected' : ''; ?>
+                                        <option value="<?= htmlspecialchars($row['name']) ?>" <?= $selected ?>> <?= htmlspecialchars($row['name']) ?> </option>
+                                    <?php } 
+                                } ?>
                             </select>
+
                             <select name="year_level_filter">
                                 <option value="0" <?= $year_level_filter === '0' ? 'selected' : '' ?>>All Year Levels</option>
                                 <option value="1" <?= $year_level_filter === '1' ? 'selected' : '' ?>>1st Year</option>
@@ -309,6 +361,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                 <option value="4" <?= $year_level_filter === '4' ? 'selected' : '' ?>>4th Year</option>
                                 <option value="Irregular" <?= $year_level_filter === 'Irregular' ? 'selected' : '' ?>>Irregular</option>
                             </select>
+
                             <select name="academic_status">
                                 <option value="Enrolled" <?= $academic_status == "Enrolled" ? 'selected' : '' ?>>Enrolled</option>
                                 <option value="Not Enrolled" <?= $academic_status == "Not Enrolled" ? 'selected' : '' ?>>Not Enrolled</option>
@@ -317,11 +370,13 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                 <option value="Dropped" <?= $academic_status == "Dropped" ? 'selected' : '' ?>>Dropped</option>
                                 <option value="Leave of Absence" <?= $academic_status == "Leave of Absence" ? 'selected' : '' ?>>Leave of Absence</option>
                             </select>
+
                             <select name="semester_filter">
                                 <option value="1st Semester" <?= $semester_filter === '1st Semester' ? 'selected' : '' ?>>1st Semester</option>
                                 <option value="2nd Semester" <?= $semester_filter === '2nd Semester' ? 'selected' : '' ?>>2nd Semester</option>
                                 <option value="Summer" <?= $semester_filter === 'Summer' ? 'selected' : '' ?>>Summer</option>
                             </select>
+
                             <select name="school_year_filter">
                                 <?php foreach($available_years as $year) : ?>
                                     <option value="<?= $year ?>" <?= $school_year_filter == $year ? "selected" : "" ?>>
@@ -329,6 +384,7 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                                     </option>
                                 <?php endforeach; ?>
                             </select>
+
                             <label class="checkbox-label">
                                 <input type="checkbox" name="flagged_filter" value="1" <?= $flagged_filter == 1 ? 'checked' : '' ?>>
                                 Flagged Scholars Only
@@ -440,17 +496,17 @@ $has_filters = ($course_filter != 0 || $college_filter != 0 || $scholarship_filt
                 <?php if($total_pages > 1) : ?>
                     <div class="pagination">
                         <?php if($page > 1) : ?>
-                            <a href="?page=<?= $page - 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>&year_level_filter=<?= urlencode($year_level_filter) ?>&school_year_filter=<?= urlencode($school_year_filter) ?>&academic_status=<?= urlencode($academic_status) ?>&semester_filter=<?= urlencode($semester_filter) ?>&flagged_filter=<?= $flagged_filter ?>">Previous</a>
+                            <a href="?page=<?= $page - 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= urlencode($selected_scholarship_name) ?>&year_level_filter=<?= urlencode($year_level_filter) ?>&school_year_filter=<?= urlencode($school_year_filter) ?>&academic_status=<?= urlencode($academic_status) ?>&semester_filter=<?= urlencode($semester_filter) ?>&flagged_filter=<?= $flagged_filter ?>">Previous</a>
                         <?php endif; ?>
                         <?php for($i = 1; $i <= $total_pages; $i++) : ?>
                             <?php if($i == $page) : ?>
                                 <strong><?= $i ?></strong>
                             <?php else : ?>
-                                <a href="?page=<?= $i ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>&year_level_filter=<?= urlencode($year_level_filter) ?>&school_year_filter=<?= urlencode($school_year_filter) ?>&academic_status=<?= urlencode($academic_status) ?>&semester_filter=<?= urlencode($semester_filter) ?>&flagged_filter=<?= $flagged_filter ?>"><?= $i ?></a>
+                                <a href="?page=<?= $i ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= urlencode($selected_scholarship_name) ?>&year_level_filter=<?= urlencode($year_level_filter) ?>&school_year_filter=<?= urlencode($school_year_filter) ?>&academic_status=<?= urlencode($academic_status) ?>&semester_filter=<?= urlencode($semester_filter) ?>&flagged_filter=<?= $flagged_filter ?>"><?= $i ?></a>
                             <?php endif; ?>
                         <?php endfor; ?>
                         <?php if($page < $total_pages) : ?>
-                            <a href="?page=<?= $page + 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= $scholarship_filter ?>&year_level_filter=<?= urlencode($year_level_filter) ?>&school_year_filter=<?= urlencode($school_year_filter) ?>&academic_status=<?= urlencode($academic_status) ?>&semester_filter=<?= urlencode($semester_filter) ?>&flagged_filter=<?= $flagged_filter ?>">Next</a>
+                            <a href="?page=<?= $page + 1 ?>&search=<?= urlencode($searched) ?>&course_filter=<?= $course_filter ?>&college_filter=<?= $college_filter ?>&scholarship_filter=<?= urlencode($selected_scholarship_name) ?>&year_level_filter=<?= urlencode($year_level_filter) ?>&school_year_filter=<?= urlencode($school_year_filter) ?>&academic_status=<?= urlencode($academic_status) ?>&semester_filter=<?= urlencode($semester_filter) ?>&flagged_filter=<?= $flagged_filter ?>">Next</a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
