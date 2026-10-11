@@ -12,8 +12,22 @@ $error_count = 0;
 if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty($_POST['valid_rows'])) {
     $file_name = $_POST['file_name'];
     $scholarship_program_id = (int)$_POST['scholarship_program_id'];
-    $school_year = trim($_POST['school_year'] ?? $_SESSION['school_year'] ?? '');
-    $semester = trim($_POST['semester'] ?? $_SESSION['semester'] ?? '');
+
+    // Retrieve school_year and semester directly from scholarship_program
+    $school_year_sql = "SELECT school_year, semester FROM scholarship_program WHERE id = ?";
+    $school_year_stmt = $conn->prepare($school_year_sql);
+    $school_year_stmt->bind_param('i', $scholarship_program_id);
+    $school_year_stmt->execute();
+    $school_year_result = $school_year_stmt->get_result();
+    if ($row = $school_year_result->fetch_assoc()) {
+        $school_year = $row['school_year'];
+        $semester = $row['semester'] ?? '1st Semester';
+    } else {
+        $_SESSION['fail'] = "Invalid scholarship program ID.";
+        header("Location: ../../admin/upload_excel.php");
+        exit();
+    }
+    $school_year_stmt->close();
 
     $valid_rows_json = urldecode($_POST['valid_rows']);
     $valid_rows = json_decode($valid_rows_json, true);
@@ -24,23 +38,6 @@ if(isset($_POST['confirm']) && isset($_POST['scholarship_program_id']) && !empty
         $_SESSION['fail'] = "No column mapping found. Please go back and select columns.";
         header("Location: ../../admin/upload_excel.php");
         exit();
-    }
-
-    if (empty($school_year) || empty($semester)) {
-        $school_year_sql = "SELECT school_year FROM scholarship_program WHERE id = ?";
-        $school_year_stmt = $conn->prepare($school_year_sql);
-        $school_year_stmt->bind_param('i', $scholarship_program_id);
-        $school_year_stmt->execute();
-        $school_year_result = $school_year_stmt->get_result();
-        if ($row = $school_year_result->fetch_assoc()) {
-            if (empty($school_year)) $school_year = $row['school_year'];
-        } else {
-            $_SESSION['fail'] = "Invalid scholarship program ID.";
-            header("Location: ../../admin/upload_excel.php");
-            exit();
-        }
-        $school_year_stmt->close();
-        if (empty($semester)) $semester = "1st Semester";
     }
 
     $emails_to_send = [];

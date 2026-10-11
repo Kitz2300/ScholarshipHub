@@ -149,17 +149,26 @@ if(isset($_POST['select_columns'])) {
 
     $has_new_file = isset($_FILES['excel_file']) && $_FILES['excel_file']['error'] === UPLOAD_ERR_OK;
 
-    if (isset($_POST['school_year'])) $_SESSION['school_year'] = trim($_POST['school_year']);
-    if (isset($_POST['semester'])) $_SESSION['semester'] = trim($_POST['semester']);
-
-    $current_sy = $_SESSION['school_year'] ?? '';
-    $current_sem = $_SESSION['semester'] ?? '';
-
     if (!$has_new_file && isset($_SESSION['data_rows']) && !empty($_SESSION['data_rows'])) {
         $data_rows = $_SESSION['data_rows'];
         $header_row_index = $_SESSION['header_row_index'] ?? 3;
         $scholarship_program_id = $_SESSION['scholarship_program_id'] ?? 0;
         $file_name = $_SESSION['file_name'] ?? '';
+
+        if ($scholarship_program_id > 0) {
+            $sp_stmt = $conn->prepare("SELECT school_year, semester FROM scholarship_program WHERE id = ?");
+            $sp_stmt->bind_param("i", $scholarship_program_id);
+            $sp_stmt->execute();
+            $sp_res = $sp_stmt->get_result();
+            if ($sp_row = $sp_res->fetch_assoc()) {
+                $_SESSION['school_year'] = $sp_row['school_year'];
+                $_SESSION['semester'] = $sp_row['semester'];
+            }
+            $sp_stmt->close();
+        }
+
+        $current_sy = $_SESSION['school_year'] ?? '';
+        $current_sem = $_SESSION['semester'] ?? '';
 
         $mapped_columns = [];
         $excel_index = 1;
@@ -212,6 +221,20 @@ if(isset($_POST['select_columns'])) {
             $_SESSION['upload_error'] = 'Please select a scholarship program.';
             $_SESSION['import_processed'] = false;
         } else {
+            // Fetch school_year & semester directly from scholarship_program
+            $sp_stmt = $conn->prepare("SELECT school_year, semester FROM scholarship_program WHERE id = ?");
+            $sp_stmt->bind_param("i", $scholarship_program_id);
+            $sp_stmt->execute();
+            $sp_res = $sp_stmt->get_result();
+            if ($sp_row = $sp_res->fetch_assoc()) {
+                $_SESSION['school_year'] = $sp_row['school_year'];
+                $_SESSION['semester'] = $sp_row['semester'];
+            }
+            $sp_stmt->close();
+
+            $current_sy = $_SESSION['school_year'] ?? '';
+            $current_sem = $_SESSION['semester'] ?? '';
+
             $allowedMimeTypes = [
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 'application/vnd.ms-excel',
@@ -445,12 +468,9 @@ unset($_SESSION['upload_error']);
                                 <select name="scholarship_program" id="scholarship_program" required>
                                     <option value="" disabled selected>Select Scholarship Program</option>
                                     <?php 
-                                    $sql = "SELECT sp.id, sp.name, sp.code, sp.school_year, 
-                                                   GROUP_CONCAT(DISTINCT si.semester SEPARATOR ',') AS semesters 
+                                    $sql = "SELECT sp.id, sp.name, sp.code, sp.school_year, sp.semester 
                                             FROM scholarship_program sp 
-                                            LEFT JOIN scholar_info si ON si.scholarship_program_id = sp.id AND si.is_archived = 0 
                                             WHERE sp.is_archived = 0 AND sp.is_active = 1 
-                                            GROUP BY sp.id, sp.name, sp.code, sp.school_year 
                                             ORDER BY sp.name ASC";
                                     $stmt = $conn->prepare($sql);
                                     $stmt->execute();
@@ -458,8 +478,8 @@ unset($_SESSION['upload_error']);
                                     while($row = $results->fetch_assoc()): ?>
                                         <option value="<?= $row['id'] ?>" 
                                                 data-sy="<?= htmlspecialchars($row['school_year']) ?>" 
-                                                data-sem="<?= htmlspecialchars($row['semesters'] ?? '') ?>">
-                                            <?= htmlspecialchars($row['name']) ?> (<?= htmlspecialchars($row['school_year']) ?>)
+                                                data-sem="<?= htmlspecialchars($row['semester'] ?? '') ?>">
+                                            <?= htmlspecialchars($row['name']) ?>
                                         </option>
                                     <?php endwhile; ?>
                                 </select>
@@ -478,9 +498,6 @@ unset($_SESSION['upload_error']);
                 <div class="instructions-section">
                     <h4>Instructions</h4>
                     <ul>
-                        <!-- <li>Use the template provided by the scholarship office.
-                            <a href="../assets/TEMPLATE.xlsx" download>Download Template</a>
-                        </li> -->
                         <li>Make sure the file format is <strong>.xlsx</strong>, <strong>.xls</strong>, or <strong>.csv</strong>.</li>
                         <li>After uploading, you will be able to select which columns are present in your file.</li>
                         <li><strong>Skip rows:</strong> Enter the number of top rows that contain headers. Data rows will start after that many rows.</li>
@@ -732,7 +749,7 @@ unset($_SESSION['upload_error']);
             const progSem = (opt.getAttribute('data-sem') || '').replace(/\s+/g, '').toLowerCase();
 
             const syMatch = (progSY === selectedSY);
-            const semMatch = (!progSem || progSem.includes(selectedSem));
+            const semMatch = (!progSem || progSem === selectedSem);
 
             if (syMatch && semMatch) {
                 opt.style.display = "";
