@@ -193,10 +193,10 @@ if($scholarship_program !== 'all' && !empty($scholarship_program)) {
 }
 if($school_year_filter !== 'all' && !empty($school_year_filter)) {
     $clean_sy = str_replace(' ', '', $school_year_filter);
-    $sql .= " AND REPLACE(scholar_info.school_year, ' ', '') = '" . $conn->real_escape_string($clean_sy) . "'";
+    $sql .= " AND REPLACE(scholarship_program.school_year, ' ', '') = '" . $conn->real_escape_string($clean_sy) . "'";
 }
 if($semester_filter !== 'all' && !empty($semester_filter)) {
-    $sql .= " AND scholar_info.semester = '" . $conn->real_escape_string($semester_filter) . "'";
+    $sql .= " AND scholarship_program.semester = '" . $conn->real_escape_string($semester_filter) . "'";
 }
 if($college !== 'all' && !empty($college)) {
     if(is_numeric($college)) {
@@ -225,6 +225,15 @@ if($isPreview) {
         header('Content-Type: application/json');
         echo json_encode([
             'error' => 'Database Query Error: ' . $conn->error
+        ]);
+        exit;
+    }
+
+    if ($result->num_rows === 0) {
+        while (ob_get_level()) { ob_end_clean(); }
+        header('Content-Type: application/json');
+        echo json_encode([
+            'error' => 'No scholars found for the selected scholarship program and filters.'
         ]);
         exit;
     }
@@ -325,7 +334,7 @@ if(!empty($column_order)) {
 
 $result = $conn->query($sql);
 if(!$result || $result->num_rows === 0) {
-    $_SESSION['fail'] = "No scholar records found for the selected filters.";
+    $_SESSION['fail'] = "No scholars found for the selected scholarship program and filters.";
     header("Location: ../../admin/export_scholars.php");
     exit();
 }

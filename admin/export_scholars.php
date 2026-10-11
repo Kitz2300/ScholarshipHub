@@ -84,13 +84,10 @@ $selected_sem = getSelectedSemester();
                                 <select name="scholar_program" id="scholar_program" required>
                                     <option value="" disabled selected>Select Scholarship Program</option>
                                     <?php 
-                                    $sp_sql = "SELECT sp.id, sp.name, sp.code, sp.school_year, 
-                                                       GROUP_CONCAT(DISTINCT si.semester SEPARATOR ',') AS semesters 
-                                                FROM scholarship_program sp 
-                                                LEFT JOIN scholar_info si ON si.scholarship_program_id = sp.id AND si.is_archived = 0 
-                                                WHERE sp.is_archived = 0 AND sp.is_active = 1 
-                                                GROUP BY sp.id, sp.name, sp.code, sp.school_year 
-                                                ORDER BY sp.name ASC";
+                                    $sp_sql = "SELECT sp.id, sp.name, sp.code, sp.school_year, sp.semester 
+                                               FROM scholarship_program sp 
+                                               WHERE sp.is_archived = 0 AND sp.is_active = 1 
+                                               ORDER BY sp.name ASC";
                                     $sp_stmt = $conn->prepare($sp_sql);
                                     $sp_stmt->execute();
                                     $sp_result = $sp_stmt->get_result();
@@ -98,7 +95,7 @@ $selected_sem = getSelectedSemester();
                                     ?>
                                         <option value="<?= $row['id'] ?>" 
                                                 data-sy="<?= htmlspecialchars($row['school_year']) ?>" 
-                                                data-sem="<?= htmlspecialchars($row['semesters'] ?? '') ?>">
+                                                data-sem="<?= htmlspecialchars($row['semester'] ?? '') ?>">
                                             <?= htmlspecialchars($row['name']) ?> (<?= htmlspecialchars($row['code']) ?>)
                                         </option>
                                     <?php endwhile; ?>
@@ -355,7 +352,7 @@ $selected_sem = getSelectedSemester();
                 const progSem = (opt.getAttribute('data-sem') || '').replace(/\s+/g, '').toLowerCase();
 
                 const syMatch = (progSY === selectedSY);
-                const semMatch = (!progSem || progSem.includes(selectedSem));
+                const semMatch = (!progSem || progSem === selectedSem);
 
                 if (syMatch && semMatch) {
                     opt.style.display = "";
