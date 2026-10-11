@@ -13,7 +13,12 @@ if (!hasPermission($conn,$_SESSION['user_id'], 'announcements', 'add')) {
     exit();
 }
 
-$sp_sql = "SELECT id, name FROM scholarship_program WHERE is_archived = 0 ORDER BY name ASC";
+// Fetch unique scholarship programs grouped by name and code
+$sp_sql = "SELECT MIN(id) AS id, name, code 
+           FROM scholarship_program 
+           WHERE is_archived = 0 
+           GROUP BY name, code 
+           ORDER BY name ASC";
 $sp_result = $conn->query($sp_sql);
 ?>
 <!DOCTYPE html>
@@ -120,7 +125,9 @@ $sp_result = $conn->query($sp_sql);
                                 <option value="0">All Scholarship Programs</option>
                                 <?php if ($sp_result &&$sp_result->num_rows > 0) : ?>
                                     <?php while($sp =$sp_result->fetch_assoc()) : ?>
-                                        <option value="<?= $sp['id'] ?>"><?= htmlspecialchars($sp['name']) ?></option>
+                                        <option value="<?= $sp['id'] ?>">
+                                            <?= htmlspecialchars($sp['name']) ?><?= !empty($sp['code']) ? ' (' . htmlspecialchars($sp['code']) . ')' : '' ?>
+                                        </option>
                                     <?php endwhile; ?>
                                 <?php endif; ?>
                             </select>

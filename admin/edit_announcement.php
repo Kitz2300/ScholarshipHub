@@ -38,8 +38,25 @@ if ($row =$result->fetch_assoc()) {
     $attachment =$row['attachment'] ?? '';
 }
 
-$sp_sql = "SELECT id, name FROM scholarship_program WHERE is_archived = 0 ORDER BY name ASC";
-$sp_result = $conn->query($sp_sql);
+// Get the program name of the currently assigned program ID
+$current_sp_name = "";
+if ($scholarship_program_id > 0) {$curr_sp_sql = "SELECT name FROM scholarship_program WHERE id = ?";
+    $curr_sp_stmt =$conn->prepare($curr_sp_sql);$curr_sp_stmt->bind_param("i", $scholarship_program_id);$curr_sp_stmt->execute();
+    $curr_sp_res =$curr_sp_stmt->get_result();
+    if ($c_row =$curr_sp_res->fetch_assoc()) {
+        $current_sp_name =$c_row['name'];
+    }
+    $curr_sp_stmt->close();
+}
+
+// Fetch unique scholarship programs grouped by name and code
+$sp_sql = "SELECT MIN(id) AS id, name, code 
+           FROM scholarship_program 
+           WHERE is_archived = 0 OR name = ?
+           GROUP BY name, code 
+           ORDER BY name ASC";
+$sp_stmt =$conn->prepare($sp_sql);$sp_stmt->bind_param("s", $current_sp_name);$sp_stmt->execute();
+$sp_result =$sp_stmt->get_result();
 ?>
 <!DOCTYPE html>
 <html>
@@ -159,8 +176,8 @@ $sp_result = $conn->query($sp_sql);
                                 <option value="0" <?= $scholarship_program_id == 0 ? "selected" : "" ?>>All Scholarship Programs</option>
                                 <?php if ($sp_result &&$sp_result->num_rows > 0) : ?>
                                     <?php while($sp =$sp_result->fetch_assoc()) : ?>
-                                        <option value="<?= $sp['id'] ?>" <?= $scholarship_program_id ==$sp['id'] ? "selected" : "" ?>>
-                                            <?= htmlspecialchars($sp['name']) ?>
+                                        <option value="<?= $sp['id'] ?>" <?= ($current_sp_name !== '' && $current_sp_name ===$sp['name']) || $scholarship_program_id ==$sp['id'] ? "selected" : "" ?>>
+                                            <?= htmlspecialchars($sp['name']) ?><?= !empty($sp['code']) ? ' (' . htmlspecialchars($sp['code']) . ')' : '' ?>
                                         </option>
                                     <?php endwhile; ?>
                                 <?php endif; ?>
