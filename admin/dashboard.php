@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION[
 }
 
 // Handle School Year and Semester Filter Submission
-if (isset($_POST['set_school_year'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_POST['set_school_year'])) {
     if (isset($_POST['school_year'])) {
         setSelectedSchoolYear($_POST['school_year']);
     }
@@ -67,12 +67,13 @@ $scholarship_sql = "SELECT
                         scholarship_program.is_archived = 0 
                         AND scholarship_program.is_active = 1 
                         AND REPLACE(scholarship_program.school_year, ' ', '') = ?
+                        AND scholarship_program.semester = ?
                     GROUP BY
                         scholarship_program.id, scholarship_program.name
                     ORDER BY
                         scholar_count DESC";
 $scholarship_stmt = $conn->prepare($scholarship_sql);
-$scholarship_stmt->bind_param('sss', $clean_selected_year, $selected_sem, $clean_selected_year);
+$scholarship_stmt->bind_param('ssss', $clean_selected_year, $selected_sem, $clean_selected_year, $selected_sem);
 $scholarship_stmt->execute();
 $scholarship_result = $scholarship_stmt->get_result();
 
@@ -173,8 +174,17 @@ while ($row = $status_result->fetch_assoc()) {
 
                 <!-- School Year & Semester Selector -->
                 <form action="<?= $_SERVER['PHP_SELF'] ?>" method="POST" class="school-year-selector">
+                    <input type="hidden" name="set_school_year" value="1" />
+
+                    <div class="filter-title" style="display: flex; align-items: center; gap: 6px; font-weight: bold; margin-right: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                        <span>Filters:</span>
+                    </div>
+
                     <label for="school_year"><strong>School Year:</strong></label>
-                    <select name="school_year" id="school_year">
+                    <select name="school_year" id="school_year" onchange="this.form.submit()">
                         <?php if(!empty($available_years)) : ?>
                             <?php foreach($available_years as $year) : ?>
                                 <option value="<?= $year ?>" <?= $year == $selected_year ? 'selected' : '' ?>>
@@ -187,15 +197,13 @@ while ($row = $status_result->fetch_assoc()) {
                     </select>
 
                     <label for="semester"><strong>Semester:</strong></label>
-                    <select name="semester" id="semester">
+                    <select name="semester" id="semester" onchange="this.form.submit()">
                         <?php foreach($available_semesters as $sem) : ?>
                             <option value="<?= $sem ?>" <?= $sem == $selected_sem ? 'selected' : '' ?>>
                                 <?= $sem ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
-
-                    <button type="submit" name="set_school_year" class="btn btn-sm btn-primary">Apply</button>
                 </form>
             </div>
 
@@ -259,9 +267,6 @@ while ($row = $status_result->fetch_assoc()) {
             <div class="section-card">
                 <div class="section-card-header">
                     <h3>Scholars per Scholarship Program</h3>
-                    <!-- <a href="generate_summary_pdf.php?school_year=<?= urlencode($selected_year) ?>&semester=<?= urlencode($selected_sem) ?>" target="_blank" class="btn btn-sm btn-success">
-                        Generate Printable Report
-                    </a> -->
                 </div>
                 <div class="program-list">
                     <?php if(!empty($scholarship_data)) : ?>
