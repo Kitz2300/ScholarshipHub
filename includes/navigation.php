@@ -89,7 +89,6 @@ $promotion_pages = [
 $management_pages = array_merge(
     $announcement_pages, 
     $promotion_pages,
-    // ['program_management.php', 'account_management.php', 'staff_account.php', 'archive.php', 'audit_trail.php']
     ['program_management.php', 'account_management.php', 'staff_account.php', 'audit_trail.php']
 );
 ?>
@@ -165,8 +164,7 @@ $management_pages = array_merge(
         $can_see_management = canAccessPage($conn, $_SESSION['user_id'], 'announcements') || 
                               canAccessPage($conn, $_SESSION['user_id'], 'program_management') || 
                               canAccessPage($conn, $_SESSION['user_id'], 'promote_scholars') || 
-                              ($_SESSION['role'] ?? '') === 'admin' ||
-                              ($_SESSION['role'] ?? '') === 'staff';
+                              ($_SESSION['role'] ?? '') === 'admin';
         if($can_see_management) : 
         ?>
             <li class="dropdown">
@@ -208,13 +206,6 @@ $management_pages = array_merge(
                             <a href="<?= $staff_path ?>staff_account.php" class="<?= isActive('staff_account.php', $current_page) ?>">My Account</a>
                         </li>
                     <?php endif; ?>
-
-                    <!-- Archives
-                    <?php if(($_SESSION['role'] ?? '') === 'admin') : ?>
-                        <li>
-                            <a href="<?= $admin_path ?>archive.php" class="<?= isActive('archive.php', $current_page) ?>">Archives</a>
-                        </li>
-                    <?php endif; ?> -->
 
                     <!-- Audit Trail -->
                     <?php if(($_SESSION['role'] ?? '') === 'admin') : ?>

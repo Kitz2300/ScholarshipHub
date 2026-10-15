@@ -16,6 +16,9 @@ if ($_SESSION['role'] !== 'admin') {
     checkPageAccess($conn, $_SESSION['user_id'], 'promote_scholars');
 }
 
+// Check action permission
+$can_advance = ($_SESSION['role'] === 'admin') || hasPermission($conn, $_SESSION['user_id'], 'promote_scholars', 'advance_semester');
+
 // Fetch filter selections and target semester logic
 $program_filter = (int) ($_GET['program_id'] ?? 0);
 $school_year_filter = $_GET['school_year'] ?? getSelectedSchoolYear();
@@ -45,7 +48,7 @@ if (!empty($target_semester_get)) {
     }
 }
 
-// Fetch active scholarship programs for dropdown (Deduplicated by name & code)
+// Fetch active scholarship programs for dropdown
 $sp_sql = "SELECT MIN(id) AS id, name, code 
            FROM scholarship_program 
            WHERE is_archived = 0 
@@ -85,7 +88,7 @@ if (!empty($semester_filter)) {
 
 $where_sql = implode(" AND ", $where_clauses);
 
-// Joined academic_performance & check that ONLY the scholar's LATEST OVERALL active record is selected
+// Joined academic_performance query
 $scholars_sql = "SELECT 
                     si.id AS scholar_id,
                     si.student_id,
@@ -168,7 +171,6 @@ while ($row = $scholars_result->fetch_assoc()) {
 }
 $stmt->close();
 
-// Sort scholars: Eligible at top first, then secondary sort by Scholarship Program and Last Name
 usort($scholars_list, function($a, $b) {
     if ($a['is_eligible'] !== $b['is_eligible']) {
         return $b['is_eligible'] <=> $a['is_eligible'];
@@ -204,12 +206,8 @@ usort($scholars_list, function($a, $b) {
 
             <!-- Sub-Navigation Tabs -->
             <div class="promotion-tabs">
-                <a href="promote_scholars.php" class="tab-link">
-                    Year-Level Promotion
-                </a>
-                <a href="term_advancement.php" class="tab-link active">
-                    Term / Semester Advancement
-                </a>
+                <a href="promote_scholars.php" class="tab-link">Year-Level Promotion</a>
+                <a href="term_advancement.php" class="tab-link active">Term / Semester Advancement</a>
             </div>
 
             <!-- Filter & Search Card -->
@@ -219,11 +217,7 @@ usort($scholars_list, function($a, $b) {
 
                     <div class="form-group search-group">
                         <label for="searchQuery">Search Scholar</label>
-                        <input type="text" 
-                               id="searchQuery" 
-                               placeholder="Search by Scholar Name or Student ID..." 
-                               onkeyup="filterScholarsTable()" 
-                               autocomplete="off">
+                        <input type="text" id="searchQuery" placeholder="Search by Scholar Name or Student ID..." onkeyup="filterScholarsTable()" autocomplete="off">
                     </div>
 
                     <div class="form-group">
@@ -244,9 +238,7 @@ usort($scholars_list, function($a, $b) {
                         <label for="school_year">Current School Year</label>
                         <select name="school_year" id="school_year" onchange="this.form.submit()">
                             <?php foreach ($available_years as $yr) : ?>
-                                <option value="<?= $yr ?>" <?= $school_year_filter == $yr ? 'selected' : '' ?>>
-                                    <?= $yr ?>
-                                </option>
+                                <option value="<?= $yr ?>" <?= $school_year_filter == $yr ? 'selected' : '' ?>><?= $yr ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -255,9 +247,7 @@ usort($scholars_list, function($a, $b) {
                         <label for="semester">Current Semester</label>
                         <select name="semester" id="semester" onchange="handleCurrentSemesterChange(this)">
                             <?php foreach ($available_semesters as $sem) : ?>
-                                <option value="<?= $sem ?>" <?= $semester_filter == $sem ? 'selected' : '' ?>>
-                                    <?= $sem ?>
-                                </option>
+                                <option value="<?= $sem ?>" <?= $semester_filter == $sem ? 'selected' : '' ?>><?= $sem ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -267,7 +257,6 @@ usort($scholars_list, function($a, $b) {
             <!-- Term Advancement Form -->
             <form action="../functions/admin/term_advancement_process.php" method="POST" id="termForm" onsubmit="return confirmTermAdvancement(event)">
 
-                <!-- Target Term Config Bar -->
                 <div class="target-term-card">
                     <div class="target-term-title">
                         <strong>Select Target Term for Selected Scholars:</strong>
@@ -277,9 +266,7 @@ usort($scholars_list, function($a, $b) {
                             <label for="target_school_year">Target School Year:</label>
                             <select name="target_school_year" id="target_school_year" required onchange="updateTargetPreview()">
                                 <?php foreach ($available_years as $yr) : ?>
-                                    <option value="<?= $yr ?>" <?= $school_year_filter == $yr ? 'selected' : '' ?>>
-                                        <?= $yr ?>
-                                    </option>
+                                    <option value="<?= $yr ?>" <?= $school_year_filter == $yr ? 'selected' : '' ?>><?= $yr ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -309,11 +296,15 @@ usort($scholars_list, function($a, $b) {
                         <?php if (($ineligible_count - $already_advanced_count) > 0) : ?>
                             <span class="stat-badge stat-ineligible">Missing GWA: <?= ($ineligible_count - $already_advanced_count) ?></span>
                         <?php endif; ?>
-                        <button type="submit" name="advance_term" class="btn btn-success" disabled>Advance Term</button>
+
+                        <?php if ($can_advance): ?>
+                            <button type="submit" name="advance_term" class="btn btn-success" disabled>Advance Term</button>
+                        <?php else: ?>
+                            <button type="button" class="btn btn-success" disabled title="You do not have permission to advance semesters.">Advance Term</button>
+                        <?php endif; ?>
                     </div>
                 </div>
 
-                <!-- Fixed-Height & Scrollable Table Wrapper -->
                 <div class="table-wrapper">
                     <table class="promotion-table">
                         <thead>
@@ -362,7 +353,7 @@ usort($scholars_list, function($a, $b) {
                                                    value="<?= $scholar_id ?>" 
                                                    class="scholar-checkbox"
                                                    data-eligible="<?= $is_eligible ? '1' : '0' ?>"
-                                                   <?= !$is_eligible ? 'disabled' : '' ?>
+                                                   <?= (!$is_eligible || !$can_advance) ? 'disabled' : '' ?>
                                                    onchange="updateMasterCheckboxState()">
                                         </td>
                                         <td>
@@ -532,7 +523,6 @@ usort($scholars_list, function($a, $b) {
         return confirmAction(event, msg, 'Confirm Term Advancement', 'primary');
     }
 
-    // Initialize state
     updateTargetPreview();
     updateMasterCheckboxState();
     </script>

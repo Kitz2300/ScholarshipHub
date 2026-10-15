@@ -9,17 +9,19 @@ function getPageDefinitions() {
         'import_export' => 'Import / Export',
         'announcements' => 'Announcements',
         'program_management' => 'Program & College Management',
+        'promote_scholars' => 'Promote Scholars & Term Advancement'
     ];
 }
 
 // ─── Available actions per page ───
 function getAvailableActions($page = null) {
     $all_actions = [
-        'scholars' => ['add', 'edit', 'notes', 'GWA & units', 'archive'],
+        'scholars' => ['add', 'edit', 'notes', 'GWA & units'], // Removed 'archive' scholar permission
         'scholarship_programs' => ['add', 'edit', 'archive'],
         'import_export' => ['import', 'export'],
         'announcements' => ['add', 'edit', 'status', 'delete'],
         'program_management' => ['add', 'edit', 'delete'],
+        'promote_scholars' => ['promote_year_level', 'advance_semester']
     ];
     return $page ? ($all_actions[$page] ?? []) : $all_actions;
 }
@@ -116,6 +118,7 @@ function renderPermissionsTable($existing_perms = []) {
                         <div class="action-checkboxes">
                             <?php foreach($available as $action) : 
                                 $checked = isset($existing_perms[$page_key]) && in_array($action, $existing_perms[$page_key]);
+                                $action_label = str_replace('_', ' ', $action);
                             ?>
                                 <label>
                                     <input type="checkbox" 
@@ -126,7 +129,7 @@ function renderPermissionsTable($existing_perms = []) {
                                            value="<?= $action ?>"
                                            <?= $checked ? 'checked' : '' ?>
                                            <?= $view_checked ? '' : 'disabled' ?>>
-                                    <?= ucfirst($action) ?>
+                                    <?= ucwords($action_label) ?>
                                 </label>
                             <?php endforeach; ?>
                         </div>

@@ -5,7 +5,7 @@ session_start();
 
 include __DIR__ . "/../includes/school_year_helper.php";
 
-// Helper function to calculate next school year (e.g. "2025 - 2026" -> "2026 - 2027")
+// Helper function to calculate next school year
 function getNextSchoolYear($sy) {
     $parts = explode('-', str_replace(' ', '', $sy));
     if (count($parts) === 2 && is_numeric($parts[0]) && is_numeric($parts[1])) {
@@ -25,6 +25,9 @@ if ($_SESSION['role'] !== 'admin') {
     checkPageAccess($conn, $_SESSION['user_id'], 'promote_scholars');
 }
 
+// Check action permission
+$can_promote = ($_SESSION['role'] === 'admin') || hasPermission($conn, $_SESSION['user_id'], 'promote_scholars', 'promote_year_level');
+
 // Fetch filter selections
 $program_filter = (int) ($_GET['program_id'] ?? 0);
 $year_filter = $_GET['year_level'] ?? '0';
@@ -33,7 +36,7 @@ $school_year_filter = $_GET['school_year'] ?? getSelectedSchoolYear();
 $next_school_year = getNextSchoolYear($school_year_filter);
 $available_years = getAvailableSchoolYears($conn);
 
-// Fetch active scholarship programs for dropdown (Deduplicated by name & code)
+// Fetch active scholarship programs for dropdown
 $sp_sql = "SELECT MIN(id) AS id, name, code 
            FROM scholarship_program 
            WHERE is_archived = 0 
@@ -167,7 +170,6 @@ while ($row = $scholars_result->fetch_assoc()) {
     $row['status_reason'] = $status_reason;
     $row['badge_class'] = $badge_class;
     
-    // Format display for current year level
     if (in_array($curr_yl_raw, ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Irregular'])) {
         $row['display_year_level'] = $curr_yl_raw;
     } else {
@@ -179,11 +181,9 @@ while ($row = $scholars_result->fetch_assoc()) {
         };
     }
 
-    // Flag if scholar is in 4th year to render dropdown selector
     $is_4th_year = ($curr_yl_raw === '4th Year' || $curr_yl_raw === '4' || (is_numeric($curr_yl_raw) && (int)$curr_yl_raw >= 4));
     $row['is_4th_year'] = $is_4th_year;
 
-    // Determine target standing description for standard years
     if ($curr_yl_raw === '1st Year' || $curr_yl_raw === '1') {
         $row['target_standing'] = "2nd Year ($next_school_year)";
     } elseif ($curr_yl_raw === '2nd Year' || $curr_yl_raw === '2') {
@@ -199,7 +199,6 @@ while ($row = $scholars_result->fetch_assoc()) {
     $scholars_list[] = $row;
 }
 
-// Sort scholars: Eligible at top first, then secondary sort by Scholarship Program and Last Name
 usort($scholars_list, function($a, $b) {
     if ($a['is_eligible'] !== $b['is_eligible']) {
         return $b['is_eligible'] <=> $a['is_eligible'];
@@ -232,32 +231,22 @@ usort($scholars_list, function($a, $b) {
             </div>
 
             <div class="promotion-tabs">
-                <a href="promote_scholars.php" class="tab-link active">
-                    Year-Level Promotion
-                </a>
-                <a href="term_advancement.php" class="tab-link">
-                    Term / Semester Advancement
-                </a>
+                <a href="promote_scholars.php" class="tab-link active">Year-Level Promotion</a>
+                <a href="term_advancement.php" class="tab-link">Term / Semester Advancement</a>
             </div>
 
             <div class="filter-card">
                 <form method="GET" action="<?= $_SERVER['PHP_SELF'] ?>" class="filter-form">
                     <div class="form-group search-group">
                         <label for="searchQuery">Search Scholar</label>
-                        <input type="text" 
-                               id="searchQuery" 
-                               placeholder="Search by Scholar Name or Student ID..." 
-                               onkeyup="filterScholarsTable()" 
-                               autocomplete="off">
+                        <input type="text" id="searchQuery" placeholder="Search by Scholar Name or Student ID..." onkeyup="filterScholarsTable()" autocomplete="off">
                     </div>
 
                     <div class="form-group">
                         <label for="school_year">Current School Year</label>
                         <select name="school_year" id="school_year" onchange="this.form.submit()">
                             <?php foreach ($available_years as $yr) : ?>
-                                <option value="<?= $yr ?>" <?= $school_year_filter == $yr ? 'selected' : '' ?>>
-                                    <?= $yr ?>
-                                </option>
+                                <option value="<?= $yr ?>" <?= $school_year_filter == $yr ? 'selected' : '' ?>><?= $yr ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -300,7 +289,12 @@ usort($scholars_list, function($a, $b) {
                     <div class="toolbar-right">
                         <span class="stat-badge stat-eligible">Eligible: <?= $total_eligible ?></span>
                         <span class="stat-badge stat-ineligible">Ineligible: <?= $total_ineligible ?></span>
-                        <button type="submit" name="promote" class="btn btn-success" disabled>Promote Scholar/s</button>
+                        
+                        <?php if ($can_promote): ?>
+                            <button type="submit" name="promote" class="btn btn-success" disabled>Promote Scholar/s</button>
+                        <?php else: ?>
+                            <button type="button" class="btn btn-success" disabled title="You do not have permission to promote year levels.">Promote Scholar/s</button>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -338,7 +332,7 @@ usort($scholars_list, function($a, $b) {
                                                    data-eligible="<?= $is_eligible ? '1' : '0' ?>"
                                                    data-name="<?= $full_name ?>"
                                                    data-reason="<?= htmlspecialchars($scholar['status_reason']) ?>"
-                                                   <?= !$is_eligible ? 'disabled' : '' ?>
+                                                   <?= (!$is_eligible || !$can_promote) ? 'disabled' : '' ?>
                                                    onchange="updateMasterCheckboxState()">
                                         </td>
                                         <td>
