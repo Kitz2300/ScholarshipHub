@@ -265,8 +265,11 @@ while ($row = $status_result->fetch_assoc()) {
 
             <!-- Scholars per Scholarship Program -->
             <div class="section-card">
-                <div class="section-card-header">
-                    <h3>Scholars per Scholarship Program</h3>
+                <div class="section-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0;">Scholars per Scholarship Program</h3>
+                    <a href="generate_summary_pdf.php?school_year=<?= urlencode($selected_year) ?>&semester=<?= urlencode($selected_sem) ?>" class="btn btn-sm btn-success" target="_blank" style="text-decoration: none;">
+                        Generate Report
+                    </a>
                 </div>
                 <div class="program-list">
                     <?php if(!empty($scholarship_data)) : ?>
@@ -300,7 +303,12 @@ while ($row = $status_result->fetch_assoc()) {
 
             <!-- Status Breakdown -->
             <div class="section-card">
-                <h3>Scholars by Status</h3>
+                <div class="section-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0;">Scholars by Status</h3>
+                    <a href="generate_status_pdf.php?school_year=<?= urlencode($selected_year) ?>&semester=<?= urlencode($selected_sem) ?>" class="btn btn-sm btn-success" target="_blank" style="text-decoration: none;">
+                        Generate Report
+                    </a>
+                </div>
                 <div class="status-grid">
                     <?php if(!empty($status_data)) :?>
                         <?php foreach($status_data as $status) : ?>
