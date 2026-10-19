@@ -12,12 +12,23 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION[
     exit();
 }
 
-if ($_SESSION['role'] !== 'admin') {
-    checkPageAccess($conn, $_SESSION['user_id'], 'promote_scholars');
+$user_id = $_SESSION['user_id'];
+
+// Check separated page view permissions
+$can_access_promote = canAccessPage($conn, $user_id, 'promote_scholars');
+$can_access_term    = canAccessPage($conn, $user_id, 'term_advancement');
+
+// If staff has no access to term advancement but has access to promote scholars, redirect them
+if (!$can_access_term && $can_access_promote) {
+    header("Location: promote_scholars.php");
+    exit();
 }
 
-// Check action permission
-$can_advance = ($_SESSION['role'] === 'admin') || hasPermission($conn, $_SESSION['user_id'], 'promote_scholars', 'advance_semester');
+// Ensure staff has permission to view this page
+checkPageAccess($conn, $user_id, 'term_advancement');
+
+// Action permission check
+$can_advance = ($_SESSION['role'] === 'admin') || hasPermission($conn, $user_id, 'term_advancement', 'advance_semester');
 
 // Fetch filter selections and target semester logic
 $program_filter = (int) ($_GET['program_id'] ?? 0);
@@ -204,11 +215,13 @@ usort($scholars_list, function($a, $b) {
                 <h2>Scholar Promotion & Term Management</h2>
             </div>
 
-            <!-- Sub-Navigation Tabs -->
-            <div class="promotion-tabs">
-                <a href="promote_scholars.php" class="tab-link">Year-Level Promotion</a>
-                <a href="term_advancement.php" class="tab-link active">Term / Semester Advancement</a>
-            </div>
+            <!-- Sub-Navigation Tabs (Only shown if user has access to BOTH pages) -->
+            <?php if ($can_access_promote && $can_access_term): ?>
+                <div class="promotion-tabs">
+                    <a href="promote_scholars.php" class="tab-link">Year-Level Promotion</a>
+                    <a href="term_advancement.php" class="tab-link active">Term / Semester Advancement</a>
+                </div>
+            <?php endif; ?>
 
             <!-- Filter & Search Card -->
             <div class="filter-card">
@@ -264,7 +277,7 @@ usort($scholars_list, function($a, $b) {
                     <div class="target-term-controls">
                         <div class="target-group">
                             <label for="target_school_year">Target School Year:</label>
-                            <select name="target_school_year" id="target_school_year" required onchange="updateTargetPreview()">
+                            <select name="target_school_year" id="target_school_year" required onchange="updateTargetPreview()" <?= !$can_advance ? 'disabled' : '' ?>>
                                 <?php foreach ($available_years as $yr) : ?>
                                     <option value="<?= $yr ?>" <?= $school_year_filter == $yr ? 'selected' : '' ?>><?= $yr ?></option>
                                 <?php endforeach; ?>
@@ -273,7 +286,7 @@ usort($scholars_list, function($a, $b) {
 
                         <div class="target-group">
                             <label for="target_semester">Target Semester:</label>
-                            <select name="target_semester" id="target_semester" required onchange="handleTargetSemesterChange(this)">
+                            <select name="target_semester" id="target_semester" required onchange="handleTargetSemesterChange(this)" <?= !$can_advance ? 'disabled' : '' ?>>
                                 <option value="1st Semester" <?= $target_semester == '1st Semester' ? 'selected' : '' ?>>1st Semester</option>
                                 <option value="2nd Semester" <?= $target_semester == '2nd Semester' ? 'selected' : '' ?>>2nd Semester</option>
                                 <option value="Summer" <?= $target_semester == 'Summer' ? 'selected' : '' ?>>Summer</option>
@@ -284,9 +297,9 @@ usort($scholars_list, function($a, $b) {
 
                 <div class="table-toolbar">
                     <div class="toolbar-left">
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="selectAll()">Select All</button>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="selectEligibleOnly()">Select All Eligible</button>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="deselectAll()">Deselect All</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="selectAll()" <?= !$can_advance ? 'disabled' : '' ?>>Select All</button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="selectEligibleOnly()" <?= !$can_advance ? 'disabled' : '' ?>>Select All Eligible</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="deselectAll()" <?= !$can_advance ? 'disabled' : '' ?>>Deselect All</button>
                     </div>
                     <div class="toolbar-right">
                         <span class="stat-badge stat-eligible">Eligible: <?= $eligible_count ?></span>
@@ -297,11 +310,9 @@ usort($scholars_list, function($a, $b) {
                             <span class="stat-badge stat-ineligible">Missing GWA: <?= ($ineligible_count - $already_advanced_count) ?></span>
                         <?php endif; ?>
 
-                        <?php if ($can_advance): ?>
-                            <button type="submit" name="advance_term" class="btn btn-success" disabled>Advance Term</button>
-                        <?php else: ?>
-                            <button type="button" class="btn btn-success" disabled title="You do not have permission to advance semesters.">Advance Term</button>
-                        <?php endif; ?>
+                        <button type="submit" name="advance_term" id="advanceBtn" class="btn btn-success" disabled <?= !$can_advance ? 'title="You do not have permission to advance semesters."' : '' ?>>
+                            Advance Term
+                        </button>
                     </div>
                 </div>
 
@@ -310,7 +321,7 @@ usort($scholars_list, function($a, $b) {
                         <thead>
                             <tr>
                                 <th style="width: 40px; text-align: center;">
-                                    <input type="checkbox" id="masterCheckbox" onclick="toggleMasterCheckbox(this)">
+                                    <input type="checkbox" id="masterCheckbox" onclick="toggleMasterCheckbox(this)" <?= !$can_advance ? 'disabled' : '' ?>>
                                 </th>
                                 <th>Student ID & Name</th>
                                 <th>Program / Course</th>
@@ -407,6 +418,8 @@ usort($scholars_list, function($a, $b) {
     </div>
 
     <script>
+    const CAN_ADVANCE = <?= $can_advance ? 'true' : 'false' ?>;
+
     function handleTargetSemesterChange(selectElem) {
         const targetVal = selectElem.value;
         document.getElementById('hidden_target_semester').value = targetVal;
@@ -464,18 +477,21 @@ usort($scholars_list, function($a, $b) {
     }
 
     function toggleMasterCheckbox(master) {
+        if (!CAN_ADVANCE) return;
         const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)');
         visibleCheckboxes.forEach(cb => cb.checked = master.checked);
         updateMasterCheckboxState();
     }
 
     function selectAll() {
+        if (!CAN_ADVANCE) return;
         const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)');
         visibleCheckboxes.forEach(cb => cb.checked = true);
         updateMasterCheckboxState();
     }
 
     function selectEligibleOnly() {
+        if (!CAN_ADVANCE) return;
         const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)');
         visibleCheckboxes.forEach(cb => {
             cb.checked = (cb.getAttribute('data-eligible') === '1');
@@ -484,24 +500,34 @@ usort($scholars_list, function($a, $b) {
     }
 
     function deselectAll() {
+        if (!CAN_ADVANCE) return;
         const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox');
         visibleCheckboxes.forEach(cb => cb.checked = false);
-        document.getElementById('masterCheckbox').checked = false;
+        const masterCb = document.getElementById('masterCheckbox');
+        if (masterCb) masterCb.checked = false;
         updateMasterCheckboxState();
     }
 
     function updateMasterCheckboxState() {
+        const advanceBtn = document.getElementById('advanceBtn');
+
+        if (!CAN_ADVANCE) {
+            if (advanceBtn) advanceBtn.disabled = true;
+            return;
+        }
+
         const visibleCheckboxes = Array.from(document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)'));
         const checkedCheckboxes = visibleCheckboxes.filter(cb => cb.checked);
 
         const masterCb = document.getElementById('masterCheckbox');
-        if (visibleCheckboxes.length === 0) {
-            masterCb.checked = false;
-        } else {
-            masterCb.checked = (checkedCheckboxes.length === visibleCheckboxes.length && visibleCheckboxes.length > 0);
+        if (masterCb) {
+            if (visibleCheckboxes.length === 0) {
+                masterCb.checked = false;
+            } else {
+                masterCb.checked = (checkedCheckboxes.length === visibleCheckboxes.length && visibleCheckboxes.length > 0);
+            }
         }
 
-        const advanceBtn = document.querySelector('button[name="advance_term"]');
         if (advanceBtn) {
             const totalChecked = document.querySelectorAll('.scholar-checkbox:checked:not(:disabled)').length;
             advanceBtn.disabled = (totalChecked === 0);
@@ -509,6 +535,11 @@ usort($scholars_list, function($a, $b) {
     }
 
     function confirmTermAdvancement(event) {
+        if (!CAN_ADVANCE) {
+            event.preventDefault();
+            return false;
+        }
+
         const selected = Array.from(document.querySelectorAll('.scholar-checkbox:checked:not(:disabled)'));
         if (selected.length === 0) {
             alert("Please select at least one eligible scholar to advance.");

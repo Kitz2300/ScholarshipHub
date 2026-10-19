@@ -21,12 +21,23 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION[
     exit();
 }
 
-if ($_SESSION['role'] !== 'admin') {
-    checkPageAccess($conn, $_SESSION['user_id'], 'promote_scholars');
+$user_id = $_SESSION['user_id'];
+
+// Check separated page view permissions
+$can_access_promote = canAccessPage($conn, $user_id, 'promote_scholars');
+$can_access_term    = canAccessPage($conn, $user_id, 'term_advancement');
+
+// If staff has no access to promote scholars but has access to term advancement, redirect them
+if (!$can_access_promote && $can_access_term) {
+    header("Location: term_advancement.php");
+    exit();
 }
 
-// Check action permission
-$can_promote = ($_SESSION['role'] === 'admin') || hasPermission($conn, $_SESSION['user_id'], 'promote_scholars', 'promote_year_level');
+// Ensure staff has permission to view this page
+checkPageAccess($conn, $user_id, 'promote_scholars');
+
+// Action permission check
+$can_promote = ($_SESSION['role'] === 'admin') || hasPermission($conn, $user_id, 'promote_scholars', 'promote_year_level');
 
 // Fetch filter selections
 $program_filter = (int) ($_GET['program_id'] ?? 0);
@@ -230,10 +241,13 @@ usort($scholars_list, function($a, $b) {
                 <h2>Batch Year-Level Promotion</h2>
             </div>
 
-            <div class="promotion-tabs">
-                <a href="promote_scholars.php" class="tab-link active">Year-Level Promotion</a>
-                <a href="term_advancement.php" class="tab-link">Term / Semester Advancement</a>
-            </div>
+            <!-- Sub-Navigation Tabs (Only shown if user has access to BOTH pages) -->
+            <?php if ($can_access_promote && $can_access_term): ?>
+                <div class="promotion-tabs">
+                    <a href="promote_scholars.php" class="tab-link active">Year-Level Promotion</a>
+                    <a href="term_advancement.php" class="tab-link">Term / Semester Advancement</a>
+                </div>
+            <?php endif; ?>
 
             <div class="filter-card">
                 <form method="GET" action="<?= $_SERVER['PHP_SELF'] ?>" class="filter-form">
@@ -282,19 +296,17 @@ usort($scholars_list, function($a, $b) {
             <form action="../functions/admin/promote_scholars_process.php" method="POST" id="promotionForm" onsubmit="return confirmPromotion(event)">
                 <div class="table-toolbar">
                     <div class="toolbar-left">
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="selectAll()">Select All</button>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="selectEligibleOnly()">Select Eligible Only</button>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="deselectAll()">Deselect All</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="selectAll()" <?= !$can_promote ? 'disabled' : '' ?>>Select All</button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="selectEligibleOnly()" <?= !$can_promote ? 'disabled' : '' ?>>Select Eligible Only</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="deselectAll()" <?= !$can_promote ? 'disabled' : '' ?>>Deselect All</button>
                     </div>
                     <div class="toolbar-right">
                         <span class="stat-badge stat-eligible">Eligible: <?= $total_eligible ?></span>
                         <span class="stat-badge stat-ineligible">Ineligible: <?= $total_ineligible ?></span>
                         
-                        <?php if ($can_promote): ?>
-                            <button type="submit" name="promote" class="btn btn-success" disabled>Promote Scholar/s</button>
-                        <?php else: ?>
-                            <button type="button" class="btn btn-success" disabled title="You do not have permission to promote year levels.">Promote Scholar/s</button>
-                        <?php endif; ?>
+                        <button type="submit" name="promote" id="promoteBtn" class="btn btn-success" disabled <?= !$can_promote ? 'title="You do not have permission to promote year levels."' : '' ?>>
+                            Promote Scholar/s
+                        </button>
                     </div>
                 </div>
 
@@ -303,7 +315,7 @@ usort($scholars_list, function($a, $b) {
                         <thead>
                             <tr>
                                 <th style="width: 40px; text-align: center;">
-                                    <input type="checkbox" id="masterCheckbox" onclick="toggleMasterCheckbox(this)">
+                                    <input type="checkbox" id="masterCheckbox" onclick="toggleMasterCheckbox(this)" <?= !$can_promote ? 'disabled' : '' ?>>
                                 </th>
                                 <th>Student ID & Name</th>
                                 <th>Program / Course</th>
@@ -345,6 +357,7 @@ usort($scholars_list, function($a, $b) {
                                         <td>
                                             <?php if ($scholar['is_4th_year']) : ?>
                                                 <select name="target_standing_choice[<?= $scholar_id ?>]" 
+                                                        <?= !$can_promote ? 'disabled' : '' ?>
                                                         style="padding: 5px 8px; border-radius: 6px; border: 1px solid #2a6b37; font-weight: 600; color: #1e4628; background-color: #f4fbf5; cursor: pointer;">
                                                     <option value="Graduated">Graduated (SY <?= $next_school_year ?>)</option>
                                                     <option value="Irregular">Irregular (SY <?= $next_school_year ?>)</option>
@@ -377,6 +390,8 @@ usort($scholars_list, function($a, $b) {
     </div>
 
     <script>
+    const CAN_PROMOTE = <?= $can_promote ? 'true' : 'false' ?>;
+
     function filterScholarsTable() {
         const query = document.getElementById('searchQuery').value.toLowerCase().trim();
         const rows = document.querySelectorAll('.promotion-table tbody tr.scholar-row');
@@ -394,18 +409,21 @@ usort($scholars_list, function($a, $b) {
     }
 
     function toggleMasterCheckbox(master) {
+        if (!CAN_PROMOTE) return;
         const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)');
         visibleCheckboxes.forEach(cb => cb.checked = master.checked);
         updateMasterCheckboxState();
     }
 
     function selectAll() {
+        if (!CAN_PROMOTE) return;
         const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)');
         visibleCheckboxes.forEach(cb => cb.checked = true);
         updateMasterCheckboxState();
     }
 
     function selectEligibleOnly() {
+        if (!CAN_PROMOTE) return;
         const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)');
         visibleCheckboxes.forEach(cb => {
             cb.checked = (cb.getAttribute('data-eligible') === '1');
@@ -414,24 +432,34 @@ usort($scholars_list, function($a, $b) {
     }
 
     function deselectAll() {
+        if (!CAN_PROMOTE) return;
         const visibleCheckboxes = document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox');
         visibleCheckboxes.forEach(cb => cb.checked = false);
-        document.getElementById('masterCheckbox').checked = false;
+        const masterCb = document.getElementById('masterCheckbox');
+        if (masterCb) masterCb.checked = false;
         updateMasterCheckboxState();
     }
 
     function updateMasterCheckboxState() {
+        const promoteBtn = document.getElementById('promoteBtn');
+
+        if (!CAN_PROMOTE) {
+            if (promoteBtn) promoteBtn.disabled = true;
+            return;
+        }
+
         const visibleCheckboxes = Array.from(document.querySelectorAll('.promotion-table tbody tr.scholar-row:not([style*="display: none"]) .scholar-checkbox:not(:disabled)'));
         const checkedCheckboxes = visibleCheckboxes.filter(cb => cb.checked);
 
         const masterCb = document.getElementById('masterCheckbox');
-        if (visibleCheckboxes.length === 0) {
-            masterCb.checked = false;
-        } else {
-            masterCb.checked = (checkedCheckboxes.length === visibleCheckboxes.length && visibleCheckboxes.length > 0);
+        if (masterCb) {
+            if (visibleCheckboxes.length === 0) {
+                masterCb.checked = false;
+            } else {
+                masterCb.checked = (checkedCheckboxes.length === visibleCheckboxes.length && visibleCheckboxes.length > 0);
+            }
         }
 
-        const promoteBtn = document.querySelector('button[name="promote"]');
         if (promoteBtn) {
             const totalChecked = document.querySelectorAll('.scholar-checkbox:checked:not(:disabled)').length;
             promoteBtn.disabled = (totalChecked === 0);
@@ -439,6 +467,11 @@ usort($scholars_list, function($a, $b) {
     }
 
     function confirmPromotion(event) {
+        if (!CAN_PROMOTE) {
+            event.preventDefault();
+            return false;
+        }
+
         const selected = Array.from(document.querySelectorAll('.scholar-checkbox:checked:not(:disabled)'));
         if (selected.length === 0) {
             showToast("Please select at least one scholar to promote.", "warning", 4000, "Selection Required");
