@@ -39,13 +39,14 @@ if ($sc_type === 'Other' && !empty($_POST['sc_type_other'])) {
     $sc_type = trim($_POST['sc_type_other']);
 }
 
-if (!empty($name) && !empty($code) && !empty($school_year) && !empty($semester) && $provider_id > 0 && !empty($sc_type)) {
+// Code is optional
+if (!empty($name) && !empty($school_year) && !empty($semester) && $provider_id > 0 && !empty($sc_type)) {
     
     // 1. Check for Duplicate Program in Target Term (School Year & Semester)
     $clean_school_year = str_replace(' ', '', $school_year);
     $check_dup_sql = "SELECT id FROM scholarship_program 
                       WHERE id != ? 
-                      AND (name = ? OR code = ?) 
+                      AND (name = ? OR (code != '' AND code = ?)) 
                       AND REPLACE(school_year, ' ', '') = ? 
                       AND semester = ? 
                       AND is_archived = 0";

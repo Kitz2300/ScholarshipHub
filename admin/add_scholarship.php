@@ -56,8 +56,8 @@ $providers_result = $conn->query($providers_sql);
                                 <input type="text" name="name" id="name" placeholder="Enter scholarship name" required/>
                             </div>
                             <div class="form-group">
-                                <label for="code">Scholarship Code <span class="required">*</span></label>
-                                <input type="text" name="code" id="code" placeholder="e.g., DOST-SEI" required/>
+                                <label for="code">Scholarship Code</label>
+                                <input type="text" name="code" id="code" placeholder="e.g., DOST-SEI"/>
                             </div>
                             <div class="form-group">
                                 <label for="start_year">School Year <span class="required">*</span></label>
@@ -65,7 +65,7 @@ $providers_result = $conn->query($providers_sql);
                                     <select name="start_year" id="start_year" required>
                                         <?php 
                                         $current_y = (int) date('Y');
-                                        for ($y = $current_y - 5; $y <= $current_y; $y++) : 
+                                        for ($y = $current_y - 5; $y <= $current_y + 5; $y++) : 
                                         ?>
                                             <option value="<?= $y ?>" <?= $y === $current_y ? 'selected' : '' ?>><?= $y ?></option>
                                         <?php endfor; ?>

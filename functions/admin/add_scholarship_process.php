@@ -15,7 +15,7 @@ if ($_SESSION['role'] !== 'admin' && !hasPermission($conn, $_SESSION['user_id'],
     exit();
 }
 
-$required_fields = ['name', 'code', 'start_year', 'semester', 'provider_id', 'sc_type', 'pay_amount'];
+$required_fields = ['name', 'start_year', 'semester', 'provider_id', 'sc_type', 'pay_amount'];
 $missing_fields = [];
 
 foreach ($required_fields as $field) {
@@ -31,7 +31,7 @@ if (!empty($missing_fields)) {
 }
 
 $name = trim($_POST['name']);
-$code = trim($_POST['code']);
+$code = !empty($_POST['code']) ? trim($_POST['code']) : '';
 $start_year = (int) $_POST['start_year'];
 $end_year = !empty($_POST['end_year']) ? (int) $_POST['end_year'] : ($start_year + 1);
 $school_year = $start_year . ' - ' . $end_year;
@@ -72,7 +72,7 @@ $stmt->bind_param('ssssissdd', $name, $code, $school_year, $semester, $provider_
 if ($stmt->execute()) {
     // ========== AUDIT TRAIL LOGGING ==========
     $user_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 0;
-    $action = "Added scholarship program: $name ($code) for SY $school_year ($semester)";
+    $action = "Added scholarship program: $name for SY $school_year ($semester)";
 
     $audit_sql = "INSERT INTO audit_trail (user_id, action) VALUES (?, ?)";
     $audit_stmt = $conn->prepare($audit_sql);

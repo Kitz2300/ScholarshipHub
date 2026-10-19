@@ -123,8 +123,8 @@ $has_gwa = ($gwa_req > 0);
                                 <input type="text" name="name" id="name" value="<?= htmlspecialchars($name) ?>" required/>
                             </div>
                             <div class="form-group">
-                                <label for="code">Scholarship Code <span class="required">*</span></label>
-                                <input type="text" name="code" id="code" value="<?= htmlspecialchars($code) ?>" required/>
+                                <label for="code">Scholarship Code</label>
+                                <input type="text" name="code" id="code" value="<?= htmlspecialchars($code) ?>"/>
                             </div>
                             <div class="form-group">
                                 <label for="start_year">School Year <span class="required">*</span></label>
@@ -133,7 +133,7 @@ $has_gwa = ($gwa_req > 0);
                                         <?php 
                                         $current_y = (int) date('Y');
                                         $min_y = min($current_y - 5, (int)$start_year);
-                                        $max_y = $current_y;
+                                        $max_y = max($current_y + 5, (int)$start_year);
                                         for ($y = $min_y; $y <= $max_y; $y++) : 
                                         ?>
                                             <option value="<?= $y ?>" <?= (int)$start_year === $y ? "selected" : "" ?>><?= $y ?></option>
