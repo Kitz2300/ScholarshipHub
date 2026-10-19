@@ -24,7 +24,7 @@ if ($provider_id <= 0) {
 // Process Form Submission
 if (isset($_POST['update_provider'])) {
     $name = trim($_POST['name']);
-    $code = trim($_POST['code']);
+    $code = trim($_POST['code'] ?? '');
     $provider_type = trim($_POST['provider_type']);
     
     // Override provider_type with custom input if 'Other' is selected
@@ -36,7 +36,7 @@ if (isset($_POST['update_provider'])) {
     $email = trim($_POST['email']);
     $contact_num = trim($_POST['contact_num']);
 
-    if (!empty($name) && !empty($code) && !empty($provider_type)) {
+    if (!empty($name) && !empty($provider_type)) {
         $update_sql = "UPDATE providers SET name = ?, code = ?, provider_type = ?, contact_person = ?, email = ?, contact_num = ? WHERE id = ?";
         $stmt = $conn->prepare($update_sql);
         $stmt->bind_param('ssssssi', $name, $code, $provider_type, $contact_person, $email, $contact_num, $provider_id);
@@ -82,13 +82,13 @@ $is_other_type = !in_array($current_type, $standard_types);
     <link rel="stylesheet" href="../assets/css/form.css?v=<?= filemtime('../assets/css/form.css') ?>">
     <link rel="stylesheet" href="../assets/css/modals.css?v=<?= filemtime('../assets/css/modals.css') ?>">
     <link rel="icon" href="../assets/images/PIT%20LOGO.png">
-    <script src="../assets/js/disable_button.js"></script>s
+    <script src="../assets/js/disable_button.js"></script>
 </head>
 <body>
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
 
     <?php if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : 
-        $_SESSION['fail'] = "You are no logged in!";
+        $_SESSION['fail'] = "You are not logged in!";
         header("Location: ../portal.php");
         exit();    
     else : ?>
@@ -99,7 +99,7 @@ $is_other_type = !in_array($current_type, $standard_types);
             <!-- Page Content -->
             <div class="page-content">
                 <div class="page-header">
-                    <h2>Edit Funding Provider / <?= htmlspecialchars($provider['code']) ?></h2>
+                    <h2>Edit Funding Provider<?= !empty($provider['code']) ? ' / ' . htmlspecialchars($provider['code']) : '' ?></h2>
                     <a href="providers.php" class="btn btn-secondary">Back to Providers</a>
                 </div>
 
@@ -114,8 +114,8 @@ $is_other_type = !in_array($current_type, $standard_types);
                                 <input type="text" id="name" name="name" value="<?= htmlspecialchars($provider['name']) ?>" required>
                             </div>
                             <div class="form-group half-width">
-                                <label for="code">Abbreviation / Code <span class="required">*</span></label>
-                                <input type="text" id="code" name="code" value="<?= htmlspecialchars($provider['code']) ?>" required>
+                                <label for="code">Abbreviation / Code</label>
+                                <input type="text" id="code" name="code" value="<?= htmlspecialchars($provider['code']) ?>">
                             </div>
                         </div>
 
