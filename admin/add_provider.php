@@ -16,7 +16,7 @@ if (!hasPermission($conn, $_SESSION['user_id'], 'scholarship_programs', 'add')) 
 // Process Form Submission
 if (isset($_POST['add_provider'])) {
     $name = trim($_POST['name']);
-    $code = trim($_POST['code']);
+    $code = trim($_POST['code'] ?? '');
     $provider_type = trim($_POST['provider_type']);
     
     // Override provider_type with custom input if 'Other' is selected
@@ -28,7 +28,7 @@ if (isset($_POST['add_provider'])) {
     $email = trim($_POST['email']);
     $contact_num = trim($_POST['contact_num']);
 
-    if (!empty($name) && !empty($code) && !empty($provider_type)) {
+    if (!empty($name) && !empty($provider_type)) {
         $insert_sql = "INSERT INTO providers (name, code, provider_type, contact_person, email, contact_num) VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($insert_sql);
         $stmt->bind_param('ssssss', $name, $code, $provider_type, $contact_person, $email, $contact_num);
@@ -61,7 +61,7 @@ if (isset($_POST['add_provider'])) {
     <?php include __DIR__ . "/../includes/modal_alerts.php"; ?>
 
     <?php if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'staff')) : 
-        $_SESSION['fail'] = "You are no logged in!";
+        $_SESSION['fail'] = "You are not logged in!";
         header("Location: ../portal.php");
         exit();
     else : ?>
@@ -87,8 +87,8 @@ if (isset($_POST['add_provider'])) {
                                 <input type="text" id="name" name="name" placeholder="e.g., Commission on Higher Education" required>
                             </div>
                             <div class="form-group half-width">
-                                <label for="code">Abbreviation / Code <span class="required">*</span></label>
-                                <input type="text" id="code" name="code" placeholder="e.g., CHED" required>
+                                <label for="code">Abbreviation / Code</label>
+                                <input type="text" id="code" name="code" placeholder="e.g., CHED">
                             </div>
                         </div>
 
@@ -128,7 +128,7 @@ if (isset($_POST['add_provider'])) {
                             </div>
                             <div class="form-group half-width">
                                 <label for="contact_num">Contact Number</label>
-                                <input type="number" id="contact_num" name="contact_num" placeholder="e.g., 09123456789">
+                                <input type="text" id="contact_num" name="contact_num" placeholder="e.g., 09123456789">
                             </div>
                         </div>
                     </div>
